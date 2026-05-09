@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import '../models/auth_models.dart';
 import '../screens/flash_cards_screen.dart';
 import '../screens/quiz_screen.dart';
+import '../screens/profile_screen.dart';
 import '../theme/app_theme.dart';
 
 class HomeBottomNav extends StatefulWidget {
-  const HomeBottomNav({super.key});
+  final AuthUser? user;
+
+  const HomeBottomNav({super.key, this.user});
 
   @override
   State<HomeBottomNav> createState() => _HomeBottomNavState();
@@ -54,6 +58,14 @@ class _HomeBottomNavState extends State<HomeBottomNav> {
                 Navigator.of(
                   context,
                 ).push(MaterialPageRoute(builder: (_) => const QuizScreen()));
+              }
+
+              if (index == 3) {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => ProfileScreen(user: widget.user),
+                  ),
+                );
               }
             },
             child: AnimatedContainer(

@@ -1,130 +1,172 @@
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 
+import '../models/content_models.dart';
+import '../services/backend_api.dart';
 import '../theme/app_theme.dart';
 
 class FlashCardsScreen extends StatefulWidget {
-  const FlashCardsScreen({super.key});
+  final String? categoryName;
+
+  const FlashCardsScreen({super.key, this.categoryName});
 
   @override
   State<FlashCardsScreen> createState() => _FlashCardsScreenState();
 }
 
 class _FlashCardsScreenState extends State<FlashCardsScreen> {
-  final List<_FlashCardData> _cards = const [
-    _FlashCardData(
-      term: 'Rizz',
-      meaning: 'Confidence or charm in flirting.',
-      example: 'He pulled up with serious rizz.',
-      category: 'Gen Z',
-      color: Color(0xFFC5B8F8),
-      imageUrl: 'https://openmoji.org/data/color/png/618x618/1F60E.png',
-    ),
-    _FlashCardData(
-      term: 'Skibidi',
-      meaning: 'A playful internet phrase used as meme slang.',
-      example: 'That edit was straight skibidi chaos.',
-      category: 'Gen Alpha',
-      color: Color(0xFFF5A0C8),
-      imageUrl: 'https://openmoji.org/data/color/png/618x618/1F92A.png',
-    ),
-    _FlashCardData(
-      term: 'Tapori',
-      meaning: 'Street-smart slang style often heard in Mumbai.',
-      example: 'Boss, full tapori vibes today.',
-      category: 'Regional',
-      color: Color(0xFFF5A623),
-      imageUrl: 'https://openmoji.org/data/color/png/618x618/1F5FA.png',
-    ),
-    _FlashCardData(
-      term: 'GG',
-      meaning: 'Good game.',
-      example: 'GG after a tight match.',
-      category: 'Gaming',
-      color: Color(0xFFA8D8F0),
-      imageUrl: 'https://openmoji.org/data/color/png/618x618/1F3AE.png',
-    ),
-    _FlashCardData(
-      term: 'Buff',
-      meaning: 'To make something stronger or more powerful.',
-      example: 'They buffed the character in the latest patch.',
-      category: 'Gaming',
-      color: Color(0xFFC9D8FF),
-      imageUrl: 'https://openmoji.org/data/color/png/618x618/1F4AA.png',
-    ),
-    _FlashCardData(
-      term: 'Circle back',
-      meaning: 'Return to a topic later.',
-      example: 'Let’s circle back after lunch.',
-      category: 'Workplace',
-      color: Color(0xFFEAD6FF),
-      imageUrl: 'https://openmoji.org/data/color/png/618x618/1F4BC.png',
-    ),
-    _FlashCardData(
-      term: 'Bandwidth',
-      meaning: 'Capacity to take on more work or tasks.',
-      example: 'I do not have the bandwidth this week.',
-      category: 'Workplace',
-      color: Color(0xFFC6E7D9),
-      imageUrl: 'https://openmoji.org/data/color/png/618x618/1F4BB.png',
-    ),
-    _FlashCardData(
-      term: 'Ghosting',
-      meaning: 'Cutting off communication suddenly.',
-      example: 'They ghosted after the first date.',
-      category: 'Dating',
-      color: Color(0xFFFFD7E1),
-      imageUrl: 'https://openmoji.org/data/color/png/618x618/1F47B.png',
-    ),
-    _FlashCardData(
-      term: 'Breadcrumbing',
-      meaning: 'Giving just enough attention to keep someone interested.',
-      example: 'Breadcrumbing keeps the chat barely alive.',
-      category: 'Dating',
-      color: Color(0xFFD8C7A6),
-      imageUrl: 'https://openmoji.org/data/color/png/618x618/1F35E.png',
-    ),
-    _FlashCardData(
-      term: 'No cap',
-      meaning: 'For real; no exaggeration.',
-      example: 'No cap, that was the best match tonight.',
-      category: 'Internet',
-      color: Color(0xFFE2F1FF),
-      imageUrl: 'https://openmoji.org/data/color/png/618x618/1F525.png',
-    ),
-    _FlashCardData(
-      term: 'Based',
-      meaning: 'Confidently true, unapologetic, or admired online.',
-      example: 'That take was so based.',
-      category: 'Internet',
-      color: Color(0xFFF5E7B8),
-      imageUrl: 'https://openmoji.org/data/color/png/618x618/1F973.png',
-    ),
-    _FlashCardData(
-      term: 'Flex',
-      meaning: 'To show off something impressive.',
-      example: 'Posting the trophy was a clear flex.',
-      category: 'General',
-      color: Color(0xFFD1D6FF),
-      imageUrl: 'https://openmoji.org/data/color/png/618x618/1F4AF.png',
-    ),
-  ];
+  final List<ApiCategory> _categories = [];
+  List<ApiWord> _words = [];
+
+  bool _loadingCategories = true;
+  bool _loadingWords = false;
+  String? _selectedCategory;
+  String? _errorMessage;
 
   int _currentIndex = 0;
   Offset _dragOffset = Offset.zero;
   bool _isDragging = false;
 
-  _FlashCardData get _currentCard => _cards[_currentIndex];
-  _FlashCardData? get _nextCard =>
-      _currentIndex + 1 < _cards.length ? _cards[_currentIndex + 1] : null;
-  _FlashCardData? get _thirdCard =>
-      _currentIndex + 2 < _cards.length ? _cards[_currentIndex + 2] : null;
+  @override
+  void initState() {
+    super.initState();
+    _bootstrap();
+  }
 
-  void _advanceCard() {
+  Future<void> _bootstrap() async {
+    try {
+      final categories = await BackendApi.instance.fetchCategories();
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _categories
+          ..clear()
+          ..addAll(categories);
+        _loadingCategories = false;
+        _selectedCategory =
+            widget.categoryName ??
+            (categories.isNotEmpty ? categories.first.name : null);
+      });
+
+      if (_selectedCategory != null) {
+        await _loadWords(_selectedCategory!);
+      }
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _loadingCategories = false;
+        _errorMessage = error.toString();
+      });
+    }
+  }
+
+  Future<void> _loadWords(String categoryName) async {
     setState(() {
-      _currentIndex = (_currentIndex + 1) % _cards.length;
+      _loadingWords = true;
+      _errorMessage = null;
+      _currentIndex = 0;
       _dragOffset = Offset.zero;
       _isDragging = false;
     });
+
+    try {
+      final words = await BackendApi.instance.fetchWordsByCategory(
+        categoryName,
+      );
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _words = words;
+        _loadingWords = false;
+      });
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _loadingWords = false;
+        _errorMessage = error.toString();
+      });
+    }
+  }
+
+  void _selectCategory(String categoryName) {
+    if (_selectedCategory == categoryName) {
+      return;
+    }
+
+    setState(() {
+      _selectedCategory = categoryName;
+    });
+    _loadWords(categoryName);
+  }
+
+  void _advanceCard() {
+    if (_words.isEmpty) {
+      return;
+    }
+
+    setState(() {
+      _currentIndex = (_currentIndex + 1) % _words.length;
+      _dragOffset = Offset.zero;
+      _isDragging = false;
+    });
+  }
+
+  Future<void> _showWordDetails(ApiWord word) async {
+    try {
+      final detail = await BackendApi.instance.fetchWordById(word.id);
+      if (!mounted) {
+        return;
+      }
+
+      await showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) {
+          return _WordDetailSheet(word: detail);
+        },
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.toString())));
+    }
+  }
+
+  Future<void> _shareWord(ApiWord word) async {
+    final shareText = StringBuffer()
+      ..writeln('WordFlow word card')
+      ..writeln(word.word)
+      ..writeln(word.meaning)
+      ..writeln('Category: ${word.categoryName}')
+      ..writeln(
+        word.primaryExample.isNotEmpty ? 'Example: ${word.primaryExample}' : '',
+      );
+
+    if (word.memeImageUrl.isNotEmpty) {
+      shareText
+        ..writeln()
+        ..writeln(word.memeImageUrl);
+    }
+
+    await Share.share(
+      shareText.toString().trim(),
+      subject: '${word.word} - WordFlow',
+    );
   }
 
   @override
@@ -152,106 +194,202 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
               ),
               const SizedBox(height: 6),
               const Text(
-                'Drag cards left or right to swipe through random words and phrases.',
+                'Browse live categories from the backend and swipe through words.',
                 style: TextStyle(
                   fontSize: 15,
                   height: 1.5,
                   color: AppColors.textSecondary,
                 ),
               ),
+              const SizedBox(height: 16),
+              _buildCategoryChips(),
               const SizedBox(height: 18),
-              Expanded(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final cardWidth = constraints.maxWidth;
-                    final cardHeight = constraints.maxHeight;
-
-                    return Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        if (_thirdCard != null)
-                          _StackCardBackdrop(
-                            data: _thirdCard!,
-                            width: cardWidth * 0.88,
-                            height: cardHeight * 0.82,
-                            scale: 0.90,
-                            rotation: -0.08,
-                            offset: const Offset(0, 18),
-                          ),
-                        if (_nextCard != null)
-                          _StackCardBackdrop(
-                            data: _nextCard!,
-                            width: cardWidth * 0.94,
-                            height: cardHeight * 0.88,
-                            scale: 0.96,
-                            rotation: -0.03,
-                            offset: const Offset(0, 8),
-                          ),
-                        GestureDetector(
-                          onPanStart: (_) {
-                            setState(() => _isDragging = true);
-                          },
-                          onPanUpdate: (details) {
-                            setState(() {
-                              _dragOffset += details.delta;
-                            });
-                          },
-                          onPanEnd: (details) {
-                            final shouldSwipe =
-                                _dragOffset.dx.abs() > swipeThreshold ||
-                                details.velocity.pixelsPerSecond.dx.abs() > 700;
-
-                            if (shouldSwipe) {
-                              _advanceCard();
-                            } else {
-                              setState(() {
-                                _dragOffset = Offset.zero;
-                                _isDragging = false;
-                              });
-                            }
-                          },
-                          child: Transform.translate(
-                            offset: _dragOffset,
-                            child: Transform.rotate(
-                              angle: _dragOffset.dx / 900,
-                              child: _SwipeCard(
-                                data: _currentCard,
-                                width: cardWidth,
-                                height: cardHeight,
-                                progress:
-                                    (_dragOffset.dx.abs() / swipeThreshold)
-                                        .clamp(0.0, 1.0),
-                                isDragging: _isDragging,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-              ),
+              Expanded(child: _buildDeck(swipeThreshold)),
             ],
           ),
         ),
       ),
     );
   }
+
+  Widget _buildCategoryChips() {
+    if (_loadingCategories) {
+      return const SizedBox(
+        height: 46,
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_errorMessage != null && _categories.isEmpty) {
+      return _InlineError(message: _errorMessage!);
+    }
+
+    return SizedBox(
+      height: 46,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: _categories.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        itemBuilder: (context, index) {
+          final category = _categories[index];
+          final selected = category.name == _selectedCategory;
+          return ChoiceChip(
+            label: Text('${category.name} · ${category.wordCount}'),
+            selected: selected,
+            onSelected: (_) => _selectCategory(category.name),
+            labelStyle: TextStyle(
+              color: selected ? Colors.white : AppColors.textPrimary,
+              fontWeight: FontWeight.w700,
+            ),
+            backgroundColor: Colors.white,
+            selectedColor: AppColors.textPrimary,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(999),
+              side: BorderSide(color: Colors.black.withOpacity(0.06)),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildDeck(double swipeThreshold) {
+    if (_loadingWords) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_selectedCategory == null) {
+      return const Center(
+        child: Text('No categories were returned by the backend.'),
+      );
+    }
+
+    if (_words.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.inbox_outlined,
+              size: 42,
+              color: AppColors.textSecondary,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'No words found for $_selectedCategory',
+              style: AppTextStyles.planCardDetail,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 10),
+            TextButton(
+              onPressed: () => _loadWords(_selectedCategory!),
+              child: const Text('Try again'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final currentWord = _words[_currentIndex.clamp(0, _words.length - 1)];
+    final nextWord = _words.length > 1
+        ? _words[(_currentIndex + 1) % _words.length]
+        : null;
+    final thirdWord = _words.length > 2
+        ? _words[(_currentIndex + 2) % _words.length]
+        : null;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final cardWidth = constraints.maxWidth;
+        final cardHeight = constraints.maxHeight;
+
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            if (thirdWord != null)
+              _StackCardBackdrop(
+                word: thirdWord,
+                width: cardWidth * 0.88,
+                height: cardHeight * 0.82,
+                scale: 0.90,
+                rotation: -0.08,
+                offset: const Offset(0, 18),
+              ),
+            if (nextWord != null)
+              _StackCardBackdrop(
+                word: nextWord,
+                width: cardWidth * 0.94,
+                height: cardHeight * 0.88,
+                scale: 0.96,
+                rotation: -0.03,
+                offset: const Offset(0, 8),
+              ),
+            GestureDetector(
+              onTap: () => _showWordDetails(currentWord),
+              onPanStart: (_) {
+                setState(() {
+                  _isDragging = true;
+                });
+              },
+              onPanUpdate: (details) {
+                setState(() {
+                  _dragOffset += details.delta;
+                });
+              },
+              onPanEnd: (details) {
+                final shouldSwipe =
+                    _dragOffset.dx.abs() > swipeThreshold ||
+                    details.velocity.pixelsPerSecond.dx.abs() > 700;
+
+                if (shouldSwipe) {
+                  _advanceCard();
+                } else {
+                  setState(() {
+                    _dragOffset = Offset.zero;
+                    _isDragging = false;
+                  });
+                }
+              },
+              child: Transform.translate(
+                offset: _dragOffset,
+                child: Transform.rotate(
+                  angle: _dragOffset.dx / 900,
+                  child: _SwipeCard(
+                    word: currentWord,
+                    width: cardWidth,
+                    height: cardHeight,
+                    progress: (_dragOffset.dx.abs() / swipeThreshold).clamp(
+                      0.0,
+                      1.0,
+                    ),
+                    isDragging: _isDragging,
+                    onShareWord: _shareWord,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }
 
 class _SwipeCard extends StatelessWidget {
-  final _FlashCardData data;
+  final ApiWord word;
   final double width;
   final double height;
   final double progress;
   final bool isDragging;
+  final Future<void> Function(ApiWord word) onShareWord;
 
   const _SwipeCard({
-    required this.data,
+    required this.word,
     required this.width,
     required this.height,
     required this.progress,
     required this.isDragging,
+    required this.onShareWord,
   });
 
   @override
@@ -285,7 +423,7 @@ class _SwipeCard extends StatelessWidget {
                 height: 190,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: data.color.withOpacity(0.85),
+                  color: AppColors.challengeCard.withOpacity(0.82),
                 ),
               ),
             ),
@@ -297,7 +435,7 @@ class _SwipeCard extends StatelessWidget {
                 height: 120,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: data.color.withOpacity(0.18),
+                  color: AppColors.planCardBlue.withOpacity(0.18),
                 ),
               ),
             ),
@@ -309,19 +447,31 @@ class _SwipeCard extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _CategoryPill(label: data.category),
-                      const Icon(
-                        Icons.swipe_rounded,
-                        color: AppColors.textPrimary,
+                      _CategoryPill(label: word.categoryName),
+                      Row(
+                        children: [
+                          IconButton(
+                            tooltip: 'Share word',
+                            onPressed: () => onShareWord(word),
+                            icon: const Icon(Icons.share_outlined),
+                            color: AppColors.textPrimary,
+                          ),
+                          Icon(
+                            isDragging
+                                ? Icons.swipe_rounded
+                                : Icons.touch_app_rounded,
+                            color: AppColors.textPrimary,
+                          ),
+                        ],
                       ),
                     ],
                   ),
                   const SizedBox(height: 14),
-                  _CardImage(imageUrl: data.imageUrl),
+                  _CardImage(imageUrl: word.memeImageUrl),
                   const SizedBox(height: 14),
                   const Spacer(),
                   Text(
-                    data.term,
+                    word.word,
                     style: const TextStyle(
                       fontSize: 36,
                       fontWeight: FontWeight.w900,
@@ -331,7 +481,7 @@ class _SwipeCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    data.meaning,
+                    word.meaning,
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
@@ -348,7 +498,9 @@ class _SwipeCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(24),
                     ),
                     child: Text(
-                      data.example,
+                      word.primaryExample.isNotEmpty
+                          ? word.primaryExample
+                          : 'Tap to view full details',
                       style: const TextStyle(
                         fontSize: 15,
                         height: 1.5,
@@ -394,7 +546,7 @@ class _SwipeCard extends StatelessWidget {
 }
 
 class _StackCardBackdrop extends StatelessWidget {
-  final _FlashCardData data;
+  final ApiWord word;
   final double width;
   final double height;
   final double scale;
@@ -402,7 +554,7 @@ class _StackCardBackdrop extends StatelessWidget {
   final Offset offset;
 
   const _StackCardBackdrop({
-    required this.data,
+    required this.word,
     required this.width,
     required this.height,
     required this.scale,
@@ -420,7 +572,7 @@ class _StackCardBackdrop extends StatelessWidget {
           scale: scale,
           child: Opacity(
             opacity: 0.55,
-            child: _BackdropCard(data: data, width: width, height: height),
+            child: _BackdropCard(word: word, width: width, height: height),
           ),
         ),
       ),
@@ -429,12 +581,12 @@ class _StackCardBackdrop extends StatelessWidget {
 }
 
 class _BackdropCard extends StatelessWidget {
-  final _FlashCardData data;
+  final ApiWord word;
   final double width;
   final double height;
 
   const _BackdropCard({
-    required this.data,
+    required this.word,
     required this.width,
     required this.height,
   });
@@ -467,7 +619,7 @@ class _BackdropCard extends StatelessWidget {
                 height: 150,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: data.color.withOpacity(0.9),
+                  color: AppColors.challengeCard.withOpacity(0.9),
                 ),
               ),
             ),
@@ -476,10 +628,10 @@ class _BackdropCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _CategoryPill(label: data.category),
+                  _CategoryPill(label: word.categoryName),
                   const Spacer(),
                   Text(
-                    data.term,
+                    word.word,
                     style: const TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.w900,
@@ -488,7 +640,7 @@ class _BackdropCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    data.meaning,
+                    word.meaning,
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
@@ -568,24 +720,6 @@ class _SwipeBadge extends StatelessWidget {
   }
 }
 
-class _FlashCardData {
-  final String term;
-  final String meaning;
-  final String example;
-  final String category;
-  final Color color;
-  final String imageUrl;
-
-  const _FlashCardData({
-    required this.term,
-    required this.meaning,
-    required this.example,
-    required this.category,
-    required this.color,
-    required this.imageUrl,
-  });
-}
-
 class _CardImage extends StatelessWidget {
   final String imageUrl;
 
@@ -609,17 +743,176 @@ class _CardImage extends StatelessWidget {
             ),
           ],
         ),
-        child: Image.network(
-          imageUrl,
-          fit: BoxFit.contain,
-          filterQuality: FilterQuality.medium,
-          errorBuilder: (_, __, ___) => const Icon(
-            Icons.image_not_supported_outlined,
-            size: 42,
-            color: AppColors.textSecondary,
-          ),
-        ),
+        child: imageUrl.isNotEmpty
+            ? Image.network(
+                imageUrl,
+                fit: BoxFit.contain,
+                filterQuality: FilterQuality.medium,
+                errorBuilder: (_, __, ___) => const Icon(
+                  Icons.image_not_supported_outlined,
+                  size: 42,
+                  color: AppColors.textSecondary,
+                ),
+              )
+            : const Icon(
+                Icons.image_not_supported_outlined,
+                size: 42,
+                color: AppColors.textSecondary,
+              ),
       ),
+    );
+  }
+}
+
+class _WordDetailSheet extends StatelessWidget {
+  final ApiWord word;
+
+  const _WordDetailSheet({required this.word});
+
+  Future<void> _shareWord(BuildContext context) async {
+    final shareText = StringBuffer()
+      ..writeln('WordFlow word card')
+      ..writeln(word.word)
+      ..writeln(word.meaning)
+      ..writeln('Category: ${word.categoryName}')
+      ..writeln(
+        word.primaryExample.isNotEmpty ? 'Example: ${word.primaryExample}' : '',
+      );
+
+    if (word.memeImageUrl.isNotEmpty) {
+      shareText
+        ..writeln()
+        ..writeln(word.memeImageUrl);
+    }
+
+    await Share.share(
+      shareText.toString().trim(),
+      subject: '${word.word} - WordFlow',
+    );
+
+    if (!context.mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Share sheet opened.')));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.78,
+      minChildSize: 0.55,
+      maxChildSize: 0.95,
+      builder: (context, controller) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: ListView(
+            controller: controller,
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+            children: [
+              Center(
+                child: Container(
+                  width: 46,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  _CategoryPill(label: word.categoryName),
+                  const Spacer(),
+                  TextButton.icon(
+                    onPressed: () => _shareWord(context),
+                    icon: const Icon(Icons.share_outlined),
+                    label: const Text('Share'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Text(
+                word.word,
+                style: const TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(word.meaning, style: AppTextStyles.planCardDetail),
+              const SizedBox(height: 18),
+              if (word.memeImageUrl.isNotEmpty)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(22),
+                  child: Image.network(
+                    word.memeImageUrl,
+                    height: 220,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                  ),
+                ),
+              if (word.examples.isNotEmpty) ...[
+                const SizedBox(height: 20),
+                const Text(
+                  'Examples',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                for (final example in word.examples) ...[
+                  Container(
+                    width: double.infinity,
+                    margin: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: AppColors.background,
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: Text(
+                      example,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        height: 1.45,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _InlineError extends StatelessWidget {
+  final String message;
+
+  const _InlineError({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.6),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Text(message, style: AppTextStyles.planCardDetail),
     );
   }
 }

@@ -1,14 +1,39 @@
 import 'package:flutter/material.dart';
+import '../models/auth_models.dart';
 import '../theme/app_theme.dart';
 
 class HomeHeader extends StatelessWidget {
-  const HomeHeader({super.key});
+  final AuthUser? user;
+
+  const HomeHeader({super.key, this.user});
+
+  String _formatDate(DateTime date) {
+    const months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+
+    return '${date.day} ${months[date.month - 1]}';
+  }
 
   @override
   Widget build(BuildContext context) {
+    final hasDisplayName = user != null && user!.greetingName.isNotEmpty;
+    final displayName = hasDisplayName ? user!.greetingName : 'there';
+    final hasAvatar = user != null && user!.avatarUrl.isNotEmpty;
+
     return Row(
       children: [
-        // Avatar
         Container(
           width: 44,
           height: 44,
@@ -24,32 +49,39 @@ class HomeHeader extends StatelessWidget {
             ],
           ),
           child: ClipOval(
-            child: Image.network(
-              'https://randomuser.me/api/portraits/women/44.jpg',
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => const Icon(
-                Icons.person,
-                color: Colors.white,
-                size: 24,
-              ),
-            ),
+            child: hasAvatar
+                ? Image.network(
+                    user!.avatarUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) =>
+                        const Icon(Icons.person, color: Colors.white, size: 24),
+                  )
+                : const Icon(Icons.person, color: Colors.white, size: 24),
           ),
         ),
         const SizedBox(width: 12),
 
-        // Greeting text
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Hello Lesley', style: AppTextStyles.greeting),
+              Text('Hello $displayName', style: AppTextStyles.greeting),
               const SizedBox(height: 1),
-              Text('Today 11 May.', style: AppTextStyles.greetingDate),
+              Text(
+                'Today ${_formatDate(DateTime.now())}.',
+                style: AppTextStyles.greetingDate,
+              ),
+              if (user != null) ...[
+                const SizedBox(height: 2),
+                Text(
+                  'Level ${user!.level}  ·  ${user!.totalXp} XP  ·  ${user!.currentStreak} day streak',
+                  style: AppTextStyles.greetingDate,
+                ),
+              ],
             ],
           ),
         ),
 
-        // Search button
         Container(
           width: 44,
           height: 44,

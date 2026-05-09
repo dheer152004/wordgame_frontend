@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../models/auth_models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/home_header.dart';
 import '../widgets/daily_challenge_card.dart';
@@ -8,7 +9,9 @@ import '../widgets/your_plan_section.dart';
 import '../widgets/home_bottom_nav.dart';
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+  final AuthUser? user;
+
+  const HomeScreen({super.key, this.user});
 
   @override
   Widget build(BuildContext context) {
@@ -35,31 +38,23 @@ class HomeScreen extends StatelessWidget {
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    SizedBox(height: 16),
-
-                    // 1. Header: avatar + greeting + search
-                    HomeHeader(),
-                    SizedBox(height: 24),
-
-                    // 2. Daily challenge card
-                    DailyChallengeCard(),
-                    SizedBox(height: 24),
-
-                    // 3. Week day picker
-                    WeekDayPicker(),
-                    SizedBox(height: 28),
-
-                    // 4. Categories section
-                    CategoriesSection(),
-                    SizedBox(height: 16),
+                  children: [
+                    const SizedBox(height: 16),
+                    HomeHeader(user: user),
+                    const SizedBox(height: 24),
+                    const DailyChallengeCard(),
+                    const SizedBox(height: 24),
+                    const WeekDayPicker(),
+                    const SizedBox(height: 28),
+                    const CategoriesSection(),
+                    const SizedBox(height: 16),
                   ],
                 ),
               ),
             ),
 
             // 5. Bottom navigation bar (fixed)
-            const HomeBottomNav(),
+            HomeBottomNav(user: user),
           ],
         ),
       ),
