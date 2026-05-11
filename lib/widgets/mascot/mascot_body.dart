@@ -78,13 +78,13 @@ class MascotBody extends StatelessWidget {
                   ),
                 ),
                 Positioned(
-                  top: 108,
+                  top: 94,
                   child: Container(
-                    width: 94,
-                    height: 68,
+                    width: 72,
+                    height: 78,
                     decoration: BoxDecoration(
                       color: const Color(0xFF2F8FEA),
-                      borderRadius: BorderRadius.circular(48),
+                      borderRadius: BorderRadius.circular(36),
                       boxShadow: [
                         BoxShadow(
                           color: const Color(0xFF2F8FEA).withOpacity(0.18),
@@ -92,28 +92,6 @@ class MascotBody extends StatelessWidget {
                           offset: const Offset(0, 5),
                         ),
                       ],
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 114,
-                  child: Container(
-                    width: 78,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.08),
-                      borderRadius: BorderRadius.circular(22),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 88,
-                  child: Container(
-                    width: 24,
-                    height: 22,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF2F8FEA),
-                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                 ),
@@ -147,87 +125,16 @@ class MascotBody extends StatelessWidget {
                   ),
                 ),
                 Positioned(
-                  top: 50,
+                  top: 52,
                   child: Container(
-                    width: 100 * bellyPulse,
-                    height: 72 * bellyPulse,
-                    child: ClipOval(
-                      child: Container(color: Colors.white.withOpacity(0.1)),
+                    width: 82 * bellyPulse,
+                    height: 54 * bellyPulse,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.06),
+                      borderRadius: BorderRadius.circular(28),
                     ),
                   ),
                 ),
-                if (isHappy)
-                  Positioned(
-                    top: 67,
-                    child: Container(
-                      width: 92,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.04),
-                        borderRadius: BorderRadius.circular(26),
-                      ),
-                    ),
-                  ),
-                if (isSleepy)
-                  Positioned(
-                    top: 70,
-                    child: Container(
-                      width: 86,
-                      height: 46,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.03),
-                        borderRadius: BorderRadius.circular(28),
-                      ),
-                    ),
-                  ),
-                if (isProud)
-                  Positioned(
-                    top: 63,
-                    child: Container(
-                      width: 96,
-                      height: 52,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.05),
-                        borderRadius: BorderRadius.circular(28),
-                      ),
-                    ),
-                  ),
-                if (isIdle)
-                  Positioned(
-                    top: 67,
-                    child: Container(
-                      width: 88,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.03),
-                        borderRadius: BorderRadius.circular(26),
-                      ),
-                    ),
-                  ),
-                if (isJump)
-                  Positioned(
-                    top: 64,
-                    child: Container(
-                      width: 92,
-                      height: 52,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.05),
-                        borderRadius: BorderRadius.circular(28),
-                      ),
-                    ),
-                  ),
-                if (isWave)
-                  Positioned(
-                    top: 65,
-                    child: Container(
-                      width: 90,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.04),
-                        borderRadius: BorderRadius.circular(26),
-                      ),
-                    ),
-                  ),
               ],
             ),
           ),

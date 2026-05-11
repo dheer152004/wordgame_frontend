@@ -120,12 +120,6 @@ class MascotStage extends StatelessWidget {
                   motionPulse: motionWave,
                   jumpLift: jumpLift,
                 ),
-                if (mood == MascotMood.wave)
-                  Positioned(
-                    right: 16,
-                    top: 96,
-                    child: _WaveArm(progress: wavePulse),
-                  ),
                 if (mood == MascotMood.celebration)
                   ..._buildConfetti(celebratePulse),
                 if (mood == MascotMood.shocked)

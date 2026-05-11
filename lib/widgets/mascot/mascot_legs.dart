@@ -23,7 +23,7 @@ class MascotLegs extends StatelessWidget {
     return Positioned(
       bottom: 0,
       child: Transform.translate(
-        offset: Offset(0, -jumpLift + (isCelebrate ? motionPulse * 2 : 0)),
+        offset: Offset(-6, -jumpLift + (isCelebrate ? motionPulse * 2 : 0)),
         child: SizedBox(
           width: 74,
           height: 62,

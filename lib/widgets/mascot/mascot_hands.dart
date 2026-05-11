@@ -38,8 +38,8 @@ class MascotHands extends StatelessWidget {
               child: Transform.rotate(
                 angle: isWave ? -0.58 + wavePulse * 0.35 : -0.12,
                 child: _TinyHand(
-                  width: 16,
-                  height: 26,
+                  width: 18,
+                  height: 30,
                   raise: isLaugh ? 2 + laughPulse * 3 : 0,
                 ),
               ),
@@ -50,8 +50,8 @@ class MascotHands extends StatelessWidget {
               child: Transform.rotate(
                 angle: isWave ? 0.58 - wavePulse * 0.35 : 0.12,
                 child: _TinyHand(
-                  width: 16,
-                  height: 26,
+                  width: 18,
+                  height: 30,
                   raise: isCelebrate ? 1 + celebratePulse * 4 : 0,
                 ),
               ),
@@ -83,7 +83,7 @@ class _TinyHand extends StatelessWidget {
         height: height,
         decoration: BoxDecoration(
           color: const Color(0xFF1C7AD9),
-          borderRadius: BorderRadius.circular(11),
+          borderRadius: BorderRadius.circular(12),
         ),
       ),
     );
