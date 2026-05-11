@@ -197,24 +197,24 @@ class _MascotEye extends StatelessWidget {
     final size = isShocked
         ? 23.0
         : isHappy
-            ? 20.0
-            : isIdle
-                ? 17.0
-                : 18.0;
+        ? 20.0
+        : isIdle
+        ? 17.0
+        : 18.0;
     final pupilY = isSad
         ? 3.0
         : isAngry
-            ? 2.0
-            : isHappy
-                ? -0.5
-                : isIdle
-                    ? 0.5
-                    : 0.0;
+        ? 2.0
+        : isHappy
+        ? -0.5
+        : isIdle
+        ? 0.5
+        : 0.0;
     final pupilSize = isShocked
         ? 9.0
         : isHappy
-            ? 8.0
-            : 7.0;
+        ? 8.0
+        : 7.0;
     final eyeScale = isShocked ? 1.0 : blinkOpen.clamp(0.15, 1.0);
 
     return Transform.scale(
@@ -284,17 +284,17 @@ class _MascotBrow extends StatelessWidget {
     final height = isSad
         ? 9.0
         : isShocked
-            ? 8.0
-            : 7.0;
+        ? 8.0
+        : 7.0;
     final lift = isLaugh
         ? 1 + (motionPulse * 2)
         : isSad
-            ? 2.0
-            : isShocked
-                ? -1.0
-                : isAngry
-                    ? 1.0
-                    : 0.5;
+        ? 2.0
+        : isShocked
+        ? -1.0
+        : isAngry
+        ? 1.0
+        : 0.5;
 
     return Transform.translate(
       offset: Offset(0, lift),

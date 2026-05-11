@@ -23,29 +23,35 @@ class MascotHands extends StatelessWidget {
     final isCelebrate = mood == MascotMood.celebration;
 
     return Positioned(
-      top: 84,
+      top: 78,
       left: 0,
       right: 0,
       child: SizedBox(
-        width: 132,
-        height: 40,
+        width: 140,
+        height: 50,
         child: Stack(
           clipBehavior: Clip.none,
           children: [
             Positioned(
-              left: 18,
-              top: isWave ? 2 : 8,
+              left: 12,
+              top: isWave ? 0 : 10,
               child: Transform.rotate(
-                angle: isWave ? -0.55 + wavePulse * 0.35 : -0.22,
-                child: _TinyHand(raise: isLaugh ? 2 + laughPulse * 3 : 0),
+                angle: isWave ? -0.6 + wavePulse * 0.35 : -0.18,
+                child: _TinyHand(
+                  width: 18,
+                  height: 28,
+                  raise: isLaugh ? 2 + laughPulse * 3 : 0,
+                ),
               ),
             ),
             Positioned(
-              right: 18,
-              top: isCelebrate ? -2 : 8,
+              right: 12,
+              top: isCelebrate ? -2 : 10,
               child: Transform.rotate(
-                angle: isWave ? 0.55 - wavePulse * 0.35 : 0.22,
+                angle: isWave ? 0.6 - wavePulse * 0.35 : 0.18,
                 child: _TinyHand(
+                  width: 18,
+                  height: 28,
                   raise: isCelebrate ? 1 + celebratePulse * 4 : 0,
                 ),
               ),
@@ -58,20 +64,26 @@ class MascotHands extends StatelessWidget {
 }
 
 class _TinyHand extends StatelessWidget {
+  final double width;
+  final double height;
   final double raise;
 
-  const _TinyHand({required this.raise});
+  const _TinyHand({
+    required this.width,
+    required this.height,
+    required this.raise,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Transform.translate(
       offset: Offset(0, -raise),
       child: Container(
-        width: 16,
-        height: 26,
+        width: width,
+        height: height,
         decoration: BoxDecoration(
-          color: const Color(0xFF1F7FDB),
-          borderRadius: BorderRadius.circular(12),
+          color: const Color(0xFF1C7AD9),
+          borderRadius: BorderRadius.circular(999),
         ),
       ),
     );

@@ -19,26 +19,26 @@ class MascotLegs extends StatelessWidget {
     final isJump = mood == MascotMood.jump;
     final isCelebrate = mood == MascotMood.celebration;
     final legSpread = isJump
-        ? 18.0
+        ? 16.0
         : isCelebrate
-        ? 14.0
-        : 10.0;
+        ? 12.0
+        : 8.0;
     final ankleBounce = isJump ? motionPulse * 4 : 0.0;
 
     return Positioned(
-      bottom: 6,
+      bottom: 2,
       child: Transform.translate(
         offset: Offset(0, -jumpLift + (isCelebrate ? motionPulse * 2 : 0)),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             _CuteLeg(
-              angle: isJump ? -0.12 : -0.02,
+              angle: isJump ? -0.1 : -0.03,
               xOffset: -legSpread,
               bounce: ankleBounce,
             ),
             _CuteLeg(
-              angle: isJump ? 0.12 : 0.02,
+              angle: isJump ? 0.1 : 0.03,
               xOffset: legSpread,
               bounce: ankleBounce,
             ),
@@ -70,19 +70,19 @@ class _CuteLeg extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 16,
-              height: 28,
+              width: 14,
+              height: 30,
               decoration: BoxDecoration(
-                color: const Color(0xFF1F7FDB),
-                borderRadius: BorderRadius.circular(10),
+                color: const Color(0xFF1C7AD9),
+                borderRadius: BorderRadius.circular(9),
               ),
             ),
             const SizedBox(height: 2),
             Container(
-              width: 18,
-              height: 7,
+              width: 20,
+              height: 8,
               decoration: BoxDecoration(
-                color: const Color(0xFF1A1A1A).withOpacity(0.16),
+                color: const Color(0xFF1A1A1A).withOpacity(0.12),
                 borderRadius: BorderRadius.circular(99),
               ),
             ),

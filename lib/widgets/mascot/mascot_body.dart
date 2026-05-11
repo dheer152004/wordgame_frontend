@@ -30,12 +30,12 @@ class MascotBody extends StatelessWidget {
         : 1.0;
 
     return Positioned(
-      top: 24,
+      top: 18,
       child: SizedBox(
-        width: 132,
-        height: 132,
+        width: 140,
+        height: 140,
         child: Transform.translate(
-          offset: Offset(0, floatWave * 0.5),
+          offset: Offset(0, floatWave * 0.4),
           child: Transform.scale(
             scaleY: scaleY,
             child: Stack(
@@ -43,37 +43,37 @@ class MascotBody extends StatelessWidget {
               alignment: Alignment.center,
               children: [
                 Positioned(
-                  top: 0,
+                  top: 4,
                   child: Container(
-                    width: 132,
-                    height: 132,
+                    width: 122,
+                    height: 122,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF2F8FEA),
-                      borderRadius: BorderRadius.circular(66),
+                      color: const Color(0xFF3090EB),
+                      shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF2F8FEA).withOpacity(0.24),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
+                          color: const Color(0xFF2F8FEA).withOpacity(0.22),
+                          blurRadius: 18,
+                          offset: const Offset(0, 8),
                         ),
                       ],
                     ),
                   ),
                 ),
                 Positioned(
-                  top: 0,
+                  top: 10,
                   child: Container(
-                    width: 132,
-                    height: 132,
+                    width: 110,
+                    height: 110,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.05),
-                      borderRadius: BorderRadius.circular(66),
+                      color: Colors.white.withOpacity(0.06),
+                      shape: BoxShape.circle,
                     ),
                   ),
                 ),
                 Positioned(
-                  top: 0,
-                  left: 22,
+                  top: -2,
+                  left: 30,
                   child: _BodyEar(
                     left: true,
                     mood: mood,
@@ -81,8 +81,8 @@ class MascotBody extends StatelessWidget {
                   ),
                 ),
                 Positioned(
-                  top: 0,
-                  right: 22,
+                  top: -2,
+                  right: 30,
                   child: _BodyEar(
                     left: false,
                     mood: mood,
@@ -90,61 +90,61 @@ class MascotBody extends StatelessWidget {
                   ),
                 ),
                 Positioned(
-                  top: 18,
+                  top: 20,
                   child: Container(
-                    width: 88,
-                    height: 100,
+                    width: 94,
+                    height: 94,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.08),
-                      borderRadius: BorderRadius.circular(46),
+                      color: Colors.white.withOpacity(0.09),
+                      shape: BoxShape.circle,
                     ),
                   ),
                 ),
                 if (isHappy)
                   Positioned(
-                    top: 44,
+                    top: 38,
                     child: Container(
-                      width: 110,
-                      height: 68,
+                      width: 104,
+                      height: 76,
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.04),
-                        borderRadius: BorderRadius.circular(36),
+                        borderRadius: BorderRadius.circular(40),
                       ),
                     ),
                   ),
                 if (isIdle)
                   Positioned(
-                    top: 42,
+                    top: 40,
                     child: Container(
-                      width: 106,
-                      height: 66,
+                      width: 100,
+                      height: 70,
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.03),
-                        borderRadius: BorderRadius.circular(34),
+                        borderRadius: BorderRadius.circular(38),
                       ),
                     ),
                   ),
                 if (isJump)
                   Positioned(
-                    top: 6,
+                    top: 8,
                     child: Container(
-                      width: 112,
-                      height: 128,
+                      width: 108,
+                      height: 120,
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.05),
-                        borderRadius: BorderRadius.circular(58),
+                        borderRadius: BorderRadius.circular(54),
                       ),
                     ),
                   ),
                 if (isWave)
                   Positioned(
-                    top: 30,
+                    top: 28,
                     child: Container(
-                      width: 108,
-                      height: 86,
+                      width: 104,
+                      height: 88,
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.04),
-                        borderRadius: BorderRadius.circular(40),
+                        borderRadius: BorderRadius.circular(42),
                       ),
                     ),
                   ),
@@ -173,24 +173,30 @@ class _BodyEar extends StatelessWidget {
     final isWave = mood == MascotMood.wave;
     final isLaugh = mood == MascotMood.laugh;
     final isCelebrate = mood == MascotMood.celebration;
+    final isJump = mood == MascotMood.jump;
     final yShift = isLaugh
-        ? motionPulse * 2
+        ? motionPulse * 3
         : isWave
-        ? (left ? -1.0 : 2.0) + motionPulse * 2
+        ? (left ? -1.5 : 2.0) + motionPulse * 2
         : isCelebrate
-        ? -1.5 + motionPulse * 2
+        ? -2.0 + motionPulse * 2
+        : isJump
+        ? -1.0 + motionPulse * 1.5
         : 0.0;
 
     return Transform.rotate(
-      angle: (left ? -0.22 : 0.22) + (isWave ? (left ? -0.02 : 0.02) : 0),
+      angle:
+          (left ? -0.2 : 0.2) +
+          (isWave ? (left ? -0.02 : 0.02) : 0) +
+          (isLaugh ? (left ? -0.04 : 0.04) : 0),
       child: Transform.translate(
         offset: Offset(0, yShift),
         child: Container(
-          width: 22,
-          height: 28,
+          width: 24,
+          height: 30,
           decoration: BoxDecoration(
-            color: const Color(0xFF1F7FDB),
-            borderRadius: BorderRadius.circular(14),
+            color: const Color(0xFF1C7AD9),
+            borderRadius: BorderRadius.circular(15),
           ),
         ),
       ),
