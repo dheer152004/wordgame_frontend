@@ -8,6 +8,7 @@ class MascotFace extends StatelessWidget {
   final MascotMood mood;
   final double blinkOpen;
   final double laughPulse;
+  final double motionPhase;
   final double motionPulse;
 
   const MascotFace({
@@ -15,33 +16,34 @@ class MascotFace extends StatelessWidget {
     required this.mood,
     required this.blinkOpen,
     required this.laughPulse,
+    required this.motionPhase,
     required this.motionPulse,
   });
 
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      top: 24,
+      top: 22,
       child: SizedBox(
-        width: 132,
-        height: 132,
+        width: 116,
+        height: 110,
         child: Stack(
           clipBehavior: Clip.none,
           alignment: Alignment.center,
           children: [
             Positioned(
-              top: 18,
+              top: 16,
               child: Container(
-                width: 98,
-                height: 112,
+                width: 72,
+                height: 78,
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(50),
+                  borderRadius: BorderRadius.circular(36),
                 ),
               ),
             ),
             Positioned(
-              top: 28,
+              top: 18,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -50,6 +52,7 @@ class MascotFace extends StatelessWidget {
                     side: _EyeSide.left,
                     blinkOpen: blinkOpen,
                     laughPulse: laughPulse,
+                    motionPhase: motionPhase,
                   ),
                   const SizedBox(width: 18),
                   _MascotEye(
@@ -57,12 +60,13 @@ class MascotFace extends StatelessWidget {
                     side: _EyeSide.right,
                     blinkOpen: blinkOpen,
                     laughPulse: laughPulse,
+                    motionPhase: motionPhase,
                   ),
                 ],
               ),
             ),
             Positioned(
-              top: 44,
+              top: 32,
               left: 22,
               child: _MascotBrow(
                 mood: mood,
@@ -71,7 +75,7 @@ class MascotFace extends StatelessWidget {
               ),
             ),
             Positioned(
-              top: 44,
+              top: 32,
               right: 22,
               child: _MascotBrow(
                 mood: mood,
@@ -80,7 +84,7 @@ class MascotFace extends StatelessWidget {
               ),
             ),
             Positioned(
-              top: 58,
+              top: 44,
               child: _MascotMouth(
                 mood: mood,
                 motionPulse: motionPulse,
@@ -89,7 +93,7 @@ class MascotFace extends StatelessWidget {
             ),
             if (mood == MascotMood.happy)
               Positioned(
-                top: 60,
+                top: 48,
                 left: 20,
                 child: Container(
                   width: 12,
@@ -102,7 +106,7 @@ class MascotFace extends StatelessWidget {
               ),
             if (mood == MascotMood.happy)
               Positioned(
-                top: 60,
+                top: 48,
                 right: 20,
                 child: Container(
                   width: 12,
@@ -115,7 +119,7 @@ class MascotFace extends StatelessWidget {
               ),
             if (mood == MascotMood.shocked)
               Positioned(
-                top: 52,
+                top: 40,
                 child: Container(
                   width: 28,
                   height: 28,
@@ -127,13 +131,13 @@ class MascotFace extends StatelessWidget {
               ),
             if (mood == MascotMood.cry)
               Positioned(
-                top: 50,
+                top: 38,
                 left: 20,
                 child: _MascotTear(progress: motionPulse, strong: true),
               ),
             if (mood == MascotMood.cry)
               Positioned(
-                top: 50,
+                top: 38,
                 right: 20,
                 child: _MascotTear(progress: motionPulse, strong: true),
               ),
@@ -151,12 +155,14 @@ class _MascotEye extends StatelessWidget {
   final _EyeSide side;
   final double blinkOpen;
   final double laughPulse;
+  final double motionPhase;
 
   const _MascotEye({
     required this.mood,
     required this.side,
     required this.blinkOpen,
     required this.laughPulse,
+    required this.motionPhase,
   });
 
   @override
@@ -168,6 +174,13 @@ class _MascotEye extends StatelessWidget {
     final isHappy = mood == MascotMood.happy;
     final isIdle = mood == MascotMood.idle;
     final isBlinking = mood == MascotMood.blink;
+    final isSleepy = mood == MascotMood.sleepy;
+    final isProud = mood == MascotMood.proud;
+    final lookAround = (math.sin(motionPhase * math.pi * 2) * 1.8).clamp(
+      -1.8,
+      1.8,
+    );
+    final idleLook = isIdle || isBlinking || isSleepy;
 
     if (isLaugh) {
       return Transform.rotate(
@@ -196,6 +209,10 @@ class _MascotEye extends StatelessWidget {
 
     final size = isShocked
         ? 23.0
+        : isProud
+        ? 19.0
+        : isSleepy
+        ? 16.0
         : isHappy
         ? 20.0
         : isIdle
@@ -205,6 +222,10 @@ class _MascotEye extends StatelessWidget {
         ? 3.0
         : isAngry
         ? 2.0
+        : isSleepy
+        ? 4.0
+        : isProud
+        ? -1.0
         : isHappy
         ? -0.5
         : isIdle
@@ -216,6 +237,9 @@ class _MascotEye extends StatelessWidget {
         ? 8.0
         : 7.0;
     final eyeScale = isShocked ? 1.0 : blinkOpen.clamp(0.15, 1.0);
+    final pupilLook = idleLook
+        ? lookAround * (side == _EyeSide.left ? 1 : 0.8)
+        : 0.0;
 
     return Transform.scale(
       scaleY: eyeScale,
@@ -234,7 +258,7 @@ class _MascotEye extends StatelessWidget {
           alignment: Alignment.center,
           children: [
             Transform.translate(
-              offset: Offset(0, pupilY),
+              offset: Offset(pupilLook, pupilY),
               child: Container(
                 width: pupilSize,
                 height: pupilSize,
@@ -280,9 +304,13 @@ class _MascotBrow extends StatelessWidget {
     final isShocked = mood == MascotMood.shocked;
     final isAngry = mood == MascotMood.angry;
     final isLaugh = mood == MascotMood.laugh;
+    final isSleepy = mood == MascotMood.sleepy;
+    final isProud = mood == MascotMood.proud;
     final width = isLaugh ? 22.0 : 20.0;
     final height = isSad
         ? 9.0
+        : isSleepy
+        ? 6.0
         : isShocked
         ? 8.0
         : 7.0;
@@ -290,10 +318,14 @@ class _MascotBrow extends StatelessWidget {
         ? 1 + (motionPulse * 2)
         : isSad
         ? 2.0
+        : isSleepy
+        ? 3.0
         : isShocked
         ? -1.0
         : isAngry
         ? 1.0
+        : isProud
+        ? -0.5
         : 0.5;
 
     return Transform.translate(
@@ -432,6 +464,26 @@ class _MascotMouthPainter extends CustomPainter {
         height: 20,
       );
       canvas.drawOval(rect, strokePaint);
+      return;
+    }
+
+    if (mood == MascotMood.sleepy) {
+      final rect = Rect.fromCenter(
+        center: Offset(size.width / 2, size.height / 2 + 3),
+        width: 20,
+        height: 10,
+      );
+      canvas.drawArc(rect, 0.1 * math.pi, 0.82 * math.pi, false, strokePaint);
+      return;
+    }
+
+    if (mood == MascotMood.proud) {
+      final rect = Rect.fromCenter(
+        center: Offset(size.width / 2, size.height / 2 - 2),
+        width: 26,
+        height: 16,
+      );
+      canvas.drawArc(rect, 0.15 * math.pi, 0.72 * math.pi, false, strokePaint);
       return;
     }
 

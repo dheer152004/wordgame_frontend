@@ -24,6 +24,8 @@ class _AnimatedMascotCardState extends State<AnimatedMascotCard>
   static const List<MascotMood> _moods = [
     MascotMood.idle,
     MascotMood.blink,
+    MascotMood.sleepy,
+    MascotMood.proud,
     MascotMood.happy,
     MascotMood.sad,
     MascotMood.laugh,

@@ -23,35 +23,35 @@ class MascotHands extends StatelessWidget {
     final isCelebrate = mood == MascotMood.celebration;
 
     return Positioned(
-      top: 78,
+      top: 82,
       left: 0,
       right: 0,
       child: SizedBox(
-        width: 140,
-        height: 50,
+        width: 144,
+        height: 44,
         child: Stack(
           clipBehavior: Clip.none,
           children: [
             Positioned(
-              left: 12,
-              top: isWave ? 0 : 10,
+              left: 14,
+              top: isWave ? 0 : 8,
               child: Transform.rotate(
-                angle: isWave ? -0.6 + wavePulse * 0.35 : -0.18,
+                angle: isWave ? -0.58 + wavePulse * 0.35 : -0.12,
                 child: _TinyHand(
-                  width: 18,
-                  height: 28,
+                  width: 16,
+                  height: 26,
                   raise: isLaugh ? 2 + laughPulse * 3 : 0,
                 ),
               ),
             ),
             Positioned(
-              right: 12,
-              top: isCelebrate ? -2 : 10,
+              right: 14,
+              top: isCelebrate ? -2 : 8,
               child: Transform.rotate(
-                angle: isWave ? 0.6 - wavePulse * 0.35 : 0.18,
+                angle: isWave ? 0.58 - wavePulse * 0.35 : 0.12,
                 child: _TinyHand(
-                  width: 18,
-                  height: 28,
+                  width: 16,
+                  height: 26,
                   raise: isCelebrate ? 1 + celebratePulse * 4 : 0,
                 ),
               ),
@@ -83,7 +83,7 @@ class _TinyHand extends StatelessWidget {
         height: height,
         decoration: BoxDecoration(
           color: const Color(0xFF1C7AD9),
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(11),
         ),
       ),
     );

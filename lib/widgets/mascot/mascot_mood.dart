@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 enum MascotMood {
   idle,
   blink,
+  sleepy,
+  proud,
   happy,
   sad,
   laugh,
@@ -22,6 +24,10 @@ extension MascotMoodX on MascotMood {
         return 'Idle';
       case MascotMood.blink:
         return 'Blink';
+      case MascotMood.sleepy:
+        return 'Sleepy';
+      case MascotMood.proud:
+        return 'Proud';
       case MascotMood.happy:
         return 'Happy';
       case MascotMood.sad:
@@ -51,6 +57,10 @@ extension MascotMoodX on MascotMood {
         return 'Ready when you are.';
       case MascotMood.blink:
         return 'Just checking in.';
+      case MascotMood.sleepy:
+        return 'A little sleepy.';
+      case MascotMood.proud:
+        return 'Feeling proud.';
       case MascotMood.happy:
         return 'Nice progress today.';
       case MascotMood.sad:
@@ -78,7 +88,10 @@ extension MascotMoodX on MascotMood {
     switch (this) {
       case MascotMood.idle:
       case MascotMood.blink:
+      case MascotMood.sleepy:
         return const [Color(0xFFEAF8FF), Color(0xFFDDF0FF), Color(0xFFF7FAFF)];
+      case MascotMood.proud:
+        return const [Color(0xFFEAF7F0), Color(0xFFD9F0E4), Color(0xFFF7FCF8)];
       case MascotMood.happy:
         return const [Color(0xFFEAF8FF), Color(0xFFD8EEFF), Color(0xFFF8F2FF)];
       case MascotMood.sad:
@@ -106,11 +119,14 @@ extension MascotMoodX on MascotMood {
     switch (this) {
       case MascotMood.idle:
       case MascotMood.blink:
+      case MascotMood.sleepy:
       case MascotMood.happy:
       case MascotMood.wave:
       case MascotMood.jump:
       case MascotMood.celebration:
         return const Color(0xFF2F8FEA);
+      case MascotMood.proud:
+        return const Color(0xFF56A06A);
       case MascotMood.sad:
       case MascotMood.cry:
         return const Color(0xFF4D86D8);

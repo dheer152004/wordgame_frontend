@@ -91,6 +91,7 @@ class MascotStage extends StatelessWidget {
                 MascotBody(
                   mood: mood,
                   floatPhase: floatPhase,
+                  motionPhase: motionPhase,
                   motionPulse: motionWave,
                 ),
                 if (mood == MascotMood.tapReaction)
@@ -105,6 +106,7 @@ class MascotStage extends StatelessWidget {
                   mood: mood,
                   blinkOpen: blinkOpen,
                   laughPulse: laughPulse,
+                  motionPhase: motionPhase,
                   motionPulse: motionWave,
                 ),
                 MascotHands(

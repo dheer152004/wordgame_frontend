@@ -10,6 +10,8 @@ import 'mascot_idle.dart';
 import 'mascot_jump.dart';
 import 'mascot_laugh.dart';
 import 'mascot_mood.dart';
+import 'mascot_proud.dart';
+import 'mascot_sleepy.dart';
 import 'mascot_sad.dart';
 import 'mascot_shocked.dart';
 import 'mascot_tap_reaction.dart';
@@ -30,6 +32,18 @@ Widget buildMascotArt({
       );
     case MascotMood.blink:
       return MascotBlinkArt(
+        floatPhase: floatPhase,
+        blinkPhase: blinkPhase,
+        motionPhase: motionPhase,
+      );
+    case MascotMood.sleepy:
+      return MascotSleepyArt(
+        floatPhase: floatPhase,
+        blinkPhase: blinkPhase,
+        motionPhase: motionPhase,
+      );
+    case MascotMood.proud:
+      return MascotProudArt(
         floatPhase: floatPhase,
         blinkPhase: blinkPhase,
         motionPhase: motionPhase,
