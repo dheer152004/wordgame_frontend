@@ -302,73 +302,83 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
       builder: (context, constraints) {
         final cardWidth = constraints.maxWidth;
         final cardHeight = constraints.maxHeight;
+        final effectiveCardHeight = (cardHeight - 24).clamp(0.0, cardHeight);
 
-        return Stack(
-          alignment: Alignment.center,
-          children: [
-            if (thirdWord != null)
-              _StackCardBackdrop(
-                word: thirdWord,
-                width: cardWidth * 0.88,
-                height: cardHeight * 0.82,
-                scale: 0.90,
-                rotation: -0.08,
-                offset: const Offset(0, 18),
-              ),
-            if (nextWord != null)
-              _StackCardBackdrop(
-                word: nextWord,
-                width: cardWidth * 0.94,
-                height: cardHeight * 0.88,
-                scale: 0.96,
-                rotation: -0.03,
-                offset: const Offset(0, 8),
-              ),
-            GestureDetector(
-              onTap: () => _showWordDetails(currentWord),
-              onPanStart: (_) {
-                setState(() {
-                  _isDragging = true;
-                });
-              },
-              onPanUpdate: (details) {
-                setState(() {
-                  _dragOffset += details.delta;
-                });
-              },
-              onPanEnd: (details) {
-                final shouldSwipe =
-                    _dragOffset.dx.abs() > swipeThreshold ||
-                    details.velocity.pixelsPerSecond.dx.abs() > 700;
-
-                if (shouldSwipe) {
-                  _advanceCard();
-                } else {
+        return ClipRect(
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              if (thirdWord != null)
+                RepaintBoundary(
+                  child: _StackCardBackdrop(
+                    word: thirdWord,
+                    width: cardWidth * 0.88,
+                    height: effectiveCardHeight * 0.82,
+                    scale: 0.90,
+                    rotation: -0.08,
+                    offset: const Offset(0, 18),
+                  ),
+                ),
+              if (nextWord != null)
+                RepaintBoundary(
+                  child: _StackCardBackdrop(
+                    word: nextWord,
+                    width: cardWidth * 0.94,
+                    height: effectiveCardHeight * 0.88,
+                    scale: 0.96,
+                    rotation: -0.03,
+                    offset: const Offset(0, 8),
+                  ),
+                ),
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => _showWordDetails(currentWord),
+                onPanStart: (_) {
                   setState(() {
-                    _dragOffset = Offset.zero;
-                    _isDragging = false;
+                    _isDragging = true;
                   });
-                }
-              },
-              child: Transform.translate(
-                offset: _dragOffset,
-                child: Transform.rotate(
-                  angle: _dragOffset.dx / 900,
-                  child: _SwipeCard(
-                    word: currentWord,
-                    width: cardWidth,
-                    height: cardHeight,
-                    progress: (_dragOffset.dx.abs() / swipeThreshold).clamp(
-                      0.0,
-                      1.0,
+                },
+                onPanUpdate: (details) {
+                  setState(() {
+                    _dragOffset += details.delta;
+                  });
+                },
+                onPanEnd: (details) {
+                  final shouldSwipe =
+                      _dragOffset.dx.abs() > swipeThreshold ||
+                      details.velocity.pixelsPerSecond.dx.abs() > 700;
+
+                  if (shouldSwipe) {
+                    _advanceCard();
+                  } else {
+                    setState(() {
+                      _dragOffset = Offset.zero;
+                      _isDragging = false;
+                    });
+                  }
+                },
+                child: RepaintBoundary(
+                  child: Transform.translate(
+                    offset: _dragOffset,
+                    child: Transform.rotate(
+                      angle: _dragOffset.dx / 920,
+                      child: _SwipeCard(
+                        word: currentWord,
+                        width: cardWidth,
+                        height: effectiveCardHeight,
+                        progress: (_dragOffset.dx.abs() / swipeThreshold).clamp(
+                          0.0,
+                          1.0,
+                        ),
+                        isDragging: _isDragging,
+                        onShareWord: _shareWord,
+                      ),
                     ),
-                    isDragging: _isDragging,
-                    onShareWord: _shareWord,
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );
@@ -397,150 +407,158 @@ class _SwipeCard extends StatelessWidget {
     final likeOpacity = progress;
     final nopeOpacity = progress;
 
-    return Container(
-      width: width,
-      height: height,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(34),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.10),
-            blurRadius: 26,
-            offset: const Offset(0, 18),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compactFactor = (height / 620).clamp(0.86, 1.0);
+        final imageSize = (height * 0.28).clamp(138.0, 170.0);
+        final wordFontSize = 36 * compactFactor;
+        final meaningFontSize = 18 * compactFactor;
+        final exampleFontSize = 15 * compactFactor;
+
+        return Container(
+          width: width,
+          height: height,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(34),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.10),
+                blurRadius: 26,
+                offset: const Offset(0, 18),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(34),
-        child: Stack(
-          children: [
-            Positioned(
-              left: -60,
-              top: -60,
-              child: Container(
-                width: 190,
-                height: 190,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.challengeCard.withOpacity(0.82),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(34),
+            child: Stack(
+              children: [
+                Positioned(
+                  left: -60,
+                  top: -60,
+                  child: Container(
+                    width: 190,
+                    height: 190,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.challengeCard.withOpacity(0.82),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            Positioned(
-              right: -40,
-              bottom: -30,
-              child: Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.planCardBlue.withOpacity(0.18),
+                Positioned(
+                  right: -40,
+                  bottom: -30,
+                  child: Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.planCardBlue.withOpacity(0.18),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(22, 22, 22, 18),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(22, 22, 22, 18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _CategoryPill(label: word.categoryName),
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          IconButton(
-                            tooltip: 'Share word',
-                            onPressed: () => onShareWord(word),
-                            icon: const Icon(Icons.share_outlined),
-                            color: AppColors.textPrimary,
-                          ),
-                          Icon(
-                            isDragging
-                                ? Icons.swipe_rounded
-                                : Icons.touch_app_rounded,
-                            color: AppColors.textPrimary,
+                          _CategoryPill(label: word.categoryName),
+                          Row(
+                            children: [
+                              IconButton(
+                                tooltip: 'Share word',
+                                onPressed: () => onShareWord(word),
+                                icon: const Icon(Icons.share_outlined),
+                                color: AppColors.textPrimary,
+                              ),
+                              Icon(
+                                isDragging
+                                    ? Icons.swipe_rounded
+                                    : Icons.touch_app_rounded,
+                                color: AppColors.textPrimary,
+                              ),
+                            ],
                           ),
                         ],
                       ),
+                      const SizedBox(height: 14),
+                      _CardImage(imageUrl: word.memeImageUrl, size: imageSize),
+                      const SizedBox(height: 12),
+                      const Spacer(),
+                      Text(
+                        word.word,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -1.1,
+                          color: AppColors.textPrimary,
+                        ).copyWith(fontSize: wordFontSize),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        word.meaning,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          height: 1.35,
+                          color: AppColors.textPrimary,
+                        ).copyWith(fontSize: meaningFontSize),
+                      ),
+                      const SizedBox(height: 14),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.66),
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: Text(
+                          word.primaryExample.isNotEmpty
+                              ? word.primaryExample
+                              : 'Tap to view full details',
+                          style: TextStyle(
+                            fontSize: exampleFontSize,
+                            height: 1.45,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      Row(
+                        children: [
+                          _SwipeBadge(
+                            label: 'NOPE',
+                            backgroundColor: Colors.white.withOpacity(0.8),
+                            foregroundColor: const Color(0xFFE36A5C),
+                            opacity: nopeOpacity,
+                          ),
+                          const SizedBox(width: 12),
+                          _SwipeBadge(
+                            label: 'LIKE',
+                            backgroundColor: Colors.white.withOpacity(0.8),
+                            foregroundColor: const Color(0xFF2AB67A),
+                            opacity: likeOpacity,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Swipe left or right to browse the deck',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 14),
-                  _CardImage(imageUrl: word.memeImageUrl),
-                  const SizedBox(height: 14),
-                  const Spacer(),
-                  Text(
-                    word.word,
-                    style: const TextStyle(
-                      fontSize: 36,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -1.1,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    word.meaning,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      height: 1.35,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.66),
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: Text(
-                      word.primaryExample.isNotEmpty
-                          ? word.primaryExample
-                          : 'Tap to view full details',
-                      style: const TextStyle(
-                        fontSize: 15,
-                        height: 1.5,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  Row(
-                    children: [
-                      _SwipeBadge(
-                        label: 'NOPE',
-                        backgroundColor: Colors.white.withOpacity(0.8),
-                        foregroundColor: const Color(0xFFE36A5C),
-                        opacity: nopeOpacity,
-                      ),
-                      const SizedBox(width: 12),
-                      _SwipeBadge(
-                        label: 'LIKE',
-                        backgroundColor: Colors.white.withOpacity(0.8),
-                        foregroundColor: const Color(0xFF2AB67A),
-                        opacity: likeOpacity,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Swipe left or right to browse the deck',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -722,15 +740,16 @@ class _SwipeBadge extends StatelessWidget {
 
 class _CardImage extends StatelessWidget {
   final String imageUrl;
+  final double size;
 
-  const _CardImage({required this.imageUrl});
+  const _CardImage({required this.imageUrl, required this.size});
 
   @override
   Widget build(BuildContext context) {
     return Center(
       child: Container(
-        width: 170,
-        height: 170,
+        width: size,
+        height: size,
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           color: Colors.white.withOpacity(0.72),

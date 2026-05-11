@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../models/auth_models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/home_header.dart';
+import '../widgets/mascot/animated_mascot_card.dart';
 import '../widgets/daily_challenge_card.dart';
 import '../widgets/week_day_picker.dart';
 import '../widgets/your_plan_section.dart';
@@ -41,6 +42,8 @@ class HomeScreen extends StatelessWidget {
                   children: [
                     const SizedBox(height: 16),
                     HomeHeader(user: user),
+                    const SizedBox(height: 24),
+                    AnimatedMascotCard(userName: user?.greetingName),
                     const SizedBox(height: 24),
                     const DailyChallengeCard(),
                     const SizedBox(height: 24),
