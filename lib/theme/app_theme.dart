@@ -1,22 +1,28 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  static const Color background = Color(0xFFF5F0EB);
-  static const Color surface = Color(0xFFFFFFFF);
-  static const Color challengeCard = Color(0xFFC5B8F8);
-  static const Color planCardYellow = Color(0xFFF5A623);
-  static const Color planCardBlue = Color(0xFFA8D8F0);
-  static const Color planCardPink = Color(0xFFF5A0C8);
-  static const Color textPrimary = Color(0xFF1A1A1A);
-  static const Color textSecondary = Color(0xFF6B6B6B);
+  static const Color background = Color(0xFF0B0E15);
+  static const Color surface = Color(0xFF151B28);
+  static const Color surfaceAlt = Color(0xFF1B2334);
+  static const Color surfaceSoft = Color(0xFF222B3E);
+  static const Color challengeCard = Color(0xFF6677FF);
+  static const Color planCardYellow = Color(0xFFE5F14A);
+  static const Color planCardBlue = Color(0xFF7BC5FF);
+  static const Color planCardPink = Color(0xFFFF79CC);
+  static const Color accentCyan = Color(0xFF5BE7FF);
+  static const Color accentViolet = Color(0xFF8A7DFF);
+  static const Color accentLime = Color(0xFFE5F14A);
+  static const Color accentPink = Color(0xFFFF79CC);
+  static const Color textPrimary = Color(0xFFF4F7FF);
+  static const Color textSecondary = Color(0xFFA7B0C5);
   static const Color textLight = Color(0xFFFFFFFF);
-  static const Color navBackground = Color(0xFF1A1A1A);
+  static const Color navBackground = Color(0xFF111723);
   static const Color navActive = Color(0xFFFFFFFF);
-  static const Color navInactive = Color(0xFF6B6B6B);
-  static const Color daySelected = Color(0xFF1A1A1A);
-  static const Color dayUnselected = Color(0xFFFFFFFF);
-  static const Color dayDot = Color(0xFF1A1A1A);
-  static const Color tagBg = Color(0x33FFFFFF);
+  static const Color navInactive = Color(0xFF73809A);
+  static const Color daySelected = Color(0xFFF4F7FF);
+  static const Color dayUnselected = Color(0xFF151B28);
+  static const Color dayDot = Color(0xFFE5F14A);
+  static const Color tagBg = Color(0x1AF4F7FF);
 }
 
 class AppTextStyles {

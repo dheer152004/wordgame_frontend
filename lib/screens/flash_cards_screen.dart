@@ -149,7 +149,7 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
 
   Future<void> _shareWord(ApiWord word) async {
     final shareText = StringBuffer()
-      ..writeln('WordFlow word card')
+      ..writeln('Klug word card')
       ..writeln(word.word)
       ..writeln(word.meaning)
       ..writeln('Category: ${word.categoryName}')
@@ -165,7 +165,7 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
 
     await Share.share(
       shareText.toString().trim(),
-      subject: '${word.word} - WordFlow',
+      subject: '${word.word} - Klug',
     );
   }
 
@@ -238,14 +238,14 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
             selected: selected,
             onSelected: (_) => _selectCategory(category.name),
             labelStyle: TextStyle(
-              color: selected ? Colors.white : AppColors.textPrimary,
+              color: selected ? Colors.black : AppColors.textPrimary,
               fontWeight: FontWeight.w700,
             ),
-            backgroundColor: Colors.white,
-            selectedColor: AppColors.textPrimary,
+            backgroundColor: AppColors.surfaceAlt,
+            selectedColor: Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(999),
-              side: BorderSide(color: Colors.black.withOpacity(0.06)),
+              side: BorderSide(color: Colors.white.withAlpha(18)),
             ),
           );
         },
@@ -300,9 +300,9 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final cardWidth = constraints.maxWidth;
+        final cardWidth = constraints.maxWidth * 0.94;
         final cardHeight = constraints.maxHeight;
-        final effectiveCardHeight = (cardHeight - 24).clamp(0.0, cardHeight);
+        final effectiveCardHeight = (cardHeight - 38).clamp(0.0, cardHeight);
 
         return ClipRect(
           child: Stack(
@@ -362,16 +362,16 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
                     offset: _dragOffset,
                     child: Transform.rotate(
                       angle: _dragOffset.dx / 920,
-                      child: _SwipeCard(
-                        word: currentWord,
-                        width: cardWidth,
-                        height: effectiveCardHeight,
-                        progress: (_dragOffset.dx.abs() / swipeThreshold).clamp(
-                          0.0,
-                          1.0,
+                      child: Center(
+                        child: _SwipeCard(
+                          word: currentWord,
+                          width: cardWidth,
+                          height: effectiveCardHeight,
+                          progress: (_dragOffset.dx.abs() / swipeThreshold)
+                              .clamp(0.0, 1.0),
+                          isDragging: _isDragging,
+                          onShareWord: _shareWord,
                         ),
-                        isDragging: _isDragging,
-                        onShareWord: _shareWord,
                       ),
                     ),
                   ),
@@ -409,8 +409,8 @@ class _SwipeCard extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final compactFactor = (height / 620).clamp(0.86, 1.0);
-        final imageSize = (height * 0.28).clamp(138.0, 170.0);
+        final compactFactor = (height / 420).clamp(0.86, 1.0);
+        final imageSize = (height * 0.58).clamp(230.0, 320.0);
         final wordFontSize = 36 * compactFactor;
         final meaningFontSize = 18 * compactFactor;
         final exampleFontSize = 15 * compactFactor;
@@ -419,15 +419,16 @@ class _SwipeCard extends StatelessWidget {
           width: width,
           height: height,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.surface,
             borderRadius: BorderRadius.circular(34),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.10),
-                blurRadius: 26,
+                color: Colors.black.withAlpha(110),
+                blurRadius: 30,
                 offset: const Offset(0, 18),
               ),
             ],
+            border: Border.all(color: Colors.white.withAlpha(18)),
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(34),
@@ -441,7 +442,7 @@ class _SwipeCard extends StatelessWidget {
                     height: 190,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: AppColors.challengeCard.withOpacity(0.82),
+                      color: AppColors.challengeCard.withAlpha(210),
                     ),
                   ),
                 ),
@@ -453,105 +454,106 @@ class _SwipeCard extends StatelessWidget {
                     height: 120,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: AppColors.planCardBlue.withOpacity(0.18),
+                      color: AppColors.planCardBlue.withAlpha(46),
                     ),
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(22, 22, 22, 18),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          _CategoryPill(label: word.categoryName),
-                          Row(
-                            children: [
-                              IconButton(
-                                tooltip: 'Share word',
-                                onPressed: () => onShareWord(word),
-                                icon: const Icon(Icons.share_outlined),
-                                color: AppColors.textPrimary,
-                              ),
-                              Icon(
-                                isDragging
-                                    ? Icons.swipe_rounded
-                                    : Icons.touch_app_rounded,
-                                color: AppColors.textPrimary,
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 14),
-                      _CardImage(imageUrl: word.memeImageUrl, size: imageSize),
-                      const SizedBox(height: 12),
-                      const Spacer(),
-                      Text(
-                        word.word,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: -1.1,
-                          color: AppColors.textPrimary,
-                        ).copyWith(fontSize: wordFontSize),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        word.meaning,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          height: 1.35,
-                          color: AppColors.textPrimary,
-                        ).copyWith(fontSize: meaningFontSize),
-                      ),
-                      const SizedBox(height: 14),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.66),
-                          borderRadius: BorderRadius.circular(24),
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            _CategoryPill(label: word.categoryName),
+                            Row(
+                              children: [
+                                IconButton(
+                                  tooltip: 'Share word',
+                                  onPressed: () => onShareWord(word),
+                                  icon: const Icon(Icons.share_outlined),
+                                  color: AppColors.textPrimary,
+                                ),
+                                Icon(
+                                  isDragging
+                                      ? Icons.swipe_rounded
+                                      : Icons.touch_app_rounded,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                        child: Text(
-                          word.primaryExample.isNotEmpty
-                              ? word.primaryExample
-                              : 'Tap to view full details',
-                          style: TextStyle(
-                            fontSize: exampleFontSize,
-                            height: 1.45,
+                        const SizedBox(height: 6),
+                        _CardImage(
+                          imageUrl: word.memeImageUrl,
+                          size: imageSize,
+                        ),
+                        const SizedBox(height: 4),
+                        const SizedBox(height: 8),
+                        Text(
+                          word.word,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -1.1,
                             color: AppColors.textPrimary,
+                          ).copyWith(fontSize: wordFontSize),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          word.meaning,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            height: 1.35,
+                            color: AppColors.textPrimary,
+                          ).copyWith(fontSize: meaningFontSize),
+                        ),
+                        const SizedBox(height: 6),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withAlpha(20),
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(
+                              color: Colors.white.withAlpha(16),
+                            ),
+                          ),
+                          child: Text(
+                            word.primaryExample.isNotEmpty
+                                ? word.primaryExample
+                                : 'Tap to view full details',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: exampleFontSize,
+                              height: 1.45,
+                              color: AppColors.textPrimary,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 14),
-                      Row(
-                        children: [
-                          _SwipeBadge(
-                            label: 'NOPE',
-                            backgroundColor: Colors.white.withOpacity(0.8),
-                            foregroundColor: const Color(0xFFE36A5C),
-                            opacity: nopeOpacity,
-                          ),
-                          const SizedBox(width: 12),
-                          _SwipeBadge(
-                            label: 'LIKE',
-                            backgroundColor: Colors.white.withOpacity(0.8),
-                            foregroundColor: const Color(0xFF2AB67A),
-                            opacity: likeOpacity,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'Swipe left or right to browse the deck',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary,
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            _SwipeBadge(
+                              label: 'NOPE',
+                              backgroundColor: Colors.white.withAlpha(204),
+                              foregroundColor: const Color(0xFFE36A5C),
+                              opacity: nopeOpacity,
+                            ),
+                            const SizedBox(width: 12),
+                            _SwipeBadge(
+                              label: 'LIKE',
+                              backgroundColor: Colors.white.withAlpha(204),
+                              foregroundColor: const Color(0xFF2AB67A),
+                              opacity: likeOpacity,
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -619,7 +621,7 @@ class _BackdropCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(34),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withAlpha(20),
             blurRadius: 18,
             offset: const Offset(0, 12),
           ),
@@ -637,7 +639,7 @@ class _BackdropCard extends StatelessWidget {
                 height: 150,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.challengeCard.withOpacity(0.9),
+                  color: AppColors.challengeCard.withAlpha(230),
                 ),
               ),
             ),
@@ -685,8 +687,9 @@ class _CategoryPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.70),
+        color: Colors.white.withAlpha(18),
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white.withAlpha(16)),
       ),
       child: Text(
         label,
@@ -722,7 +725,7 @@ class _SwipeBadge extends StatelessWidget {
         decoration: BoxDecoration(
           color: backgroundColor,
           borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: foregroundColor.withOpacity(0.18)),
+          border: Border.all(color: foregroundColor.withAlpha(46)),
         ),
         child: Text(
           label,
@@ -750,27 +753,29 @@ class _CardImage extends StatelessWidget {
       child: Container(
         width: size,
         height: size,
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.72),
-          shape: BoxShape.circle,
+          color: Colors.white.withAlpha(18),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
+              color: Colors.black.withAlpha(80),
               blurRadius: 16,
               offset: const Offset(0, 10),
             ),
           ],
         ),
         child: imageUrl.isNotEmpty
-            ? Image.network(
-                imageUrl,
-                fit: BoxFit.contain,
-                filterQuality: FilterQuality.medium,
-                errorBuilder: (_, __, ___) => const Icon(
-                  Icons.image_not_supported_outlined,
-                  size: 42,
-                  color: AppColors.textSecondary,
+            ? ClipRRect(
+                borderRadius: BorderRadius.circular(22),
+                child: Image.network(
+                  imageUrl,
+                  fit: BoxFit.contain,
+                  filterQuality: FilterQuality.medium,
+                  errorBuilder: (_, __, ___) => const Icon(
+                    Icons.image_not_supported_outlined,
+                    size: 42,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               )
             : const Icon(
@@ -790,7 +795,7 @@ class _WordDetailSheet extends StatelessWidget {
 
   Future<void> _shareWord(BuildContext context) async {
     final shareText = StringBuffer()
-      ..writeln('WordFlow word card')
+      ..writeln('Klug word card')
       ..writeln(word.word)
       ..writeln(word.meaning)
       ..writeln('Category: ${word.categoryName}')
@@ -806,7 +811,7 @@ class _WordDetailSheet extends StatelessWidget {
 
     await Share.share(
       shareText.toString().trim(),
-      subject: '${word.word} - WordFlow',
+      subject: '${word.word} - Klug',
     );
 
     if (!context.mounted) {
@@ -825,91 +830,97 @@ class _WordDetailSheet extends StatelessWidget {
       minChildSize: 0.55,
       maxChildSize: 0.95,
       builder: (context, controller) {
-        return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-          ),
-          child: ListView(
-            controller: controller,
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
-            children: [
-              Center(
-                child: Container(
-                  width: 46,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(999),
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          child: Container(
+            decoration: const BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            ),
+            child: ListView(
+              controller: controller,
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+              children: [
+                Center(
+                  child: Container(
+                    width: 46,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withAlpha(26),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 18),
-              Row(
-                children: [
-                  _CategoryPill(label: word.categoryName),
-                  const Spacer(),
-                  TextButton.icon(
-                    onPressed: () => _shareWord(context),
-                    icon: const Icon(Icons.share_outlined),
-                    label: const Text('Share'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 14),
-              Text(
-                word.word,
-                style: const TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.w900,
-                  color: AppColors.textPrimary,
+                const SizedBox(height: 18),
+                Row(
+                  children: [
+                    _CategoryPill(label: word.categoryName),
+                    const Spacer(),
+                    TextButton.icon(
+                      onPressed: () => _shareWord(context),
+                      icon: const Icon(Icons.share_outlined),
+                      label: const Text('Share'),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 10),
-              Text(word.meaning, style: AppTextStyles.planCardDetail),
-              const SizedBox(height: 18),
-              if (word.memeImageUrl.isNotEmpty)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(22),
-                  child: Image.network(
-                    word.memeImageUrl,
-                    height: 220,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                  ),
-                ),
-              if (word.examples.isNotEmpty) ...[
-                const SizedBox(height: 20),
-                const Text(
-                  'Examples',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
+                const SizedBox(height: 14),
+                Text(
+                  word.word,
+                  style: const TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w900,
                     color: AppColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 10),
-                for (final example in word.examples) ...[
-                  Container(
-                    width: double.infinity,
-                    margin: const EdgeInsets.only(bottom: 10),
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: AppColors.background,
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: Text(
-                      example,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        height: 1.45,
-                        color: AppColors.textPrimary,
+                Text(word.meaning, style: AppTextStyles.planCardDetail),
+                const SizedBox(height: 18),
+                if (word.memeImageUrl.isNotEmpty)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(22),
+                    child: AspectRatio(
+                      aspectRatio: 1,
+                      child: Image.network(
+                        word.memeImageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                       ),
                     ),
                   ),
+                if (word.examples.isNotEmpty) ...[
+                  const SizedBox(height: 20),
+                  const Text(
+                    'Examples',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  for (final example in word.examples) ...[
+                    Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceAlt,
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: Colors.white.withAlpha(14)),
+                      ),
+                      child: Text(
+                        example,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          height: 1.45,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ],
-            ],
+            ),
           ),
         );
       },
@@ -928,8 +939,9 @@ class _InlineError extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.6),
+        color: Colors.white.withAlpha(18),
         borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withAlpha(12)),
       ),
       child: Text(message, style: AppTextStyles.planCardDetail),
     );

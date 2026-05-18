@@ -39,10 +39,10 @@ class HomeHeader extends StatelessWidget {
           height: 44,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: const Color(0xFFD4A574),
+            color: AppColors.challengeCard,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withAlpha(80),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -90,7 +90,7 @@ class HomeHeader extends StatelessWidget {
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.06),
+                color: Colors.black.withAlpha(15),
                 blurRadius: 10,
                 offset: const Offset(0, 2),
               ),

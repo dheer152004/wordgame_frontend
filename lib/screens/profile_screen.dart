@@ -55,15 +55,16 @@ class ProfileScreen extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.surface,
                   borderRadius: BorderRadius.circular(AppRadius.card),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
-                      blurRadius: 24,
-                      offset: const Offset(0, 14),
+                      color: Colors.black.withAlpha(90),
+                      blurRadius: 28,
+                      offset: const Offset(0, 16),
                     ),
                   ],
+                  border: Border.all(color: Colors.white.withAlpha(20)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -79,9 +80,7 @@ class ProfileScreen extends StatelessWidget {
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.challengeCard.withOpacity(
-                                  0.28,
-                                ),
+                                color: AppColors.challengeCard.withAlpha(72),
                                 blurRadius: 18,
                                 offset: const Offset(0, 10),
                               ),
@@ -164,14 +163,19 @@ class ProfileScreen extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
-                  color: AppColors.challengeCard.withOpacity(0.18),
+                  color: AppColors.challengeCard.withAlpha(31),
                   borderRadius: BorderRadius.circular(AppRadius.card),
+                  border: Border.all(color: Colors.white.withAlpha(16)),
                 ),
                 child: Text(
                   isSignedIn
                       ? 'Signed in sessions are restored automatically on launch.'
                       : 'Log in to see your profile details and unlock progress sync.',
-                  style: AppTextStyles.planCardDetail,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 14,
+                    height: 1.5,
+                  ),
                 ),
               ),
               const SizedBox(height: 18),
@@ -181,8 +185,9 @@ class ProfileScreen extends StatelessWidget {
                 child: ElevatedButton(
                   onPressed: isSignedIn ? () => _logout(context) : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.textPrimary,
+                    backgroundColor: AppColors.challengeCard,
                     foregroundColor: Colors.white,
+                    shadowColor: Colors.black.withAlpha(72),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(18),
                     ),
@@ -213,8 +218,9 @@ class _InfoTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: AppColors.surfaceAlt,
         borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withAlpha(16)),
       ),
       child: Row(
         children: [

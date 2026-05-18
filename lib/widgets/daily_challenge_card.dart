@@ -9,8 +9,13 @@ class DailyChallengeCard extends StatelessWidget {
     return Container(
       height: 160,
       decoration: BoxDecoration(
-        color: AppColors.challengeCard,
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF6677FF), Color(0xFF8A7DFF), Color(0xFF4D5BD6)],
+        ),
         borderRadius: BorderRadius.circular(AppRadius.card),
+        border: Border.all(color: Colors.white.withAlpha(16)),
       ),
       clipBehavior: Clip.hardEdge,
       child: Stack(
@@ -24,7 +29,7 @@ class DailyChallengeCard extends StatelessWidget {
               height: 160,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.08),
+                color: Colors.white.withAlpha(20),
               ),
             ),
           ),
@@ -75,9 +80,9 @@ class DailyChallengeCard extends StatelessWidget {
 
 class _ParticipantAvatars extends StatelessWidget {
   final List<Color> avatarColors = const [
-    Color(0xFFD4A574),
-    Color(0xFF8B7355),
-    Color(0xFFC4956A),
+    Color(0xFFE5F14A),
+    Color(0xFF7BC5FF),
+    Color(0xFFFF79CC),
   ];
 
   @override
@@ -98,9 +103,13 @@ class _ParticipantAvatars extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: avatarColors[i],
-                    border: Border.all(color: AppColors.challengeCard, width: 1.5),
+                    border: Border.all(color: Colors.white, width: 1.5),
                   ),
-                  child: const Icon(Icons.person, color: Colors.white, size: 14),
+                  child: const Icon(
+                    Icons.person,
+                    color: Colors.white,
+                    size: 14,
+                  ),
                 ),
               );
             }),
@@ -109,7 +118,7 @@ class _ParticipantAvatars extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.15),
+            color: Colors.black.withAlpha(38),
             borderRadius: BorderRadius.circular(AppRadius.pill),
           ),
           child: const Text(
@@ -131,9 +140,7 @@ class _ParticipantAvatars extends StatelessWidget {
 class _DonutRingsIllustration extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: _RingsPainter(),
-    );
+    return CustomPaint(painter: _RingsPainter());
   }
 }
 
@@ -145,28 +152,28 @@ class _RingsPainter extends CustomPainter {
         center: Offset(size.width * 0.55, size.height * 0.28),
         outerRadius: size.width * 0.28,
         innerRadius: size.width * 0.16,
-        color: const Color(0xFF4A90D9), // blue
+        color: const Color(0xFF7BC5FF), // blue
         angle: -0.3,
       ),
       _RingData(
         center: Offset(size.width * 0.35, size.height * 0.42),
         outerRadius: size.width * 0.30,
         innerRadius: size.width * 0.17,
-        color: const Color(0xFFE8734A), // orange
+        color: const Color(0xFFFF79CC), // pink
         angle: 0.2,
       ),
       _RingData(
         center: Offset(size.width * 0.62, size.height * 0.55),
         outerRadius: size.width * 0.26,
         innerRadius: size.width * 0.15,
-        color: const Color(0xFF2D2D2D), // dark
+        color: const Color(0xFF151B28), // dark
         angle: 0.1,
       ),
       _RingData(
         center: Offset(size.width * 0.38, size.height * 0.72),
         outerRadius: size.width * 0.28,
         innerRadius: size.width * 0.16,
-        color: const Color(0xFFF5F0EB), // cream/white
+        color: const Color(0xFFF4F7FF), // cream/white
         angle: -0.15,
       ),
     ];
@@ -195,16 +202,18 @@ class _RingsPainter extends CustomPainter {
     // Draw as donut: outer path minus inner hole
     final path = Path()
       ..addOval(outerRect)
-      ..addOval(Rect.fromCenter(
-        center: Offset.zero,
-        width: ring.innerRadius * 2,
-        height: ring.innerRadius * 1.4,
-      ));
+      ..addOval(
+        Rect.fromCenter(
+          center: Offset.zero,
+          width: ring.innerRadius * 2,
+          height: ring.innerRadius * 1.4,
+        ),
+      );
     path.fillType = PathFillType.evenOdd;
 
     // Slight 3D shadow
     final shadowPaint = Paint()
-      ..color = Colors.black.withOpacity(0.15)
+      ..color = Colors.black.withAlpha(38)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
     canvas.translate(2, 3);
     canvas.drawPath(path, shadowPaint);
@@ -214,19 +223,23 @@ class _RingsPainter extends CustomPainter {
 
     // Inner highlight (top of ring lighter)
     final highlightPaint = Paint()
-      ..color = Colors.white.withOpacity(0.25)
+      ..color = Colors.white.withAlpha(64)
       ..style = PaintingStyle.fill;
     final highlightPath = Path()
-      ..addOval(Rect.fromCenter(
-        center: const Offset(0, -4),
-        width: ring.outerRadius * 1.5,
-        height: ring.outerRadius * 0.7,
-      ))
-      ..addOval(Rect.fromCenter(
-        center: Offset.zero,
-        width: ring.innerRadius * 2.2,
-        height: ring.innerRadius * 1.6,
-      ));
+      ..addOval(
+        Rect.fromCenter(
+          center: const Offset(0, -4),
+          width: ring.outerRadius * 1.5,
+          height: ring.outerRadius * 0.7,
+        ),
+      )
+      ..addOval(
+        Rect.fromCenter(
+          center: Offset.zero,
+          width: ring.innerRadius * 2.2,
+          height: ring.innerRadius * 1.6,
+        ),
+      );
     highlightPath.fillType = PathFillType.evenOdd;
     canvas.drawPath(highlightPath, highlightPaint);
 

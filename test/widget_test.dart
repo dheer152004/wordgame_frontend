@@ -21,7 +21,7 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    expect(find.text('WordFlow'), findsWidgets);
+    expect(find.text('Klug'), findsWidgets);
     expect(find.text('Continue as guest'), findsOneWidget);
   });
 }

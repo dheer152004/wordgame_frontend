@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/auth_models.dart';
 import '../models/content_models.dart';
+import '../models/quiz_models.dart';
 import 'session_store.dart';
 
 class BackendException implements Exception {
@@ -199,6 +200,70 @@ class BackendApi {
     }
 
     return payload.toString();
+  }
+
+  Future<List<QuizQuestion>> fetchQuizToday({bool forceRefresh = false}) async {
+    final response = await _client.get(
+      _uri('/api/quiz/today'),
+      headers: await _headers(authenticated: true),
+    );
+
+    final payload = _decodeResponse(response);
+    return _asList(payload)
+        .whereType<Map>()
+        .map((entry) => QuizQuestion.fromJson(Map<String, dynamic>.from(entry)))
+        .toList();
+  }
+
+  Future<dynamic> fetchQuizTodayAvailability() async {
+    final response = await _client.get(
+      _uri('/api/quiz/today/available'),
+      headers: await _headers(authenticated: true),
+    );
+    return _decodeResponse(response);
+  }
+
+  Future<dynamic> fetchQuizStatus() async {
+    final response = await _client.get(
+      _uri('/api/quiz/status'),
+      headers: await _headers(authenticated: true),
+    );
+    return _decodeResponse(response);
+  }
+
+  Future<dynamic> fetchQuizStats() async {
+    final response = await _client.get(
+      _uri('/api/quiz/stats'),
+      headers: await _headers(authenticated: true),
+    );
+    return _decodeResponse(response);
+  }
+
+  Future<dynamic> fetchQuizHistory() async {
+    final response = await _client.get(
+      _uri('/api/quiz/history'),
+      headers: await _headers(authenticated: true),
+    );
+    return _decodeResponse(response);
+  }
+
+  Future<QuizSubmissionResult> submitQuizAnswers(
+    List<QuizAnswerSubmission> answers,
+  ) async {
+    final response = await _client.post(
+      _uri('/api/quiz/submit'),
+      headers: await _headers(authenticated: true),
+      body: jsonEncode({
+        'answers': answers.map((answer) => answer.toJson()).toList(),
+      }),
+    );
+
+    final payload = _decodeResponse(response);
+    if (payload is Map<String, dynamic>) {
+      return QuizSubmissionResult.fromJson(payload);
+    }
+
+    throw const BackendException('Unexpected quiz submission response.');
   }
 
   dynamic _decodeResponse(http.Response response) {

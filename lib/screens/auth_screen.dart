@@ -149,7 +149,7 @@ class _AuthScreenState extends State<AuthScreen> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFFF7F1EA), Color(0xFFF0E4D8), Color(0xFFE7F0F6)],
+            colors: [Color(0xFF25112E), Color(0xFF101525), Color(0xFF05070D)],
           ),
         ),
         child: SafeArea(
@@ -163,10 +163,11 @@ class _AuthScreenState extends State<AuthScreen> {
                   alignment: Alignment.topRight,
                   child: TextButton(
                     onPressed: _continueAsGuest,
+                    style: TextButton.styleFrom(foregroundColor: Colors.white),
                     child: const Text(
                       'Continue as guest',
                       style: TextStyle(
-                        color: AppColors.textPrimary,
+                        color: Colors.white,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -176,16 +177,17 @@ class _AuthScreenState extends State<AuthScreen> {
                 Container(
                   constraints: BoxConstraints(minHeight: size.width * 0.72),
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(32),
-                    color: Colors.white.withOpacity(0.55),
-                    border: Border.all(color: Colors.white.withOpacity(0.6)),
+                    borderRadius: BorderRadius.circular(34),
+                    color: Colors.white.withAlpha(20),
+                    border: Border.all(color: Colors.white.withAlpha(46)),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.08),
-                        blurRadius: 30,
+                        color: Colors.black.withAlpha(89),
+                        blurRadius: 36,
                         offset: const Offset(0, 18),
                       ),
                     ],
+                    backgroundBlendMode: BlendMode.overlay,
                   ),
                   child: Stack(
                     children: [
@@ -215,16 +217,20 @@ class _AuthScreenState extends State<AuthScreen> {
                               height: 112,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: AppColors.challengeCard.withOpacity(
-                                  0.92,
+                                gradient: const RadialGradient(
+                                  colors: [
+                                    Color(0xFF8A7DFF),
+                                    Color(0xFF6677FF),
+                                    Color(0xFF2A2F4A),
+                                  ],
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: AppColors.challengeCard.withOpacity(
-                                      0.35,
-                                    ),
-                                    blurRadius: 24,
-                                    offset: const Offset(0, 12),
+                                    color: const Color(
+                                      0xFF6677FF,
+                                    ).withAlpha(77),
+                                    blurRadius: 28,
+                                    offset: const Offset(0, 14),
                                   ),
                                 ],
                               ),
@@ -236,12 +242,12 @@ class _AuthScreenState extends State<AuthScreen> {
                             ),
                             const SizedBox(height: 18),
                             const Text(
-                              'WordFlow',
+                              'KLUG',
                               style: TextStyle(
                                 fontSize: 30,
                                 fontWeight: FontWeight.w800,
                                 letterSpacing: -0.8,
-                                color: AppColors.textPrimary,
+                                color: Colors.white,
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -253,7 +259,7 @@ class _AuthScreenState extends State<AuthScreen> {
                               style: const TextStyle(
                                 fontSize: 14,
                                 height: 1.5,
-                                color: AppColors.textSecondary,
+                                color: Colors.white70,
                               ),
                             ),
                           ],
@@ -417,9 +423,9 @@ class _ModeToggle extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.55),
+        color: Colors.white.withAlpha(20),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withOpacity(0.55)),
+        border: Border.all(color: const Color.fromARGB(255, 0, 0, 0).withAlpha(46)),
       ),
       child: Row(
         children: [
@@ -462,14 +468,14 @@ class _ModeButton extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: selected ? AppColors.textPrimary : Colors.transparent,
+          color: selected ? Colors.white : Colors.transparent,
           borderRadius: BorderRadius.circular(14),
         ),
         child: Text(
           label,
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: selected ? Colors.white : AppColors.textPrimary,
+            color: selected ? Colors.black : Colors.white,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -505,15 +511,26 @@ class _InputField extends StatelessWidget {
       textInputAction: textInputAction,
       obscureText: obscureText,
       validator: validator,
+      style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon),
+        labelStyle: const TextStyle(color: Colors.white70),
+        prefixIcon: Icon(icon, color: Colors.white70),
         filled: true,
-        fillColor: Colors.white.withOpacity(0.9),
+        fillColor: Colors.white.withAlpha(20),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
           borderSide: BorderSide.none,
         ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: BorderSide(color: Colors.white.withAlpha(31)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: BorderSide(color: AppColors.challengeCard.withAlpha(242)),
+        ),
+        errorStyle: const TextStyle(color: Color(0xFFFFA6A6)),
       ),
     );
   }
@@ -562,10 +579,11 @@ class _AuthButton extends StatelessWidget {
         ),
         style: ElevatedButton.styleFrom(
           backgroundColor: backgroundColor,
+          disabledBackgroundColor: backgroundColor.withAlpha(166),
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
-            side: BorderSide(color: Colors.black.withOpacity(0.06)),
+            side: BorderSide(color: Colors.white.withAlpha(26)),
           ),
         ),
       ),
@@ -583,15 +601,16 @@ class _FloatingPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.7),
+        color: Colors.white.withAlpha(31),
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white.withAlpha(31)),
       ),
       child: Text(
         label,
         style: const TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w700,
-          color: AppColors.textPrimary,
+          color: Colors.white,
         ),
       ),
     );
