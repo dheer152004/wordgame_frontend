@@ -89,15 +89,13 @@ class _LoadingScreenState extends State<LoadingScreen>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
-                      width: 66,
-                      height: 66,
+                      width: 200,
+                      height: 200,
                       decoration: BoxDecoration(
-                        gradient: const RadialGradient(
-                          colors: [
-                            Color(0xFF8A7DFF),
-                            Color(0xFF6677FF),
-                            Color(0xFF2A2F4A),
-                          ],
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [Color(0xFFFFFFFF), Color(0xFFF5F5F5)],
                         ),
                         shape: BoxShape.circle,
                         boxShadow: [
@@ -113,17 +111,7 @@ class _LoadingScreenState extends State<LoadingScreen>
                         fit: BoxFit.contain,
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Klug',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 24),
                     Text(
                       'Loading your session',
                       style: TextStyle(

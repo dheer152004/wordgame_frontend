@@ -492,9 +492,6 @@ class _SwipeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final likeOpacity = progress;
-    final nopeOpacity = progress;
-
     return LayoutBuilder(
       builder: (context, constraints) {
         final compactFactor = (height / 420).clamp(0.75, 1.0);
@@ -583,7 +580,7 @@ class _SwipeCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       _CardImage(imageUrl: word.memeImageUrl, size: imageSize),
-                      const SizedBox(height: 4),
+                      const Spacer(),
                       Text(
                         word.word,
                         style: const TextStyle(
@@ -600,24 +597,6 @@ class _SwipeCard extends StatelessWidget {
                           height: 1.35,
                           color: AppColors.textPrimary,
                         ).copyWith(fontSize: meaningFontSize),
-                      ),
-                      const SizedBox(height: 3),
-                      Row(
-                        children: [
-                          _SwipeBadge(
-                            label: 'NOPE',
-                            backgroundColor: Colors.white.withAlpha(204),
-                            foregroundColor: const Color(0xFFE36A5C),
-                            opacity: nopeOpacity,
-                          ),
-                          const SizedBox(width: 12),
-                          _SwipeBadge(
-                            label: 'LIKE',
-                            backgroundColor: Colors.white.withAlpha(204),
-                            foregroundColor: const Color(0xFF2AB67A),
-                            opacity: likeOpacity,
-                          ),
-                        ],
                       ),
                     ],
                   ),
