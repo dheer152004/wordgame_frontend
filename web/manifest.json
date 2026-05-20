@@ -1,11 +1,11 @@
 {
-    "name": "word_frontend",
-    "short_name": "word_frontend",
+    "name": "KLUG - Word Learning Game",
+    "short_name": "KLUG",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#05070D",
+    "theme_color": "#8A7DFF",
+    "description": "Learn new words through interactive quizzes and flash cards.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

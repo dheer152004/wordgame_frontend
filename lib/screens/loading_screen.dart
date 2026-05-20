@@ -108,10 +108,9 @@ class _LoadingScreenState extends State<LoadingScreen>
                           ),
                         ],
                       ),
-                      child: const Icon(
-                        Icons.auto_awesome_rounded,
-                        color: Colors.white,
-                        size: 30,
+                      child: Image.asset(
+                        'web/icons/KLUG_full.png',
+                        fit: BoxFit.contain,
                       ),
                     ),
                     const SizedBox(height: 16),

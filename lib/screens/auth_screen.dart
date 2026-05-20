@@ -181,25 +181,11 @@ class _AuthScreenState extends State<AuthScreen> {
                           height: 112,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            gradient: const RadialGradient(
-                              colors: [
-                                Color(0xFF8A7DFF),
-                                Color(0xFF6677FF),
-                                Color(0xFF2A2F4A),
-                              ],
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF6677FF).withAlpha(77),
-                                blurRadius: 28,
-                                offset: const Offset(0, 14),
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.auto_awesome_rounded,
-                            size: 54,
                             color: Colors.white,
+                          ),
+                          child: Image.asset(
+                            'web/icons/KLUG(K)_transparent.png',
+                            fit: BoxFit.contain,
                           ),
                         ),
                         const SizedBox(height: 18),
@@ -242,7 +228,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       ? Icons.lock_open_rounded
                       : Icons.person_add_alt_1_rounded,
                   backgroundColor: AppColors.textPrimary,
-                  foregroundColor: Colors.white,
+                  foregroundColor: Colors.black87,
                   isLoading: _isSubmitting,
                   onPressed: _submit,
                 ),
@@ -425,7 +411,7 @@ class _ModeButton extends StatelessWidget {
           label,
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: selected ? Colors.black : Colors.white,
+            color: selected ? Colors.black : Colors.black87,
             fontWeight: FontWeight.w700,
           ),
         ),
