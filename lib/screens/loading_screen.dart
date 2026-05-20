@@ -33,19 +33,31 @@ class _LoadingScreenState extends State<LoadingScreen>
   }
 
   Future<void> _bootstrap() async {
-    final user = await SessionStore.restoreUser();
-    await Future.delayed(const Duration(milliseconds: 1400));
+    try {
+      final user = await SessionStore.restoreUser();
+      await Future.delayed(const Duration(milliseconds: 1400));
 
-    if (!mounted) {
-      return;
+      if (!mounted) {
+        return;
+      }
+
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) =>
+              user != null ? HomeScreen(user: user) : const AuthScreen(),
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        // Navigate to auth screen on error
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const AuthScreen()),
+        );
+      }
     }
-
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) =>
-            user != null ? HomeScreen(user: user) : const AuthScreen(),
-      ),
-    );
   }
 
   @override
@@ -109,6 +121,15 @@ class _LoadingScreenState extends State<LoadingScreen>
                       child: Image.asset(
                         'web/icons/KLUG_full.png',
                         fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: Colors.white,
+                            child: const Icon(
+                              Icons.image_not_supported,
+                              size: 50,
+                            ),
+                          );
+                        },
                       ),
                     ),
                     const SizedBox(height: 24),
