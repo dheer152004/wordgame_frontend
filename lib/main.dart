@@ -1,51 +1,57 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'screens/loading_screen.dart';
 import 'theme/app_theme.dart';
 
-void main() {
+// Global theme notifier
+final themeNotifier = ValueNotifier<ThemeMode>(ThemeMode.dark);
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Load environment variables from .env file
+  await dotenv.load();
+  // Only initialize MobileAds on mobile platforms (not on web)
+  if (!kIsWeb) {
+    await MobileAds.instance.initialize();
+  }
   runApp(const WordApp());
 }
 
-class WordApp extends StatelessWidget {
+class WordApp extends StatefulWidget {
   const WordApp({super.key});
+
+  @override
+  State<WordApp> createState() => _WordAppState();
+}
+
+class _WordAppState extends State<WordApp> {
+  @override
+  void initState() {
+    super.initState();
+    themeNotifier.addListener(_onThemeChanged);
+  }
+
+  @override
+  void dispose() {
+    themeNotifier.removeListener(_onThemeChanged);
+    super.dispose();
+  }
+
+  void _onThemeChanged() {
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'KLUG',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        fontFamily: 'SF Pro Display',
-        brightness: Brightness.dark,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: AppColors.challengeCard,
-          brightness: Brightness.dark,
-          surface: AppColors.surface,
-        ),
-        scaffoldBackgroundColor: AppColors.background,
-        cardColor: AppColors.surface,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.transparent,
-          foregroundColor: AppColors.textPrimary,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-        ),
-        snackBarTheme: SnackBarThemeData(
-          backgroundColor: AppColors.surfaceAlt,
-          contentTextStyle: const TextStyle(color: AppColors.textPrimary),
-          actionTextColor: AppColors.accentCyan,
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.challengeCard,
-            foregroundColor: Colors.white,
-          ),
-        ),
-        splashColor: Colors.transparent,
-        highlightColor: Colors.transparent,
-      ),
+      theme: AppTheme.getLightTheme(),
+      darkTheme: AppTheme.getDarkTheme(),
+      themeMode: themeNotifier.value,
       home: const LoadingScreen(),
     );
   }

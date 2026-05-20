@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 
 import '../models/quiz_models.dart';
@@ -21,6 +22,7 @@ class _QuizScreenState extends State<QuizScreen> {
   dynamic _stats;
   dynamic _history;
   QuizSubmissionResult? _result;
+  bool _alreadyCompletedToday = false;
 
   bool _loading = true;
   bool _submitting = false;
@@ -36,6 +38,7 @@ class _QuizScreenState extends State<QuizScreen> {
     setState(() {
       _loading = true;
       _errorMessage = null;
+      _alreadyCompletedToday = false;
     });
 
     try {
@@ -74,10 +77,34 @@ class _QuizScreenState extends State<QuizScreen> {
         return;
       }
 
-      setState(() {
-        _loading = false;
-        _errorMessage = error.toString();
-      });
+      final errorString = error.toString();
+
+      // Check if error is "already completed today's quiz"
+      if (errorString.contains('already completed today')) {
+        setState(() {
+          _loading = false;
+          _alreadyCompletedToday = true;
+          _errorMessage = null;
+        });
+
+        // Load stats for display
+        try {
+          final stats = await BackendApi.instance.fetchQuizStats();
+          if (mounted) {
+            setState(() {
+              _stats = stats;
+            });
+          }
+        } catch (_) {
+          // Ignore stats loading errors
+        }
+      } else {
+        setState(() {
+          _loading = false;
+          _alreadyCompletedToday = false;
+          _errorMessage = errorString;
+        });
+      }
     }
   }
 
@@ -247,7 +274,79 @@ class _QuizScreenState extends State<QuizScreen> {
                     padding: EdgeInsets.symmetric(vertical: 72),
                     child: Center(child: CircularProgressIndicator()),
                   )
-                else if (_errorMessage != null && _questions.isEmpty)
+                else if (_alreadyCompletedToday) ...[
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: Colors.white.withAlpha(20)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.check_circle_rounded,
+                              color: Color(0xFF2AB67A),
+                              size: 32,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Quiz Completed',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  const Text(
+                                    'You have already completed today\'s quiz!',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  _SectionTitle(
+                    title: 'Today\'s stats',
+                    subtitle: 'Your performance summary.',
+                  ),
+                  const SizedBox(height: 12),
+                  _InfoGrid(
+                    items: [
+                      _InfoTile(
+                        title: 'Stats',
+                        value: _describe(_stats),
+                        icon: Icons.bar_chart_rounded,
+                      ),
+                      _InfoTile(
+                        title: 'Status',
+                        value: _describe(_status),
+                        icon: Icons.insights_rounded,
+                      ),
+                      _InfoTile(
+                        title: 'History',
+                        value: _describe(_history),
+                        icon: Icons.history_rounded,
+                      ),
+                    ],
+                  ),
+                ] else if (_errorMessage != null && _questions.isEmpty)
                   _InlineError(message: _errorMessage!, onRetry: _bootstrap)
                 else ...[
                   if (_result != null) ...[
@@ -460,11 +559,12 @@ class _QuizCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 14),
-          for (final option in prompt.options) ...[
+          for (final entry in prompt.options.asMap().entries) ...[
             _OptionRow(
-              label: option,
-              selected: selectedOption == option,
-              onTap: () => onSelect(option),
+              letter: String.fromCharCode(65 + entry.key),
+              label: entry.value,
+              selected: selectedOption == String.fromCharCode(65 + entry.key),
+              onTap: () => onSelect(String.fromCharCode(65 + entry.key)),
             ),
             const SizedBox(height: 10),
           ],
@@ -475,11 +575,13 @@ class _QuizCard extends StatelessWidget {
 }
 
 class _OptionRow extends StatelessWidget {
+  final String letter;
   final String label;
   final bool selected;
   final VoidCallback onTap;
 
   const _OptionRow({
+    required this.letter,
     required this.label,
     required this.selected,
     required this.onTap,
@@ -504,11 +606,21 @@ class _OptionRow extends StatelessWidget {
           child: Row(
             children: [
               Container(
-                width: 10,
-                height: 10,
+                width: 28,
+                height: 28,
                 decoration: BoxDecoration(
                   color: selected ? Colors.black : AppColors.challengeCard,
                   shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    letter,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: selected ? Colors.white : Colors.black,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: 12),

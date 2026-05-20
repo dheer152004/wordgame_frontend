@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../config/app_config.dart';
 import '../models/auth_models.dart';
 import '../models/content_models.dart';
 import '../models/quiz_models.dart';
@@ -22,7 +23,7 @@ class BackendApi {
 
   static final BackendApi instance = BackendApi._();
 
-  static const String baseUrl = 'https://wordgame-backend-2sza.onrender.com';
+  String get baseUrl => AppConfig.backendApiBaseUrl;
   static const Duration _cacheTtl = Duration(hours: 6);
   static const String _categoriesCacheKey = 'word_frontend_categories_cache';
   static const String _wordDetailCachePrefix = 'word_frontend_word_detail_';

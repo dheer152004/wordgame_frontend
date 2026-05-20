@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
+import 'dart:async';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../models/content_models.dart';
 import '../services/backend_api.dart';
 import '../theme/app_theme.dart';
+import '../widgets/custom_native_ad.dart';
 
 class FlashCardsScreen extends StatefulWidget {
   final String? categoryName;
@@ -27,10 +30,57 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
   Offset _dragOffset = Offset.zero;
   bool _isDragging = false;
 
+  // Ad tracking
+  int _swipeCount = 0;
+  bool _showAdCard = false;
+  late Timer _sessionTimer;
+  late DateTime _sessionStartTime;
+  bool _videoAdShown = false;
+  final InterstitialAdManager _adManager = InterstitialAdManager();
+  final RewardedVideoAdManager _rewardedAdManager = RewardedVideoAdManager();
+
   @override
   void initState() {
     super.initState();
     _bootstrap();
+    _adManager.loadInterstitialAd();
+    _rewardedAdManager.loadRewardedAd();
+    _startSessionTimer();
+  }
+
+  void _startSessionTimer() {
+    _sessionStartTime = DateTime.now();
+    _sessionTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      // After 5 minutes (300 seconds), show video ad
+      final elapsedSeconds = DateTime.now()
+          .difference(_sessionStartTime)
+          .inSeconds;
+      if (elapsedSeconds >= 300 && !_videoAdShown) {
+        _videoAdShown = true;
+        _showVideoAd();
+        timer.cancel();
+      }
+    });
+  }
+
+  void _showVideoAd() {
+    if (_rewardedAdManager.isAdReady) {
+      _rewardedAdManager.showRewardedAd(
+        onUserEarnedReward: (amount, type) {
+          if (mounted) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text('You earned $amount $type')));
+          }
+        },
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _sessionTimer.cancel();
+    super.dispose();
   }
 
   Future<void> _bootstrap() async {
@@ -112,6 +162,27 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
   void _advanceCard() {
     if (_words.isEmpty) {
       return;
+    }
+
+    _swipeCount++;
+
+    // Show native ad card after every 10 swipes
+    if (_swipeCount % 10 == 0) {
+      setState(() {
+        _showAdCard = true;
+      });
+      Future.delayed(const Duration(seconds: 3), () {
+        if (mounted) {
+          setState(() {
+            _showAdCard = false;
+          });
+        }
+      });
+    }
+
+    // Show interstitial ad every 25 swipes
+    if (_swipeCount % 25 == 0 && _adManager.isAdReady) {
+      _adManager.showInterstitialAd();
     }
 
     setState(() {
@@ -204,7 +275,24 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
               const SizedBox(height: 16),
               _buildCategoryChips(),
               const SizedBox(height: 18),
-              Expanded(child: _buildDeck(swipeThreshold)),
+              if (_showAdCard)
+                Expanded(
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const CustomNativeAd(),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Swipe count: $_swipeCount',
+                          style: AppTextStyles.sectionTitle,
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                Expanded(child: _buildDeck(swipeThreshold)),
             ],
           ),
         ),
@@ -302,7 +390,7 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
       builder: (context, constraints) {
         final cardWidth = constraints.maxWidth * 0.94;
         final cardHeight = constraints.maxHeight;
-        final effectiveCardHeight = (cardHeight - 38).clamp(0.0, cardHeight);
+        final effectiveCardHeight = (cardHeight - 20).clamp(0.0, cardHeight);
 
         return ClipRect(
           child: Stack(
@@ -409,11 +497,11 @@ class _SwipeCard extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final compactFactor = (height / 420).clamp(0.86, 1.0);
-        final imageSize = (height * 0.58).clamp(230.0, 320.0);
-        final wordFontSize = 36 * compactFactor;
-        final meaningFontSize = 18 * compactFactor;
-        final exampleFontSize = 15 * compactFactor;
+        final compactFactor = (height / 420).clamp(0.75, 1.0);
+        final imageSize = (height * 0.55).clamp(280.0, 360.0);
+        final wordFontSize = 28 * compactFactor;
+        final meaningFontSize = 14 * compactFactor;
+        final exampleFontSize = 12 * compactFactor;
 
         return Container(
           width: width,
@@ -459,101 +547,79 @@ class _SwipeCard extends StatelessWidget {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            _CategoryPill(label: word.categoryName),
-                            Row(
-                              children: [
-                                IconButton(
+                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _CategoryPill(label: word.categoryName),
+                          Row(
+                            children: [
+                              SizedBox(
+                                width: 32,
+                                height: 32,
+                                child: IconButton(
                                   tooltip: 'Share word',
                                   onPressed: () => onShareWord(word),
-                                  icon: const Icon(Icons.share_outlined),
+                                  icon: const Icon(
+                                    Icons.share_outlined,
+                                    size: 18,
+                                  ),
                                   color: AppColors.textPrimary,
+                                  padding: EdgeInsets.zero,
                                 ),
-                                Icon(
-                                  isDragging
-                                      ? Icons.swipe_rounded
-                                      : Icons.touch_app_rounded,
-                                  color: AppColors.textPrimary,
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        _CardImage(
-                          imageUrl: word.memeImageUrl,
-                          size: imageSize,
-                        ),
-                        const SizedBox(height: 4),
-                        const SizedBox(height: 8),
-                        Text(
-                          word.word,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -1.1,
-                            color: AppColors.textPrimary,
-                          ).copyWith(fontSize: wordFontSize),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          word.meaning,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            height: 1.35,
-                            color: AppColors.textPrimary,
-                          ).copyWith(fontSize: meaningFontSize),
-                        ),
-                        const SizedBox(height: 6),
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withAlpha(20),
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(
-                              color: Colors.white.withAlpha(16),
-                            ),
+                              ),
+                              Icon(
+                                isDragging
+                                    ? Icons.swipe_rounded
+                                    : Icons.touch_app_rounded,
+                                color: AppColors.textPrimary,
+                              ),
+                            ],
                           ),
-                          child: Text(
-                            word.primaryExample.isNotEmpty
-                                ? word.primaryExample
-                                : 'Tap to view full details',
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: exampleFontSize,
-                              height: 1.45,
-                              color: AppColors.textPrimary,
-                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      _CardImage(imageUrl: word.memeImageUrl, size: imageSize),
+                      const SizedBox(height: 4),
+                      Text(
+                        word.word,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -1.1,
+                          color: AppColors.textPrimary,
+                        ).copyWith(fontSize: wordFontSize),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        word.meaning,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          height: 1.35,
+                          color: AppColors.textPrimary,
+                        ).copyWith(fontSize: meaningFontSize),
+                      ),
+                      const SizedBox(height: 3),
+                      Row(
+                        children: [
+                          _SwipeBadge(
+                            label: 'NOPE',
+                            backgroundColor: Colors.white.withAlpha(204),
+                            foregroundColor: const Color(0xFFE36A5C),
+                            opacity: nopeOpacity,
                           ),
-                        ),
-                        const SizedBox(height: 6),
-                        Row(
-                          children: [
-                            _SwipeBadge(
-                              label: 'NOPE',
-                              backgroundColor: Colors.white.withAlpha(204),
-                              foregroundColor: const Color(0xFFE36A5C),
-                              opacity: nopeOpacity,
-                            ),
-                            const SizedBox(width: 12),
-                            _SwipeBadge(
-                              label: 'LIKE',
-                              backgroundColor: Colors.white.withAlpha(204),
-                              foregroundColor: const Color(0xFF2AB67A),
-                              opacity: likeOpacity,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                          const SizedBox(width: 12),
+                          _SwipeBadge(
+                            label: 'LIKE',
+                            backgroundColor: Colors.white.withAlpha(204),
+                            foregroundColor: const Color(0xFF2AB67A),
+                            opacity: likeOpacity,
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
               ],

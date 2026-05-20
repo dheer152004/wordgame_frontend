@@ -1,78 +1,88 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import '../screens/quiz_screen.dart';
 
 class DailyChallengeCard extends StatelessWidget {
   const DailyChallengeCard({super.key});
 
+  void _navigateToQuiz(BuildContext context) {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const QuizScreen()));
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 160,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF6677FF), Color(0xFF8A7DFF), Color(0xFF4D5BD6)],
+    return GestureDetector(
+      onTap: () => _navigateToQuiz(context),
+      child: Container(
+        height: 160,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF6677FF), Color(0xFF8A7DFF), Color(0xFF4D5BD6)],
+          ),
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          border: Border.all(color: Colors.white.withAlpha(16)),
         ),
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: Colors.white.withAlpha(16)),
-      ),
-      clipBehavior: Clip.hardEdge,
-      child: Stack(
-        children: [
-          // Decorative background circle (subtle)
-          Positioned(
-            right: -20,
-            top: -30,
-            child: Container(
-              width: 160,
-              height: 160,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withAlpha(20),
+        clipBehavior: Clip.hardEdge,
+        child: Stack(
+          children: [
+            // Decorative background circle (subtle)
+            Positioned(
+              right: -20,
+              top: -30,
+              child: Container(
+                width: 160,
+                height: 160,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withAlpha(20),
+                ),
               ),
             ),
-          ),
 
-          // Content row
-          Padding(
-            padding: const EdgeInsets.all(22),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Left text
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Daily\nchallenge',
-                        style: AppTextStyles.challengeTitle,
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Do your plan before 10:00 AM',
-                        style: AppTextStyles.challengeSubtitle,
-                      ),
-                      const Spacer(),
-                      // Participant avatars
-                      _ParticipantAvatars(),
-                    ],
+            // Content row
+            Padding(
+              padding: const EdgeInsets.all(22),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Left text
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Today\'s\nQuiz',
+                          style: AppTextStyles.challengeTitle,
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Take the quiz now',
+                          style: AppTextStyles.challengeSubtitle,
+                        ),
+                        const Spacer(),
+                        // Participant avatars
+                        _ParticipantAvatars(),
+                      ],
+                    ),
                   ),
-                ),
 
-                const SizedBox(width: 8),
+                  const SizedBox(width: 8),
 
-                // Right: 3D donut rings illustration
-                SizedBox(
-                  width: 110,
-                  height: 110,
-                  child: _DonutRingsIllustration(),
-                ),
-              ],
+                  // Right: 3D donut rings illustration
+                  SizedBox(
+                    width: 110,
+                    height: 110,
+                    child: _DonutRingsIllustration(),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

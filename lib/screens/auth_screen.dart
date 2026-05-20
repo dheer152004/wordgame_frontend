@@ -132,12 +132,6 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
-  void _continueAsGuest() {
-    Navigator.of(
-      context,
-    ).pushReplacement(MaterialPageRoute(builder: (_) => const HomeScreen()));
-  }
-
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -159,21 +153,6 @@ class _AuthScreenState extends State<AuthScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Align(
-                  alignment: Alignment.topRight,
-                  child: TextButton(
-                    onPressed: _continueAsGuest,
-                    style: TextButton.styleFrom(foregroundColor: Colors.white),
-                    child: const Text(
-                      'Continue as guest',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 18),
                 Container(
                   constraints: BoxConstraints(minHeight: size.width * 0.72),
                   decoration: BoxDecoration(
@@ -189,83 +168,64 @@ class _AuthScreenState extends State<AuthScreen> {
                     ],
                     backgroundBlendMode: BlendMode.overlay,
                   ),
-                  child: Stack(
-                    children: [
-                      Positioned(
-                        left: 24,
-                        top: 24,
-                        child: _FloatingPill(
-                          label: isLogin ? 'Welcome back' : 'Join the flow',
-                        ),
-                      ),
-                      Positioned(
-                        right: 20,
-                        bottom: 20,
-                        child: _FloatingPill(
-                          label: isLogin
-                              ? 'Pick up where you left off'
-                              : 'Create your profile',
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              width: 112,
-                              height: 112,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: const RadialGradient(
-                                  colors: [
-                                    Color(0xFF8A7DFF),
-                                    Color(0xFF6677FF),
-                                    Color(0xFF2A2F4A),
-                                  ],
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(
-                                      0xFF6677FF,
-                                    ).withAlpha(77),
-                                    blurRadius: 28,
-                                    offset: const Offset(0, 14),
-                                  ),
-                                ],
-                              ),
-                              child: const Icon(
-                                Icons.auto_awesome_rounded,
-                                size: 54,
-                                color: Colors.white,
-                              ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 32,
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 112,
+                          height: 112,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: const RadialGradient(
+                              colors: [
+                                Color(0xFF8A7DFF),
+                                Color(0xFF6677FF),
+                                Color(0xFF2A2F4A),
+                              ],
                             ),
-                            const SizedBox(height: 18),
-                            const Text(
-                              'KLUG',
-                              style: TextStyle(
-                                fontSize: 30,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -0.8,
-                                color: Colors.white,
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF6677FF).withAlpha(77),
+                                blurRadius: 28,
+                                offset: const Offset(0, 14),
                               ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              isLogin
-                                  ? 'Log in to sync your progress and explore the live word deck.'
-                                  : 'Register once and start learning live categories from the backend.',
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                height: 1.5,
-                                color: Colors.white70,
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.auto_awesome_rounded,
+                            size: 54,
+                            color: Colors.white,
+                          ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 18),
+                        const Text(
+                          'KLUG',
+                          style: TextStyle(
+                            fontSize: 30,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.8,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          isLogin
+                              ? 'Log in to sync your progress and explore the live word deck.'
+                              : 'Register once and start learning live categories from the backend.',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            height: 1.5,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 22),
@@ -285,18 +245,6 @@ class _AuthScreenState extends State<AuthScreen> {
                   foregroundColor: Colors.white,
                   isLoading: _isSubmitting,
                   onPressed: _submit,
-                ),
-                const SizedBox(height: 12),
-                TextButton(
-                  onPressed: _continueAsGuest,
-                  child: const Text(
-                    'Skip for now',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
                 ),
               ],
             ),
@@ -425,7 +373,9 @@ class _ModeToggle extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white.withAlpha(20),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color.fromARGB(255, 0, 0, 0).withAlpha(46)),
+        border: Border.all(
+          color: const Color.fromARGB(255, 0, 0, 0).withAlpha(46),
+        ),
       ),
       child: Row(
         children: [
@@ -484,7 +434,7 @@ class _ModeButton extends StatelessWidget {
   }
 }
 
-class _InputField extends StatelessWidget {
+class _InputField extends StatefulWidget {
   final TextEditingController controller;
   final String label;
   final IconData icon;
@@ -504,18 +454,46 @@ class _InputField extends StatelessWidget {
   });
 
   @override
+  State<_InputField> createState() => _InputFieldState();
+}
+
+class _InputFieldState extends State<_InputField> {
+  late bool _obscurePassword;
+
+  @override
+  void initState() {
+    super.initState();
+    _obscurePassword = widget.obscureText;
+  }
+
+  @override
   Widget build(BuildContext context) {
     return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      textInputAction: textInputAction,
-      obscureText: obscureText,
-      validator: validator,
+      controller: widget.controller,
+      keyboardType: widget.keyboardType,
+      textInputAction: widget.textInputAction,
+      obscureText: _obscurePassword,
+      validator: widget.validator,
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
-        labelText: label,
+        labelText: widget.label,
         labelStyle: const TextStyle(color: Colors.white70),
-        prefixIcon: Icon(icon, color: Colors.white70),
+        prefixIcon: Icon(widget.icon, color: Colors.white70),
+        suffixIcon: widget.obscureText
+            ? IconButton(
+                icon: Icon(
+                  _obscurePassword
+                      ? Icons.visibility_off_rounded
+                      : Icons.visibility_rounded,
+                  color: Colors.white70,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _obscurePassword = !_obscurePassword;
+                  });
+                },
+              )
+            : null,
         filled: true,
         fillColor: Colors.white.withAlpha(20),
         border: OutlineInputBorder(
@@ -585,32 +563,6 @@ class _AuthButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(18),
             side: BorderSide(color: Colors.white.withAlpha(26)),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _FloatingPill extends StatelessWidget {
-  final String label;
-
-  const _FloatingPill({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white.withAlpha(31),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withAlpha(31)),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-          color: Colors.white,
         ),
       ),
     );

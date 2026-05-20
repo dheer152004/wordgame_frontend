@@ -1,14 +1,54 @@
 import 'package:flutter/material.dart';
 
+import '../main.dart';
 import '../models/auth_models.dart';
+import '../services/backend_api.dart';
 import '../services/session_store.dart';
 import '../theme/app_theme.dart';
 import 'auth_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   final AuthUser? user;
 
   const ProfileScreen({super.key, this.user});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  late AuthUser? user;
+  dynamic _quizStats;
+  bool _loadingStats = false;
+
+  @override
+  void initState() {
+    super.initState();
+    user = widget.user;
+    _fetchQuizStats();
+  }
+
+  Future<void> _fetchQuizStats() async {
+    setState(() {
+      _loadingStats = true;
+    });
+
+    try {
+      final stats = await BackendApi.instance.fetchQuizStats();
+      if (mounted) {
+        setState(() {
+          _quizStats = stats;
+          _loadingStats = false;
+        });
+      }
+    } catch (error) {
+      if (mounted) {
+        setState(() {
+          _loadingStats = false;
+        });
+      }
+    }
+  }
 
   Future<void> _logout(BuildContext context) async {
     await SessionStore.clear();
@@ -179,6 +219,95 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 18),
+              if (_loadingStats)
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 32),
+                  child: const Center(child: CircularProgressIndicator()),
+                )
+              else if (_quizStats != null) ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(AppRadius.card),
+                    border: Border.all(color: Colors.white.withAlpha(20)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Quiz Stats',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      _buildStatsDisplay(_quizStats),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 18),
+              ],
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(AppRadius.card),
+                  border: Border.all(color: Colors.white.withAlpha(20)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Display Settings',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Theme',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        SegmentedButton<ThemeMode>(
+                          segments: const <ButtonSegment<ThemeMode>>[
+                            ButtonSegment<ThemeMode>(
+                              value: ThemeMode.light,
+                              label: Text('Light'),
+                              icon: Icon(Icons.light_mode),
+                            ),
+                            ButtonSegment<ThemeMode>(
+                              value: ThemeMode.dark,
+                              label: Text('Dark'),
+                              icon: Icon(Icons.dark_mode),
+                            ),
+                          ],
+                          selected: <ThemeMode>{themeNotifier.value},
+                          onSelectionChanged: (Set<ThemeMode> newSelection) {
+                            setState(() {
+                              themeNotifier.value = newSelection.first;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 18),
               SizedBox(
                 width: double.infinity,
                 height: 54,
@@ -201,6 +330,74 @@ class ProfileScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildStatsDisplay(dynamic stats) {
+    if (stats == null) {
+      return const Text(
+        'No stats available',
+        style: TextStyle(color: AppColors.textSecondary),
+      );
+    }
+
+    if (stats is Map<String, dynamic>) {
+      final entries = stats.entries
+          .where((entry) => entry.value != null)
+          .toList();
+
+      if (entries.isEmpty) {
+        return const Text(
+          'No stats available',
+          style: TextStyle(color: AppColors.textSecondary),
+        );
+      }
+
+      return Column(
+        children: [
+          for (final entry in entries) ...[
+            _StatRow(label: entry.key, value: entry.value.toString()),
+            const SizedBox(height: 8),
+          ],
+        ],
+      );
+    }
+
+    return Text(
+      stats.toString(),
+      style: const TextStyle(color: AppColors.textSecondary),
+    );
+  }
+}
+
+class _StatRow extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _StatRow({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textSecondary,
+          ),
+        ),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          ),
+        ),
+      ],
     );
   }
 }
