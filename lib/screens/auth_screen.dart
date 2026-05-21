@@ -130,9 +130,15 @@ class _AuthScreenState extends State<AuthScreen> {
       _setMode(_AuthMode.login);
     } on BackendException catch (error) {
       if (mounted) {
+        // Display user-friendly error messages
+        String displayMessage = error.message;
+        if (error.message.contains('Bad credentials') ||
+            error.message.contains('Authentication failed')) {
+          displayMessage = 'Invalid credentials';
+        }
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(error.message)));
+        ).showSnackBar(SnackBar(content: Text(displayMessage)));
       }
     } catch (error) {
       if (mounted) {

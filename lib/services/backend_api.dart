@@ -269,10 +269,25 @@ class BackendApi {
 
   dynamic _decodeResponse(http.Response response) {
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      final message = response.body.isEmpty
-          ? 'Request failed with status ${response.statusCode}.'
-          : response.body;
-      throw BackendException(message);
+      String errorMessage =
+          'Request failed with status ${response.statusCode}.';
+
+      // Try to parse JSON error response
+      if (response.body.isNotEmpty) {
+        try {
+          final decoded = jsonDecode(response.body);
+          if (decoded is Map<String, dynamic> &&
+              decoded.containsKey('message')) {
+            errorMessage = decoded['message'];
+          } else {
+            errorMessage = response.body;
+          }
+        } catch (_) {
+          errorMessage = response.body;
+        }
+      }
+
+      throw BackendException(errorMessage);
     }
 
     if (response.body.trim().isEmpty) {

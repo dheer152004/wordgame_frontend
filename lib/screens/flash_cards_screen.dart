@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:share_plus/share_plus.dart';
 import 'dart:async';
+import 'dart:io';
+import 'dart:ui' as ui;
+import 'dart:typed_data';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../models/content_models.dart';
 import '../services/backend_api.dart';
@@ -38,6 +43,10 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
   bool _videoAdShown = false;
   final InterstitialAdManager _adManager = InterstitialAdManager();
   final RewardedVideoAdManager _rewardedAdManager = RewardedVideoAdManager();
+
+  // Card capture keys
+  final GlobalKey _cardKey = GlobalKey();
+  final GlobalKey _cleanCardKey = GlobalKey();
 
   @override
   void initState() {
@@ -164,27 +173,6 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
       return;
     }
 
-    _swipeCount++;
-
-    // Show native ad card after every 10 swipes
-    if (_swipeCount % 10 == 0) {
-      setState(() {
-        _showAdCard = true;
-      });
-      Future.delayed(const Duration(seconds: 3), () {
-        if (mounted) {
-          setState(() {
-            _showAdCard = false;
-          });
-        }
-      });
-    }
-
-    // Show interstitial ad every 25 swipes
-    if (_swipeCount % 25 == 0 && _adManager.isAdReady) {
-      _adManager.showInterstitialAd();
-    }
-
     setState(() {
       _currentIndex = (_currentIndex + 1) % _words.length;
       _dragOffset = Offset.zero;
@@ -219,25 +207,45 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
   }
 
   Future<void> _shareWord(ApiWord word) async {
-    final shareText = StringBuffer()
-      ..writeln('Klug word card')
-      ..writeln(word.word)
-      ..writeln(word.meaning)
-      ..writeln('Category: ${word.categoryName}')
-      ..writeln(
-        word.primaryExample.isNotEmpty ? 'Example: ${word.primaryExample}' : '',
+    try {
+      // Capture the clean card (straight, not rotated)
+      final RenderRepaintBoundary? boundary =
+          _cleanCardKey.currentContext?.findRenderObject()
+              as RenderRepaintBoundary?;
+
+      if (boundary != null && boundary.attached) {
+        final ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+        final ByteData? byteData = await image.toByteData(
+          format: ui.ImageByteFormat.png,
+        );
+        final Uint8List pngBytes = byteData!.buffer.asUint8List();
+
+        // Save to temporary file
+        final tempDir = await getTemporaryDirectory();
+        final file = File('${tempDir.path}/klug_card_${word.word}.png');
+        await file.writeAsBytes(pngBytes);
+
+        // Share the image
+        await Share.shareXFiles(
+          [XFile(file.path, mimeType: 'image/png')],
+          text: 'Check out this word from Klug!',
+          subject: '${word.word} - Klug',
+        );
+      }
+    } catch (e) {
+      print('Error sharing card: $e');
+      // Fallback to text share if image capture fails
+      final shareText = StringBuffer()
+        ..writeln('Klug word card')
+        ..writeln(word.word)
+        ..writeln(word.meaning)
+        ..writeln('Category: ${word.categoryName}');
+
+      await Share.share(
+        shareText.toString().trim(),
+        subject: '${word.word} - Klug',
       );
-
-    if (word.memeImageUrl.isNotEmpty) {
-      shareText
-        ..writeln()
-        ..writeln(word.memeImageUrl);
     }
-
-    await Share.share(
-      shareText.toString().trim(),
-      subject: '${word.word} - Klug',
-    );
   }
 
   @override
@@ -265,7 +273,7 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
               ),
               const SizedBox(height: 6),
               const Text(
-                'Browse categories and swipe through words.',
+                'Browse categories and swipe through words',
                 style: TextStyle(
                   fontSize: 15,
                   height: 1.5,
@@ -275,24 +283,7 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
               const SizedBox(height: 16),
               _buildCategoryChips(),
               const SizedBox(height: 18),
-              if (_showAdCard)
-                Expanded(
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const CustomNativeAd(),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Swipe count: $_swipeCount',
-                          style: AppTextStyles.sectionTitle,
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-              else
-                Expanded(child: _buildDeck(swipeThreshold)),
+              Expanded(child: _buildDeck(swipeThreshold)),
             ],
           ),
         ),
@@ -400,6 +391,27 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
           child: Stack(
             alignment: Alignment.center,
             children: [
+              // Hidden clean card for capturing (off-screen)
+              Positioned(
+                left: -5000,
+                top: -5000,
+                child: SizedBox(
+                  width: cardWidth,
+                  height: effectiveCardHeight,
+                  child: RepaintBoundary(
+                    key: _cleanCardKey,
+                    child: _SwipeCard(
+                      word: currentWord,
+                      width: cardWidth,
+                      height: effectiveCardHeight,
+                      progress: 0,
+                      isDragging: false,
+                      onShareWord: _shareWord,
+                    ),
+                  ),
+                ),
+              ),
+              // Visible card stack
               if (thirdWord != null)
                 RepaintBoundary(
                   child: _StackCardBackdrop(
@@ -450,6 +462,7 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
                   }
                 },
                 child: RepaintBoundary(
+                  key: _cardKey,
                   child: Transform.translate(
                     offset: _dragOffset,
                     child: Transform.rotate(
@@ -531,7 +544,7 @@ class _SwipeCard extends StatelessWidget {
                     height: 190,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: AppColors.challengeCard.withAlpha(210),
+                      color: AppColors.challengeCard.withAlpha(120),
                     ),
                   ),
                 ),
@@ -543,7 +556,7 @@ class _SwipeCard extends StatelessWidget {
                     height: 120,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: AppColors.planCardBlue.withAlpha(46),
+                      color: AppColors.planCardBlue.withAlpha(25),
                     ),
                   ),
                 ),
@@ -688,7 +701,7 @@ class _BackdropCard extends StatelessWidget {
                 height: 150,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.challengeCard.withAlpha(230),
+                  color: AppColors.challengeCard.withAlpha(100),
                 ),
               ),
             ),
@@ -843,33 +856,40 @@ class _WordDetailSheet extends StatelessWidget {
   const _WordDetailSheet({required this.word});
 
   Future<void> _shareWord(BuildContext context) async {
-    final shareText = StringBuffer()
-      ..writeln('Klug word card')
-      ..writeln(word.word)
-      ..writeln(word.meaning)
-      ..writeln('Category: ${word.categoryName}')
-      ..writeln(
-        word.primaryExample.isNotEmpty ? 'Example: ${word.primaryExample}' : '',
-      );
+    try {
+      final shareText = StringBuffer()
+        ..writeln('Word: ${word.word}')
+        ..writeln('Meaning: ${word.meaning}')
+        ..writeln('Category: ${word.categoryName}');
 
-    if (word.memeImageUrl.isNotEmpty) {
+      if (word.primaryExample.isNotEmpty) {
+        shareText..writeln('Example: ${word.primaryExample}');
+      }
+
       shareText
         ..writeln()
-        ..writeln(word.memeImageUrl);
+        ..writeln('Get more exciting words on KLUG');
+
+      await Share.share(
+        shareText.toString().trim(),
+        subject: '${word.word} - Klug',
+      );
+
+      if (!context.mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Word shared successfully!')),
+      );
+    } catch (e) {
+      debugPrint('Error sharing word: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error sharing: $e')));
+      }
     }
-
-    await Share.share(
-      shareText.toString().trim(),
-      subject: '${word.word} - Klug',
-    );
-
-    if (!context.mounted) {
-      return;
-    }
-
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Share sheet opened.')));
   }
 
   @override
@@ -888,7 +908,7 @@ class _WordDetailSheet extends StatelessWidget {
             ),
             child: ListView(
               controller: controller,
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
               children: [
                 Center(
                   child: Container(

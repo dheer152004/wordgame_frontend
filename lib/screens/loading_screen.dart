@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../screens/auth_screen.dart';
+import '../screens/home_screen.dart';
+import '../services/session_store.dart';
 import '../theme/app_theme.dart';
 
 class LoadingScreen extends StatefulWidget {
@@ -35,12 +37,28 @@ class _LoadingScreenState extends State<LoadingScreen>
       await Future.delayed(const Duration(milliseconds: 1400));
       if (!mounted) return;
 
-      // Skip session restore, go directly to auth
-      Navigator.of(
-        context,
-      ).pushReplacement(MaterialPageRoute(builder: (_) => const AuthScreen()));
+      // Try to restore saved user session
+      final savedUser = await SessionStore.restoreUser();
+
+      if (savedUser != null) {
+        // User has a saved session, go directly to home
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => HomeScreen(user: savedUser)),
+        );
+      } else {
+        // No saved session, go to auth
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const AuthScreen()),
+        );
+      }
     } catch (e) {
-      debugPrint('Error: $e');
+      debugPrint('Error during bootstrap: $e');
+      // Fallback to auth on error
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const AuthScreen()),
+        );
+      }
     }
   }
 

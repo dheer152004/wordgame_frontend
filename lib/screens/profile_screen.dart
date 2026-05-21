@@ -20,6 +20,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   late AuthUser? user;
   dynamic _quizStats;
   bool _loadingStats = false;
+  dynamic _cachedQuizStats;
+  DateTime? _cacheTime;
+  static const Duration _cacheExpiration = Duration(hours: 24);
 
   @override
   void initState() {
@@ -28,7 +31,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _fetchQuizStats();
   }
 
-  Future<void> _fetchQuizStats() async {
+  Future<void> _fetchQuizStats({bool forceRefresh = false}) async {
+    // Check if we have cached data and it's not expired
+    if (!forceRefresh && _cachedQuizStats != null && _cacheTime != null) {
+      final elapsed = DateTime.now().difference(_cacheTime!);
+      if (elapsed < _cacheExpiration) {
+        setState(() {
+          _quizStats = _cachedQuizStats;
+        });
+        return;
+      }
+    }
+
     setState(() {
       _loadingStats = true;
     });
@@ -38,6 +52,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (mounted) {
         setState(() {
           _quizStats = stats;
+          _cachedQuizStats = stats;
+          _cacheTime = DateTime.now();
           _loadingStats = false;
         });
       }
@@ -199,26 +215,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               const SizedBox(height: 18),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: AppColors.challengeCard.withAlpha(31),
-                  borderRadius: BorderRadius.circular(AppRadius.card),
-                  border: Border.all(color: Colors.white.withAlpha(16)),
-                ),
-                child: Text(
-                  isSignedIn
-                      ? 'Signed in sessions are restored automatically on launch.'
-                      : 'Log in to see your profile details and unlock progress sync.',
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 14,
-                    height: 1.5,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 18),
               if (_loadingStats)
                 Container(
                   padding: const EdgeInsets.symmetric(vertical: 32),
@@ -236,13 +232,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Quiz Stats',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Quiz Stats',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () =>
+                                _fetchQuizStats(forceRefresh: true),
+                            icon: const Icon(Icons.refresh_rounded),
+                            tooltip: 'Refresh stats',
+                            iconSize: 20,
+                            constraints: const BoxConstraints(),
+                            padding: EdgeInsets.zero,
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 14),
                       _buildStatsDisplay(_quizStats),
@@ -305,6 +315,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ],
                     ),
                   ],
+                ),
+              ),
+              const SizedBox(height: 18),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: AppColors.challengeCard.withAlpha(31),
+                  borderRadius: BorderRadius.circular(AppRadius.card),
+                  border: Border.all(color: Colors.white.withAlpha(16)),
+                ),
+                child: Text(
+                  isSignedIn
+                      ? 'Signed in sessions are restored automatically on launch.'
+                      : 'Log in to see your profile details and unlock progress sync.',
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 14,
+                    height: 1.5,
+                  ),
                 ),
               ),
               const SizedBox(height: 18),
