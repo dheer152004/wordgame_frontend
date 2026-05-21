@@ -265,7 +265,7 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
               ),
               const SizedBox(height: 6),
               const Text(
-                'Browse live categories from the backend and swipe through words.',
+                'Browse categories and swipe through words.',
                 style: TextStyle(
                   fontSize: 15,
                   height: 1.5,
@@ -500,8 +500,8 @@ class _SwipeCard extends StatelessWidget {
       builder: (context, constraints) {
         final compactFactor = (height / 420).clamp(0.75, 1.0);
         final imageSize = (height * 0.55).clamp(280.0, 360.0);
-        final wordFontSize = 28 * compactFactor;
-        final meaningFontSize = 14 * compactFactor;
+        final wordFontSize = 34 * compactFactor;
+        final meaningFontSize = 16 * compactFactor;
         final exampleFontSize = 12 * compactFactor;
 
         return Container(
@@ -584,7 +584,7 @@ class _SwipeCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       _CardImage(imageUrl: word.memeImageUrl, size: imageSize),
-                      const Spacer(),
+                      const SizedBox(height: 20),
                       Text(
                         word.word,
                         style: const TextStyle(
@@ -593,7 +593,7 @@ class _SwipeCard extends StatelessWidget {
                           color: AppColors.textPrimary,
                         ).copyWith(fontSize: wordFontSize),
                       ),
-                      const SizedBox(height: 3),
+                      const SizedBox(height: 8),
                       Text(
                         word.meaning,
                         style: const TextStyle(
@@ -666,7 +666,7 @@ class _BackdropCard extends StatelessWidget {
       width: width,
       height: height,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(34),
         boxShadow: [
           BoxShadow(
@@ -698,7 +698,7 @@ class _BackdropCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _CategoryPill(label: word.categoryName),
-                  const Spacer(),
+                  const SizedBox(height: 12),
                   Text(
                     word.word,
                     style: const TextStyle(
@@ -804,7 +804,7 @@ class _CardImage extends StatelessWidget {
         height: size,
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Colors.white.withAlpha(18),
+          color: Colors.transparent,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withAlpha(80),
