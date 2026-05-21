@@ -4,7 +4,7 @@ import '../models/auth_models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/home_header.dart';
 import '../widgets/daily_challenge_card.dart';
-import '../widgets/your_plan_section.dart';
+import '../widgets/categories_section.dart';
 import '../widgets/home_bottom_nav.dart';
 
 class HomeScreen extends StatelessWidget {

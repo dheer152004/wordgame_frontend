@@ -281,7 +281,7 @@ class _EmptyState extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.card),
         border: Border.all(color: Colors.white.withAlpha(16)),
       ),
-      child: const Text('No categories were returned by the backend.'),
+      child: const Text('No categories were returned by the server.'),
     );
   }
 }

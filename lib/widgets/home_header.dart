@@ -67,14 +67,15 @@ class HomeHeader extends StatelessWidget {
             children: [
               Text('Hello $displayName', style: AppTextStyles.greeting),
               const SizedBox(height: 1),
-              Text(
-                'Today ${_formatDate(DateTime.now())}.',
-                style: AppTextStyles.greetingDate,
-              ),
               if (user != null) ...[
-                const SizedBox(height: 2),
+                const SizedBox(height: 1),
                 Text(
-                  'Level ${user!.level}  ·  ${user!.totalXp} XP  ·  ${user!.currentStreak} day streak',
+                  'Level ${user!.level} - ${user!.totalXp} XP',
+                  style: AppTextStyles.greetingDate,
+                ),
+                const SizedBox(height: 1),
+                Text(
+                  '${user!.currentStreak} Day Streaks',
                   style: AppTextStyles.greetingDate,
                 ),
               ],

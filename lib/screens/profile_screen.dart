@@ -209,7 +209,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     _InfoTile(
                       label: 'Current streak',
-                      value: isSignedIn ? '${user!.currentStreak} day(s)' : '-',
+                      value: isSignedIn ? '${user!.currentStreak} Days' : '-',
                     ),
                   ],
                 ),
