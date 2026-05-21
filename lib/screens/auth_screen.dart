@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 
 import '../models/auth_models.dart';
 import '../services/backend_api.dart';
@@ -28,6 +29,9 @@ class _AuthScreenState extends State<AuthScreen> {
 
   _AuthMode _mode = _AuthMode.login;
   bool _isSubmitting = false;
+  String? _errorMessage;
+  bool _showError = true;
+  Timer? _errorDismissTimer;
 
   @override
   void initState() {
@@ -46,6 +50,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
   @override
   void dispose() {
+    _errorDismissTimer?.cancel();
     _loginUsernameController.dispose();
     _loginPasswordController.dispose();
     _registerUsernameController.dispose();
@@ -62,7 +67,45 @@ class _AuthScreenState extends State<AuthScreen> {
 
     setState(() {
       _mode = mode;
+      _errorMessage = null;
+      _showError = true;
     });
+  }
+
+  Widget _buildErrorBanner() {
+    if (_errorMessage == null) {
+      return const SizedBox.shrink();
+    }
+
+    return AnimatedOpacity(
+      opacity: _showError ? 1.0 : 0.0,
+      duration: const Duration(milliseconds: 500),
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.red.withAlpha(179),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.red.withAlpha(230), width: 1),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.error_outline_rounded, color: Colors.white, size: 16),
+              const SizedBox(width: 8),
+              Text(
+                _errorMessage!,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _submit() async {
@@ -74,11 +117,11 @@ class _AuthScreenState extends State<AuthScreen> {
       return;
     }
 
-    setState(() {
-      _isSubmitting = true;
-    });
-
     try {
+      setState(() {
+        _isSubmitting = true;
+        _errorMessage = null;
+      });
       if (isLogin) {
         final username = _loginUsernameController.text.trim();
         final user = await BackendApi.instance.login(
@@ -136,15 +179,57 @@ class _AuthScreenState extends State<AuthScreen> {
             error.message.contains('Authentication failed')) {
           displayMessage = 'Invalid credentials';
         }
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(displayMessage)));
+        setState(() {
+          _errorMessage = displayMessage;
+          _showError = true;
+        });
+
+        // Auto-dismiss after 2 seconds
+        _errorDismissTimer?.cancel();
+        _errorDismissTimer = Timer(const Duration(seconds: 2), () {
+          if (mounted) {
+            // Trigger fade-out animation
+            setState(() {
+              _showError = false;
+            });
+            // Clear message after animation completes
+            Future.delayed(const Duration(milliseconds: 500), () {
+              if (mounted) {
+                setState(() {
+                  _errorMessage = null;
+                  _showError = true;
+                });
+              }
+            });
+          }
+        });
       }
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Unexpected error: $error')));
+        setState(() {
+          _errorMessage = 'Unexpected error: $error';
+          _showError = true;
+        });
+
+        // Auto-dismiss after 2 seconds
+        _errorDismissTimer?.cancel();
+        _errorDismissTimer = Timer(const Duration(seconds: 2), () {
+          if (mounted) {
+            // Trigger fade-out animation
+            setState(() {
+              _showError = false;
+            });
+            // Clear message after animation completes
+            Future.delayed(const Duration(milliseconds: 500), () {
+              if (mounted) {
+                setState(() {
+                  _errorMessage = null;
+                  _showError = true;
+                });
+              }
+            });
+          }
+        });
       }
     } finally {
       if (mounted) {
@@ -308,6 +393,10 @@ class _AuthScreenState extends State<AuthScreen> {
               return null;
             },
           ),
+          if (_errorMessage != null) ...[
+            const SizedBox(height: 12),
+            _buildErrorBanner(),
+          ],
         ],
       ),
     );
@@ -377,6 +466,10 @@ class _AuthScreenState extends State<AuthScreen> {
               return null;
             },
           ),
+          if (_errorMessage != null) ...[
+            const SizedBox(height: 12),
+            _buildErrorBanner(),
+          ],
         ],
       ),
     );
