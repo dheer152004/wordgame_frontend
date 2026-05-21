@@ -60,11 +60,11 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
   void _startSessionTimer() {
     _sessionStartTime = DateTime.now();
     _sessionTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      // After 5 minutes (300 seconds), show video ad
+      // After 2.5 minutes (150 seconds), show video ad
       final elapsedSeconds = DateTime.now()
           .difference(_sessionStartTime)
           .inSeconds;
-      if (elapsedSeconds >= 300 && !_videoAdShown) {
+      if (elapsedSeconds >= 150 && !_videoAdShown) {
         _videoAdShown = true;
         _showVideoAd();
         timer.cancel();
@@ -511,11 +511,15 @@ class _SwipeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final compactFactor = (height / 420).clamp(0.75, 1.0);
-        final imageSize = (height * 0.55).clamp(280.0, 360.0);
-        final wordFontSize = 34 * compactFactor;
-        final meaningFontSize = 16 * compactFactor;
-        final exampleFontSize = 12 * compactFactor;
+        final compactFactor = (height / 420).clamp(0.6, 1.0);
+        // Larger image sizing - responsive but still prominent
+        final imageSize = (height * 0.50).clamp(240.0, 360.0);
+        final wordFontSize = (28 * compactFactor).clamp(16.0, 34.0);
+        final meaningFontSize = (14 * compactFactor).clamp(11.0, 16.0);
+
+        // Adaptive padding based on screen height
+        final horizontalPadding = height < 500 ? 10.0 : 12.0;
+        final verticalPadding = height < 500 ? 8.0 : 10.0;
 
         return Container(
           width: width,
@@ -560,62 +564,78 @@ class _SwipeCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          _CategoryPill(label: word.categoryName),
-                          Row(
-                            children: [
-                              SizedBox(
-                                width: 32,
-                                height: 32,
-                                child: IconButton(
-                                  tooltip: 'Share word',
-                                  onPressed: () => onShareWord(word),
-                                  icon: const Icon(
-                                    Icons.share_outlined,
-                                    size: 18,
+                SingleChildScrollView(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      horizontalPadding,
+                      verticalPadding,
+                      horizontalPadding,
+                      6,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            _CategoryPill(label: word.categoryName),
+                            Row(
+                              children: [
+                                SizedBox(
+                                  width: 32,
+                                  height: 32,
+                                  child: IconButton(
+                                    tooltip: 'Share word',
+                                    onPressed: () => onShareWord(word),
+                                    icon: const Icon(
+                                      Icons.share_outlined,
+                                      size: 18,
+                                    ),
+                                    color: AppColors.textPrimary,
+                                    padding: EdgeInsets.zero,
                                   ),
-                                  color: AppColors.textPrimary,
-                                  padding: EdgeInsets.zero,
                                 ),
-                              ),
-                              Icon(
-                                isDragging
-                                    ? Icons.swipe_rounded
-                                    : Icons.touch_app_rounded,
-                                color: AppColors.textPrimary,
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 2),
-                      _CardImage(imageUrl: word.memeImageUrl, size: imageSize),
-                      const SizedBox(height: 20),
-                      Text(
-                        word.word,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: -1.1,
-                          color: AppColors.textPrimary,
-                        ).copyWith(fontSize: wordFontSize),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        word.meaning,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          height: 1.35,
-                          color: AppColors.textPrimary,
-                        ).copyWith(fontSize: meaningFontSize),
-                      ),
-                    ],
+                                Icon(
+                                  isDragging
+                                      ? Icons.swipe_rounded
+                                      : Icons.touch_app_rounded,
+                                  color: AppColors.textPrimary,
+                                  size: 18,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        _CardImage(
+                          imageUrl: word.memeImageUrl,
+                          size: imageSize,
+                        ),
+                        SizedBox(height: height < 500 ? 12 : 20),
+                        Text(
+                          word.word,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -1.1,
+                            color: AppColors.textPrimary,
+                          ).copyWith(fontSize: wordFontSize),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          word.meaning,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            height: 1.35,
+                            color: AppColors.textPrimary,
+                          ).copyWith(fontSize: meaningFontSize),
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
