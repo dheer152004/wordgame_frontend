@@ -6,6 +6,7 @@ import '../models/auth_models.dart';
 
 class SessionStore {
   static const String _userKey = 'word_frontend_auth_user';
+  static const String _usernameKey = 'word_frontend_login_username';
   static AuthUser? _currentUser;
 
   static Future<void> saveUser(AuthUser user) async {
@@ -52,5 +53,20 @@ class SessionStore {
     _currentUser = null;
     final preferences = await SharedPreferences.getInstance();
     await preferences.remove(_userKey);
+  }
+
+  static Future<void> saveLoginUsername(String username) async {
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setString(_usernameKey, username);
+  }
+
+  static Future<String?> getLoginUsername() async {
+    final preferences = await SharedPreferences.getInstance();
+    return preferences.getString(_usernameKey);
+  }
+
+  static Future<void> clearLoginUsername() async {
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.remove(_usernameKey);
   }
 }

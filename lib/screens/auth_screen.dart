@@ -30,6 +30,21 @@ class _AuthScreenState extends State<AuthScreen> {
   bool _isSubmitting = false;
 
   @override
+  void initState() {
+    super.initState();
+    _loadSavedUsername();
+  }
+
+  Future<void> _loadSavedUsername() async {
+    final savedUsername = await SessionStore.getLoginUsername();
+    if (savedUsername != null && mounted) {
+      setState(() {
+        _loginUsernameController.text = savedUsername;
+      });
+    }
+  }
+
+  @override
   void dispose() {
     _loginUsernameController.dispose();
     _loginPasswordController.dispose();
@@ -65,13 +80,15 @@ class _AuthScreenState extends State<AuthScreen> {
 
     try {
       if (isLogin) {
+        final username = _loginUsernameController.text.trim();
         final user = await BackendApi.instance.login(
           LoginRequest(
-            username: _loginUsernameController.text.trim(),
+            username: username,
             password: _loginPasswordController.text,
           ),
         );
         await SessionStore.saveUser(user);
+        await SessionStore.saveLoginUsername(username);
         if (!mounted) {
           return;
         }
@@ -147,92 +164,106 @@ class _AuthScreenState extends State<AuthScreen> {
           ),
         ),
         child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(24, 18, 24, 18),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  constraints: BoxConstraints(minHeight: size.width * 0.72),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(34),
-                    color: Colors.white.withAlpha(20),
-                    border: Border.all(color: Colors.white.withAlpha(46)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withAlpha(89),
-                        blurRadius: 36,
-                        offset: const Offset(0, 18),
-                      ),
-                    ],
-                    backgroundBlendMode: BlendMode.overlay,
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 32,
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(24, 18, 24, 18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    constraints: BoxConstraints(
+                      minHeight: size.width * 0.72,
+                      maxWidth: 500,
                     ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 112,
-                          height: 112,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white,
-                          ),
-                          child: Image.asset(
-                            'web/icons/KLUG(K)_transparent.png',
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-                        const SizedBox(height: 18),
-                        const Text(
-                          'KLUG',
-                          style: TextStyle(
-                            fontSize: 30,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.8,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          isLogin
-                              ? 'Log in to sync your progress and explore the live word deck.'
-                              : 'Register once and start learning live categories from the backend.',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            height: 1.5,
-                            color: Colors.white70,
-                          ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(34),
+                      color: Colors.white.withAlpha(20),
+                      border: Border.all(color: Colors.white.withAlpha(46)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withAlpha(89),
+                          blurRadius: 36,
+                          offset: const Offset(0, 18),
                         ),
                       ],
+                      backgroundBlendMode: BlendMode.overlay,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 32,
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 112,
+                            height: 112,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white,
+                            ),
+                            child: Image.asset(
+                              'assets/icons/KLUG(K)_transparent.png',
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                          const SizedBox(height: 18),
+                          const Text(
+                            'KLUG',
+                            style: TextStyle(
+                              fontSize: 30,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.8,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            isLogin
+                                ? 'Log in to sync your progress and explore the live word deck.'
+                                : 'Register once and start learning live categories from the backend.',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              height: 1.5,
+                              color: Colors.white70,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 22),
-                _ModeToggle(mode: _mode, onChanged: _setMode),
-                const SizedBox(height: 16),
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 220),
-                  child: isLogin ? _buildLoginForm() : _buildRegisterForm(),
-                ),
-                const SizedBox(height: 18),
-                _AuthButton(
-                  label: isLogin ? 'Log in' : 'Create account',
-                  icon: isLogin
-                      ? Icons.lock_open_rounded
-                      : Icons.person_add_alt_1_rounded,
-                  backgroundColor: AppColors.textPrimary,
-                  foregroundColor: Colors.black87,
-                  isLoading: _isSubmitting,
-                  onPressed: _submit,
-                ),
-              ],
+                  const SizedBox(height: 22),
+                  SizedBox(
+                    width: double.infinity,
+                    child: _ModeToggle(mode: _mode, onChanged: _setMode),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 220),
+                      child: isLogin ? _buildLoginForm() : _buildRegisterForm(),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  SizedBox(
+                    width: double.infinity,
+                    child: _AuthButton(
+                      label: isLogin ? 'Log in' : 'Create account',
+                      icon: isLogin
+                          ? Icons.lock_open_rounded
+                          : Icons.person_add_alt_1_rounded,
+                      backgroundColor: AppColors.textPrimary,
+                      foregroundColor: Colors.black87,
+                      isLoading: _isSubmitting,
+                      onPressed: _submit,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

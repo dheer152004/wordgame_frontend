@@ -390,7 +390,11 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
       builder: (context, constraints) {
         final cardWidth = constraints.maxWidth * 0.94;
         final cardHeight = constraints.maxHeight;
-        final effectiveCardHeight = (cardHeight - 20).clamp(0.0, cardHeight);
+        // Aspect ratio: width:height = 1:1.25, so height = width * 1.25
+        final effectiveCardHeight = ((cardWidth * 1.35) - 20).clamp(
+          0.0,
+          cardHeight,
+        );
 
         return ClipRect(
           child: Stack(

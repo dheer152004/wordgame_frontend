@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../screens/auth_screen.dart';
-import '../screens/home_screen.dart';
-import '../services/session_store.dart';
 import '../theme/app_theme.dart';
 
 class LoadingScreen extends StatefulWidget {
@@ -34,29 +32,15 @@ class _LoadingScreenState extends State<LoadingScreen>
 
   Future<void> _bootstrap() async {
     try {
-      final user = await SessionStore.restoreUser();
       await Future.delayed(const Duration(milliseconds: 1400));
+      if (!mounted) return;
 
-      if (!mounted) {
-        return;
-      }
-
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (_) =>
-              user != null ? HomeScreen(user: user) : const AuthScreen(),
-        ),
-      );
+      // Skip session restore, go directly to auth
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (_) => const AuthScreen()));
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
-        // Navigate to auth screen on error
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const AuthScreen()),
-        );
-      }
+      debugPrint('Error: $e');
     }
   }
 
@@ -119,7 +103,7 @@ class _LoadingScreenState extends State<LoadingScreen>
                         ],
                       ),
                       child: Image.asset(
-                        'web/icons/KLUG_full.png',
+                        'assets/icons/KLUG_full.png',
                         fit: BoxFit.contain,
                         errorBuilder: (context, error, stackTrace) {
                           return Container(

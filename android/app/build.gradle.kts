@@ -37,13 +37,6 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
-
-    applicationVariants.all { variant ->
-        variant.outputs.all { output ->
-            val outputImpl = output as com.android.build.gradle.internal.api.BaseVariantOutputImpl
-            outputImpl.outputFileName = "KLUG-${variant.buildType.name}.apk"
-        }
-    }
 }
 
 flutter {
