@@ -2,20 +2,20 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../models/auth_models.dart';
+import '../models/profile_models.dart';
 
 class SessionStore {
   static const String _userKey = 'word_frontend_auth_user';
   static const String _usernameKey = 'word_frontend_login_username';
-  static AuthUser? _currentUser;
+  static UserProfile? _currentUser;
 
-  static Future<void> saveUser(AuthUser user) async {
+  static Future<void> saveUser(UserProfile user) async {
     _currentUser = user;
     final preferences = await SharedPreferences.getInstance();
     await preferences.setString(_userKey, jsonEncode(user.toJson()));
   }
 
-  static Future<AuthUser?> restoreUser() async {
+  static Future<UserProfile?> restoreUser() async {
     if (_currentUser != null) {
       return _currentUser;
     }
@@ -28,7 +28,7 @@ class SessionStore {
 
     final decoded = jsonDecode(raw);
     if (decoded is Map<String, dynamic>) {
-      _currentUser = AuthUser.fromJson(decoded);
+      _currentUser = UserProfile.fromJson(decoded);
       return _currentUser;
     }
 

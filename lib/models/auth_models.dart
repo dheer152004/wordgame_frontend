@@ -33,73 +33,57 @@ class RegisterRequest {
   }
 }
 
-class AuthUser {
-  final String token;
-  final int id;
-  final String username;
-  final String email;
-  final String displayName;
-  final String avatarUrl;
-  final int totalXp;
-  final int level;
-  final int currentStreak;
+// class UserProfile {
+//   final String token;
+//   final int id;
+//   final String username;
+//   final String email;
+//   final String displayName;
+//   final String avatarUrl;
+//   final int totalXp;
+//   final int level;
+//   final int currentStreak;
 
-  const AuthUser({
-    required this.token,
-    required this.id,
-    required this.username,
-    required this.email,
-    required this.displayName,
-    required this.avatarUrl,
-    required this.totalXp,
-    required this.level,
-    required this.currentStreak,
-  });
+//   const UserProfile({
+//     required this.token,
+//     required this.id,
+//     required this.username,
+//     required this.email,
+//     required this.displayName,
+//     required this.avatarUrl,
+//     required this.totalXp,
+//     required this.level,
+//     required this.currentStreak,
+//   });
 
-  factory AuthUser.fromJson(Map<String, dynamic> json) {
-    return AuthUser(
-      token: json['token']?.toString() ?? '',
-      id: _readInt(json['id']),
-      username: json['username']?.toString() ?? '',
-      email: json['email']?.toString() ?? '',
-      displayName: json['displayName']?.toString() ?? '',
-      avatarUrl: json['avatarUrl']?.toString() ?? '',
-      totalXp: _readInt(json['totalXp']),
-      level: _readInt(json['level']),
-      currentStreak: _readInt(json['currentStreak']),
-    );
-  }
+//   factory UserProfile.fromJson(Map<String, dynamic> json) {
+//     return UserProfile(
+//       token: json['token']?.toString() ?? '',
+//       id: _readInt(json['id']),
+//       username: json['username']?.toString() ?? '',
+//       email: json['email']?.toString() ?? '',
+//       displayName: json['displayName']?.toString() ?? '',
+//       avatarUrl: json['avatarUrl']?.toString() ?? '',
+//       totalXp: _readInt(json['totalXp']),
+//       level: _readInt(json['level']),
+//       currentStreak: _readInt(json['currentStreak']),
+//     );
+//   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'token': token,
-      'id': id,
-      'username': username,
-      'email': email,
-      'displayName': displayName,
-      'avatarUrl': avatarUrl,
-      'totalXp': totalXp,
-      'level': level,
-      'currentStreak': currentStreak,
-    };
-  }
+//   Map<String, dynamic> toJson() {
+//     return {
+//       'token': token,
+//       'id': id,
+//       'username': username,
+//       'email': email,
+//       'displayName': displayName,
+//       'avatarUrl': avatarUrl,
+//       'totalXp': totalXp,
+//       'level': level,
+//       'currentStreak': currentStreak,
+//     };
+//   }
 
-  String get greetingName =>
-      displayName.trim().isNotEmpty ? displayName : username;
-}
-
-int _readInt(Object? value) {
-  if (value is int) {
-    return value;
-  }
-
-  if (value is String) {
-    return int.tryParse(value) ?? 0;
-  }
-
-  if (value is num) {
-    return value.toInt();
-  }
-
-  return 0;
-}
+//   String get greetingName =>
+//       displayName.trim().isNotEmpty ? displayName : username;
+// }

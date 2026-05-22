@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../models/auth_models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/home_header.dart';
 import '../widgets/daily_challenge_card.dart';
 import '../widgets/categories_section.dart';
 import '../widgets/home_bottom_nav.dart';
+import '../models/profile_models.dart';
 
 class HomeScreen extends StatelessWidget {
-  final AuthUser? user;
+  final UserProfile? user;
 
   const HomeScreen({super.key, this.user});
 

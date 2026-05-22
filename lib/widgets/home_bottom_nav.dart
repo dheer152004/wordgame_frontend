@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import '../models/auth_models.dart';
+import '../models/profile_models.dart';
 import '../screens/flash_cards_screen.dart';
 import '../screens/quiz_screen.dart';
 import '../screens/profile_screen.dart';
 import '../theme/app_theme.dart';
 
 class HomeBottomNav extends StatefulWidget {
-  final AuthUser? user;
+  final UserProfile? user;
 
   const HomeBottomNav({super.key, this.user});
 

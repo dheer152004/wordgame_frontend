@@ -136,6 +136,8 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
         _words = words;
         _loadingWords = false;
       });
+
+      _scheduleVisibleImagePreload();
     } catch (error) {
       if (!mounted) return;
 
@@ -162,6 +164,40 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
       _dragOffset = Offset.zero;
       _isDragging = false;
     });
+
+    _scheduleVisibleImagePreload();
+  }
+
+  void _scheduleVisibleImagePreload() {
+    if (!mounted || _words.isEmpty) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _words.isEmpty) return;
+      _preloadVisibleImages();
+    });
+  }
+
+  Future<void> _preloadVisibleImages() async {
+    final visibleWords = <ApiWord>{};
+
+    visibleWords.add(_words[_currentIndex.clamp(0, _words.length - 1)]);
+    if (_words.length > 1) {
+      visibleWords.add(_words[(_currentIndex + 1) % _words.length]);
+    }
+    if (_words.length > 2) {
+      visibleWords.add(_words[(_currentIndex + 2) % _words.length]);
+    }
+
+    for (final word in visibleWords) {
+      final imageUrl = word.memeImageUrl.trim();
+      if (imageUrl.isEmpty) continue;
+
+      try {
+        await precacheImage(NetworkImage(imageUrl), context);
+      } catch (error) {
+        debugPrint('Error preloading image for ${word.word}: $error');
+      }
+    }
   }
 
   Future<void> _showWordDetails(ApiWord word) async {

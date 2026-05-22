@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../config/app_config.dart';
 import '../models/auth_models.dart';
+import '../models/profile_models.dart';
 import '../models/word_Content_models.dart';
 import '../models/quiz_models.dart';
 import 'session_store.dart';
@@ -51,7 +52,7 @@ class BackendApi {
     return {..._jsonHeaders, ...authHeaders};
   }
 
-  Future<AuthUser> login(LoginRequest request) async {
+  Future<UserProfile> login(LoginRequest request) async {
     final response = await _client.post(
       _uri('/api/auth/login'),
       headers: _jsonHeaders,
@@ -60,13 +61,13 @@ class BackendApi {
 
     final payload = _decodeResponse(response);
     if (payload is Map<String, dynamic>) {
-      return AuthUser.fromJson(payload);
+      return UserProfile.fromJson(payload);
     }
 
     throw const BackendException('Unexpected login response from server.');
   }
 
-  Future<AuthUser?> register(RegisterRequest request) async {
+  Future<UserProfile?> register(RegisterRequest request) async {
     final response = await _client.post(
       _uri('/api/auth/register'),
       headers: _jsonHeaders,
@@ -75,10 +76,49 @@ class BackendApi {
 
     final payload = _decodeResponse(response);
     if (payload is Map<String, dynamic> && payload.containsKey('token')) {
-      return AuthUser.fromJson(payload);
+      return UserProfile.fromJson(payload);
     }
 
     return null;
+  }
+
+  Future<UserProfile> fetchUserProfile() async {
+    final response = await _client.get(
+      _uri('/api/user/profile'),
+      headers: await _headers(authenticated: true),
+    );
+
+    final payload = _decodeResponse(response);
+    if (payload is Map<String, dynamic>) {
+      return UserProfile.fromJson(payload);
+    }
+
+    throw const BackendException('Unexpected profile response from server.');
+  }
+
+  Future<UserProfile> updateUserProfile({
+    required String displayName,
+    required String avatarUrl,
+    required String bio,
+    required String location,
+  }) async {
+    final response = await _client.put(
+      _uri('/api/user/profile'),
+      headers: await _headers(authenticated: true),
+      body: jsonEncode({
+        'displayName': displayName,
+        'avatarUrl': avatarUrl,
+        'bio': bio,
+        'location': location,
+      }),
+    );
+
+    final payload = _decodeResponse(response);
+    if (payload is Map<String, dynamic>) {
+      return UserProfile.fromJson(payload);
+    }
+
+    throw const BackendException('Unexpected profile update response.');
   }
 
   Future<List<ApiCategory>> fetchCategories({bool forceRefresh = false}) async {

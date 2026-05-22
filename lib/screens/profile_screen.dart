@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
 import '../main.dart';
-import '../models/auth_models.dart';
+import '../models/profile_models.dart';
 import '../services/backend_api.dart';
 import '../services/session_store.dart';
 import '../theme/app_theme.dart';
 import 'auth_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
-  final AuthUser? user;
+  final UserProfile? user;
 
   const ProfileScreen({super.key, this.user});
 
@@ -17,7 +17,9 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  late AuthUser? user;
+  UserProfile? user;
+  UserProfile? _profile;
+  bool _loadingProfile = false;
   dynamic _quizStats;
   bool _loadingStats = false;
   dynamic _cachedQuizStats;
@@ -28,7 +30,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     user = widget.user;
+    _restoreSessionUser();
+  }
+
+  Future<void> _restoreSessionUser() async {
+    user ??= await SessionStore.restoreUser();
+    _fetchProfile();
     _fetchQuizStats();
+  }
+
+  Future<void> _fetchProfile() async {
+    if (user == null) {
+      return;
+    }
+
+    setState(() {
+      _loadingProfile = true;
+    });
+
+    try {
+      final profile = await BackendApi.instance.fetchUserProfile();
+      if (mounted) {
+        setState(() {
+          _profile = profile;
+          _loadingProfile = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _loadingProfile = false;
+        });
+      }
+    }
   }
 
   Future<void> _fetchQuizStats({bool forceRefresh = false}) async {
@@ -81,12 +115,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final isSignedIn = user != null;
-    final displayName = isSignedIn && user!.greetingName.isNotEmpty
-        ? user!.greetingName
-        : 'Guest';
-    final subtitle = isSignedIn
-        ? 'Your account details and learning stats'
-        : 'You are browsing as a guest';
+    final profile = _profile;
+    final displayName = profile?.greetingName.isNotEmpty == true
+        ? profile!.greetingName
+        : (isSignedIn && user!.greetingName.isNotEmpty
+              ? user!.greetingName
+              : 'Guest');
+    final subtitle = profile?.bio.isNotEmpty == true
+        ? profile!.bio
+        : (isSignedIn
+              ? 'Your account details and learning stats'
+              : 'You are browsing as a guest');
+    final avatarUrl = profile?.avatarUrl.isNotEmpty == true
+        ? profile!.avatarUrl
+        : (isSignedIn ? user!.avatarUrl : '');
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -109,108 +151,73 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 14),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
                   color: AppColors.surface,
                   borderRadius: BorderRadius.circular(AppRadius.card),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withAlpha(90),
-                      blurRadius: 28,
-                      offset: const Offset(0, 16),
-                    ),
-                  ],
                   border: Border.all(color: Colors.white.withAlpha(20)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Container(
-                          width: 72,
-                          height: 72,
-                          decoration: BoxDecoration(
-                            color: AppColors.challengeCard,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.challengeCard.withAlpha(72),
-                                blurRadius: 18,
-                                offset: const Offset(0, 10),
-                              ),
-                            ],
-                          ),
-                          child: ClipOval(
-                            child: isSignedIn && user!.avatarUrl.isNotEmpty
-                                ? Image.network(
-                                    user!.avatarUrl,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) => const Icon(
-                                      Icons.person,
-                                      size: 34,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                : const Icon(
-                                    Icons.person,
-                                    size: 34,
-                                    color: Colors.white,
-                                  ),
+                        const Expanded(
+                          child: Text(
+                            'Profile Details',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                            ),
                           ),
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                displayName,
-                                style: const TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w800,
-                                  color: AppColors.textPrimary,
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              onPressed: isSignedIn ? _editProfile : null,
+                              icon: const Icon(Icons.edit_rounded),
+                              tooltip: 'Edit profile',
+                              iconSize: 20,
+                              constraints: const BoxConstraints(),
+                              padding: EdgeInsets.zero,
+                            ),
+                            if (_loadingProfile)
+                              const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
                                 ),
+                              )
+                            else
+                              IconButton(
+                                onPressed: isSignedIn ? _fetchProfile : null,
+                                icon: const Icon(Icons.refresh_rounded),
+                                tooltip: 'Refresh profile',
+                                iconSize: 20,
+                                constraints: const BoxConstraints(),
+                                padding: EdgeInsets.zero,
                               ),
-                              const SizedBox(height: 4),
-                              Text(subtitle, style: AppTextStyles.greetingDate),
-                            ],
-                          ),
+                          ],
                         ),
                       ],
                     ),
-                    const SizedBox(height: 18),
-                    _InfoTile(
-                      label: 'Username',
-                      value: isSignedIn ? user!.username : 'Guest',
-                    ),
-                    _InfoTile(
-                      label: 'Email',
-                      value: isSignedIn ? user!.email : 'Not signed in',
-                    ),
-                    _InfoTile(
-                      label: 'Display name',
-                      value: isSignedIn && user!.displayName.isNotEmpty
-                          ? user!.displayName
-                          : 'Not set',
-                    ),
-                    _InfoTile(
-                      label: 'User ID',
-                      value: isSignedIn ? user!.id.toString() : '-',
-                    ),
-                    _InfoTile(
-                      label: 'Level',
-                      value: isSignedIn ? user!.level.toString() : '-',
-                    ),
-                    _InfoTile(
-                      label: 'Total XP',
-                      value: isSignedIn ? user!.totalXp.toString() : '-',
-                    ),
-                    _InfoTile(
-                      label: 'Current streak',
-                      value: isSignedIn ? '${user!.currentStreak} Days' : '-',
-                    ),
+                    const SizedBox(height: 14),
+                    if (_profile != null)
+                      _buildProfileDetails(_profile!)
+                    else if (isSignedIn)
+                      const Text(
+                        'Loading profile details...',
+                        style: TextStyle(color: AppColors.textSecondary),
+                      )
+                    else
+                      const Text(
+                        'Log in to load profile details.',
+                        style: TextStyle(color: AppColors.textSecondary),
+                      ),
                   ],
                 ),
               ),
@@ -363,6 +370,172 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Future<void> _editProfile() async {
+    if (user == null) {
+      return;
+    }
+
+    UserProfile currentProfile = _profile ?? user!;
+    if (_profile == null) {
+      try {
+        currentProfile = await BackendApi.instance.fetchUserProfile();
+      } catch (error) {
+        if (!mounted) {
+          return;
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Unable to load profile: $error')),
+        );
+        return;
+      }
+    }
+
+    final displayNameController = TextEditingController(
+      text: currentProfile.displayName,
+    );
+    final avatarUrlController = TextEditingController(
+      text: currentProfile.avatarUrl,
+    );
+    final bioController = TextEditingController(text: currentProfile.bio);
+    final locationController = TextEditingController(
+      text: currentProfile.location,
+    );
+    var isSaving = false;
+
+    try {
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) {
+          return StatefulBuilder(
+            builder: (context, setDialogState) {
+              return AlertDialog(
+                backgroundColor: AppColors.surface,
+                title: const Text('Edit profile'),
+                content: SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 420),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        TextField(
+                          controller: displayNameController,
+                          enabled: !isSaving,
+                          decoration: const InputDecoration(
+                            labelText: 'Display name',
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: avatarUrlController,
+                          enabled: !isSaving,
+                          decoration: const InputDecoration(
+                            labelText: 'Avatar URL',
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: bioController,
+                          enabled: !isSaving,
+                          minLines: 3,
+                          maxLines: 5,
+                          decoration: const InputDecoration(labelText: 'Bio'),
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: locationController,
+                          enabled: !isSaving,
+                          decoration: const InputDecoration(
+                            labelText: 'Location',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: isSaving
+                        ? null
+                        : () => Navigator.of(dialogContext).pop(),
+                    child: const Text('Cancel'),
+                  ),
+                  ElevatedButton(
+                    onPressed: isSaving
+                        ? null
+                        : () async {
+                            setDialogState(() {
+                              isSaving = true;
+                            });
+
+                            try {
+                              final updatedProfile = await BackendApi.instance
+                                  .updateUserProfile(
+                                    displayName: displayNameController.text
+                                        .trim(),
+                                    avatarUrl: avatarUrlController.text.trim(),
+                                    bio: bioController.text.trim(),
+                                    location: locationController.text.trim(),
+                                  );
+
+                              final mergedProfile = UserProfile.fromJson({
+                                ...updatedProfile.toJson(),
+                                'token': user!.token,
+                              });
+
+                              if (!mounted) {
+                                return;
+                              }
+
+                              setState(() {
+                                _profile = mergedProfile;
+                                user = mergedProfile;
+                              });
+                              await SessionStore.saveUser(mergedProfile);
+
+                              if (dialogContext.mounted) {
+                                Navigator.of(dialogContext).pop();
+                              }
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Profile updated.'),
+                                ),
+                              );
+                            } catch (error) {
+                              if (!dialogContext.mounted) {
+                                return;
+                              }
+
+                              setDialogState(() {
+                                isSaving = false;
+                              });
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Unable to update profile: $error',
+                                  ),
+                                ),
+                              );
+                            }
+                          },
+                    child: Text(isSaving ? 'Saving...' : 'Save'),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+      );
+    } finally {
+      displayNameController.dispose();
+      avatarUrlController.dispose();
+      bioController.dispose();
+      locationController.dispose();
+    }
+  }
+
   Widget _buildStatsDisplay(dynamic stats) {
     if (stats == null) {
       return const Text(
@@ -397,6 +570,140 @@ class _ProfileScreenState extends State<ProfileScreen> {
       stats.toString(),
       style: const TextStyle(color: AppColors.textSecondary),
     );
+  }
+
+  Widget _buildProfileDetails(UserProfile profile) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Center(
+          child: Container(
+            width: 88,
+            height: 88,
+            decoration: BoxDecoration(
+              color: AppColors.challengeCard,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.challengeCard.withAlpha(72),
+                  blurRadius: 18,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+              border: Border.all(color: Colors.white.withAlpha(18)),
+            ),
+            child: ClipOval(
+              child: profile.avatarUrl.isNotEmpty
+                  ? Image.network(
+                      profile.avatarUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const Icon(
+                        Icons.person,
+                        size: 40,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.person, size: 40, color: Colors.white),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        _InfoTile(label: 'Username', value: profile.username),
+        _InfoTile(label: 'Email', value: profile.email),
+        _InfoTile(
+          label: 'Display name',
+          value: profile.displayName.isNotEmpty
+              ? profile.displayName
+              : 'Not set',
+        ),
+        _InfoTile(label: 'Bio', value: _displayValue(profile.bio)),
+        _InfoTile(label: 'Location', value: _displayValue(profile.location)),
+        _InfoTile(label: 'User ID', value: profile.id.toString()),
+        _InfoTile(label: 'Level', value: profile.level.toString()),
+        _InfoTile(label: 'Total XP', value: profile.totalXp.toString()),
+        _InfoTile(
+          label: 'XP to next level',
+          value: profile.xpToNextLevel.toString(),
+        ),
+        _InfoTile(
+          label: 'Level progress',
+          value: '${profile.levelProgress.toStringAsFixed(0)}%',
+        ),
+        _InfoTile(
+          label: 'Current streak',
+          value: '${profile.currentStreak} Days',
+        ),
+        _InfoTile(
+          label: 'Longest streak',
+          value: '${profile.longestStreak} Days',
+        ),
+        _InfoTile(
+          label: 'Total words saved',
+          value: profile.totalWordsSaved.toString(),
+        ),
+        _InfoTile(
+          label: 'Quizzes completed',
+          value: profile.totalQuizzesCompleted.toString(),
+        ),
+        _InfoTile(
+          label: 'Average quiz score',
+          value: profile.averageQuizScore.toStringAsFixed(1),
+        ),
+        _InfoTile(
+          label: 'Words mastered',
+          value: profile.wordsMastered.toString(),
+        ),
+        _InfoTile(
+          label: 'Last active',
+          value: _formatDateTime(profile.lastActive),
+        ),
+        _InfoTile(
+          label: 'Created at',
+          value: _formatDateTime(profile.createdAt),
+        ),
+        _InfoTile(
+          label: 'Last quiz date',
+          value: _displayValue(profile.lastQuizDate),
+        ),
+        if (profile.recentBadges.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          const Text(
+            'Recent badges',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final badge in profile.recentBadges)
+                _BadgeChip(label: badge),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  String _displayValue(String value) {
+    return value.trim().isNotEmpty ? value : 'Not set';
+  }
+
+  String _formatDateTime(DateTime? value) {
+    if (value == null) {
+      return 'Not set';
+    }
+
+    final local = value.toLocal();
+    final month = local.month.toString().padLeft(2, '0');
+    final day = local.day.toString().padLeft(2, '0');
+    final hour = local.hour.toString().padLeft(2, '0');
+    final minute = local.minute.toString().padLeft(2, '0');
+    return '${local.year}-$month-$day $hour:$minute';
   }
 }
 
@@ -474,6 +781,32 @@ class _InfoTile extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _BadgeChip extends StatelessWidget {
+  final String label;
+
+  const _BadgeChip({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.challengeCard.withAlpha(42),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white.withAlpha(18)),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: AppColors.textPrimary,
+        ),
       ),
     );
   }

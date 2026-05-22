@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../models/auth_models.dart';
+import '../models/profile_models.dart';
 import '../theme/app_theme.dart';
 
 class HomeHeader extends StatelessWidget {
-  final AuthUser? user;
+  final UserProfile? user;
 
   const HomeHeader({super.key, this.user});
 
