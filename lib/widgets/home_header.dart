@@ -7,24 +7,24 @@ class HomeHeader extends StatelessWidget {
 
   const HomeHeader({super.key, this.user});
 
-  String _formatDate(DateTime date) {
-    const months = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
-    ];
+  // String _formatDate(DateTime date) {
+  //   const months = [
+  //     'January',
+  //     'February',
+  //     'March',
+  //     'April',
+  //     'May',
+  //     'June',
+  //     'July',
+  //     'August',
+  //     'September',
+  //     'October',
+  //     'November',
+  //     'December',
+  //   ];
 
-    return '${date.day} ${months[date.month - 1]}';
-  }
+  //   return '${date.day} ${months[date.month - 1]}';
+  // }
 
   @override
   Widget build(BuildContext context) {

@@ -5,7 +5,6 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -39,8 +38,6 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
   Offset _dragOffset = Offset.zero;
   bool _isDragging = false;
 
-  int _swipeCount = 0;
-  bool _showAdCard = false;
   late Timer _sessionTimer;
   late DateTime _sessionStartTime;
   bool _videoAdShown = false;

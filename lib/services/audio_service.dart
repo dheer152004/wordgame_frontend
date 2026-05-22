@@ -106,6 +106,7 @@ class AudioService {
   Future<void> speak(String text) async {
     if (text.isEmpty) return;
     try {
+      await _setFemaleVoice();
       await _flutterTts.setSpeechRate(0.45);
       await _flutterTts.setVolume(1.0);
       await _flutterTts.setPitch(1.0);
@@ -116,6 +117,46 @@ class AudioService {
       // ignore: avoid_print
       print('AudioService: speak error: $e\n$st');
       rethrow;
+    }
+  }
+
+  /// Try to choose a female voice when available on the platform.
+  Future<void> _setFemaleVoice() async {
+    try {
+      final voices = await _flutterTts.getVoices;
+      if (voices is List) {
+        for (var v in voices) {
+          if (v is Map) {
+            final name = (v['name'] ?? '').toString().toLowerCase();
+            final locale = (v['locale'] ?? '').toString().toLowerCase();
+            final gender = (v['gender'] ?? '').toString().toLowerCase();
+            if (gender.contains('female') || name.contains('female')) {
+              await _flutterTts.setVoice({
+                'name': v['name'].toString(),
+                'locale': v['locale']?.toString() ?? locale,
+              });
+              // ignore: avoid_print
+              print('AudioService: selected female voice ${v['name']}');
+              return;
+            }
+          } else if (v is String) {
+            final vs = v.toLowerCase();
+            if (vs.contains('female')) {
+              await _flutterTts.setVoice({'name': v});
+              // ignore: avoid_print
+              print('AudioService: selected female voice $v');
+              return;
+            }
+          }
+        }
+      }
+      // Fallback: set a common locale to improve voice selection
+      await _flutterTts.setLanguage('en-US');
+      // ignore: avoid_print
+      print('AudioService: no explicit female voice found; set language en-US');
+    } catch (e) {
+      // ignore: avoid_print
+      print('AudioService: setFemaleVoice error: $e');
     }
   }
 }

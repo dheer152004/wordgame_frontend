@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'mascot_angry.dart';
 import 'mascot_blink.dart';
 import 'mascot_celebration.dart';
-import 'mascot_core.dart';
 import 'mascot_cry.dart';
 import 'mascot_happy.dart';
 import 'mascot_idle.dart';
