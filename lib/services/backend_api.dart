@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../config/app_config.dart';
 import '../models/auth_models.dart';
-import '../models/content_models.dart';
+import '../models/word_Content_models.dart';
 import '../models/quiz_models.dart';
 import 'session_store.dart';
 

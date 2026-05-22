@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/content_models.dart';
+import '../models/word_Content_models.dart';
 import '../screens/flash_cards_screen.dart';
 import '../services/backend_api.dart';
 import '../theme/app_theme.dart';

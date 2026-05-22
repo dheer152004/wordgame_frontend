@@ -25,6 +25,7 @@ class ApiWord {
   final String memeImageUrl;
   final String categoryName;
   final List<String> examples;
+  final String audioUrl;
 
   const ApiWord({
     required this.id,
@@ -33,6 +34,7 @@ class ApiWord {
     required this.memeImageUrl,
     required this.categoryName,
     required this.examples,
+    this.audioUrl = '',
   });
 
   factory ApiWord.fromJson(Map<String, dynamic> json) {
@@ -48,6 +50,7 @@ class ApiWord {
       memeImageUrl: json['memeImageUrl']?.toString() ?? '',
       categoryName: json['categoryName']?.toString() ?? '',
       examples: examples,
+      audioUrl: json['audioUrl']?.toString() ?? '',
     );
   }
 

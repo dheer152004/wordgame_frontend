@@ -8,8 +8,9 @@ import 'dart:typed_data';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:path_provider/path_provider.dart';
 
-import '../models/content_models.dart';
+import '../models/word_Content_models.dart';
 import '../services/backend_api.dart';
+import '../services/audio_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/custom_native_ad.dart';
 
@@ -870,20 +871,63 @@ class _CardImage extends StatelessWidget {
   }
 }
 
-class _WordDetailSheet extends StatelessWidget {
+class _WordDetailSheet extends StatefulWidget {
   final ApiWord word;
 
   const _WordDetailSheet({required this.word});
 
+  @override
+  State<_WordDetailSheet> createState() => _WordDetailSheetState();
+}
+
+class _WordDetailSheetState extends State<_WordDetailSheet> {
+  final AudioService _audioService = AudioService();
+  bool _isPlayingAudio = false;
+
+  Future<void> _playPronunciation() async {
+    if (widget.word.audioUrl.isEmpty) {
+      return;
+    }
+
+    setState(() {
+      _isPlayingAudio = true;
+    });
+
+    try {
+      await _audioService.playPronunciation(widget.word.audioUrl);
+
+      // Listen for when audio finishes
+      if (mounted && _audioService.isPlaying) {
+        // Give the audio player a moment to start
+        await Future.delayed(const Duration(milliseconds: 500));
+      }
+    } catch (e) {
+      debugPrint('Error playing pronunciation: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error playing audio: $e')));
+      }
+    } finally {
+      // Reset playing state after audio completes
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (mounted) {
+        setState(() {
+          _isPlayingAudio = false;
+        });
+      }
+    }
+  }
+
   Future<void> _shareWord(BuildContext context) async {
     try {
       final shareText = StringBuffer()
-        ..writeln('Word: ${word.word}')
-        ..writeln('Meaning: ${word.meaning}')
-        ..writeln('Category: ${word.categoryName}');
+        ..writeln('Word: ${widget.word.word}')
+        ..writeln('Meaning: ${widget.word.meaning}')
+        ..writeln('Category: ${widget.word.categoryName}');
 
-      if (word.primaryExample.isNotEmpty) {
-        shareText..writeln('Example: ${word.primaryExample}');
+      if (widget.word.primaryExample.isNotEmpty) {
+        shareText..writeln('Example: ${widget.word.primaryExample}');
       }
 
       shareText
@@ -892,7 +936,7 @@ class _WordDetailSheet extends StatelessWidget {
 
       await Share.share(
         shareText.toString().trim(),
-        subject: '${word.word} - Klug',
+        subject: '${widget.word.word} - Klug',
       );
 
       if (!context.mounted) {
@@ -943,18 +987,45 @@ class _WordDetailSheet extends StatelessWidget {
                 const SizedBox(height: 18),
                 Row(
                   children: [
-                    _CategoryPill(label: word.categoryName),
+                    _CategoryPill(label: widget.word.categoryName),
                     const Spacer(),
-                    TextButton.icon(
-                      onPressed: () => _shareWord(context),
-                      icon: const Icon(Icons.share_outlined),
-                      label: const Text('Share'),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        TextButton.icon(
+                          onPressed: () => _shareWord(context),
+                          icon: const Icon(Icons.share_outlined),
+                          label: const Text('Share'),
+                        ),
+                        SizedBox(
+                          height: 40,
+                          width: 40,
+                          child: IconButton(
+                            onPressed: widget.word.audioUrl.isEmpty
+                                ? null
+                                : (_isPlayingAudio ? null : _playPronunciation),
+                            icon: Icon(
+                              _isPlayingAudio
+                                  ? Icons.stop_circle
+                                  : Icons.volume_up_outlined,
+                              color: widget.word.audioUrl.isEmpty
+                                  ? AppColors.textSecondary.withAlpha(128)
+                                  : (_isPlayingAudio
+                                        ? AppColors.planCardBlue
+                                        : AppColors.textPrimary),
+                            ),
+                            tooltip: widget.word.audioUrl.isEmpty
+                                ? 'Pronunciation not available'
+                                : 'Listen to pronunciation',
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
                 const SizedBox(height: 14),
                 Text(
-                  word.word,
+                  widget.word.word,
                   style: const TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.w900,
@@ -962,21 +1033,21 @@ class _WordDetailSheet extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-                Text(word.meaning, style: AppTextStyles.planCardDetail),
+                Text(widget.word.meaning, style: AppTextStyles.planCardDetail),
                 const SizedBox(height: 18),
-                if (word.memeImageUrl.isNotEmpty)
+                if (widget.word.memeImageUrl.isNotEmpty)
                   ClipRRect(
                     borderRadius: BorderRadius.circular(22),
                     child: AspectRatio(
                       aspectRatio: 1,
                       child: Image.network(
-                        word.memeImageUrl,
+                        widget.word.memeImageUrl,
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                       ),
                     ),
                   ),
-                if (word.examples.isNotEmpty) ...[
+                if (widget.word.examples.isNotEmpty) ...[
                   const SizedBox(height: 20),
                   const Text(
                     'Examples',
@@ -987,7 +1058,7 @@ class _WordDetailSheet extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  for (final example in word.examples) ...[
+                  for (final example in widget.word.examples) ...[
                     Container(
                       width: double.infinity,
                       margin: const EdgeInsets.only(bottom: 10),
