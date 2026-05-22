@@ -101,6 +101,57 @@ class UserProfile {
     };
   }
 
+  UserProfile copyWith({
+    String? token,
+    int? id,
+    String? username,
+    String? email,
+    String? displayName,
+    String? avatarUrl,
+    String? bio,
+    String? location,
+    int? totalXp,
+    int? level,
+    int? currentStreak,
+    int? longestStreak,
+    int? xpToNextLevel,
+    double? levelProgress,
+    int? totalWordsSaved,
+    int? totalQuizzesCompleted,
+    double? averageQuizScore,
+    int? wordsMastered,
+    DateTime? lastActive,
+    DateTime? createdAt,
+    String? lastQuizDate,
+    List<String>? recentBadges,
+  }) {
+    return UserProfile(
+      token: token ?? this.token,
+      id: id ?? this.id,
+      username: username ?? this.username,
+      email: email ?? this.email,
+      displayName: displayName ?? this.displayName,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      bio: bio ?? this.bio,
+      location: location ?? this.location,
+      totalXp: totalXp ?? this.totalXp,
+      level: level ?? this.level,
+      currentStreak: currentStreak ?? this.currentStreak,
+      longestStreak: longestStreak ?? this.longestStreak,
+      xpToNextLevel: xpToNextLevel ?? this.xpToNextLevel,
+      levelProgress: levelProgress ?? this.levelProgress,
+      totalWordsSaved: totalWordsSaved ?? this.totalWordsSaved,
+      totalQuizzesCompleted:
+          totalQuizzesCompleted ?? this.totalQuizzesCompleted,
+      averageQuizScore: averageQuizScore ?? this.averageQuizScore,
+      wordsMastered: wordsMastered ?? this.wordsMastered,
+      lastActive: lastActive ?? this.lastActive,
+      createdAt: createdAt ?? this.createdAt,
+      lastQuizDate: lastQuizDate ?? this.lastQuizDate,
+      recentBadges: recentBadges ?? this.recentBadges,
+    );
+  }
+
   String get greetingName =>
       displayName.trim().isNotEmpty ? displayName : username;
 }

@@ -52,7 +52,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final profile = await BackendApi.instance.fetchUserProfile();
       if (mounted) {
         setState(() {
-          _profile = profile;
+          _profile = _mergeAvatarPreference(profile);
           _loadingProfile = false;
         });
       }
@@ -116,6 +116,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     final isSignedIn = user != null;
     final profile = _profile;
+    final avatarUrl = _resolvedAvatarUrl(profile);
     final displayName = profile?.greetingName.isNotEmpty == true
         ? profile!.greetingName
         : (isSignedIn && user!.greetingName.isNotEmpty
@@ -126,9 +127,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         : (isSignedIn
               ? 'Your account details and learning stats'
               : 'You are browsing as a guest');
-    final avatarUrl = profile?.avatarUrl.isNotEmpty == true
-        ? profile!.avatarUrl
-        : (isSignedIn ? user!.avatarUrl : '');
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -398,9 +396,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       text: currentProfile.avatarUrl,
     );
     final bioController = TextEditingController(text: currentProfile.bio);
-    final locationController = TextEditingController(
-      text: currentProfile.location,
-    );
     var isSaving = false;
 
     try {
@@ -419,9 +414,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        _buildAvatarPreview(avatarUrlController.text.trim()),
+                        const SizedBox(height: 16),
                         TextField(
                           controller: displayNameController,
                           enabled: !isSaving,
+                          onChanged: (_) => setDialogState(() {}),
                           decoration: const InputDecoration(
                             labelText: 'Display name',
                           ),
@@ -430,6 +428,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         TextField(
                           controller: avatarUrlController,
                           enabled: !isSaving,
+                          onChanged: (_) => setDialogState(() {}),
                           decoration: const InputDecoration(
                             labelText: 'Avatar URL',
                           ),
@@ -438,16 +437,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         TextField(
                           controller: bioController,
                           enabled: !isSaving,
+                          onChanged: (_) => setDialogState(() {}),
                           minLines: 3,
                           maxLines: 5,
                           decoration: const InputDecoration(labelText: 'Bio'),
                         ),
                         const SizedBox(height: 12),
-                        TextField(
-                          controller: locationController,
-                          enabled: !isSaving,
-                          decoration: const InputDecoration(
-                            labelText: 'Location',
+                        const Text(
+                          'Location is detected automatically from your IP address.',
+                          style: TextStyle(color: AppColors.textSecondary),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          avatarUrlController.text.trim().isEmpty
+                              ? 'Paste a direct image URL to preview the avatar.'
+                              : 'Preview updates as you edit the URL.',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 12,
                           ),
                         ),
                       ],
@@ -470,19 +478,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             });
 
                             try {
+                              final location = await BackendApi.instance
+                                  .fetchLocationFromIp();
                               final updatedProfile = await BackendApi.instance
                                   .updateUserProfile(
                                     displayName: displayNameController.text
                                         .trim(),
                                     avatarUrl: avatarUrlController.text.trim(),
                                     bio: bioController.text.trim(),
-                                    location: locationController.text.trim(),
+                                    location: location,
                                   );
 
-                              final mergedProfile = UserProfile.fromJson({
-                                ...updatedProfile.toJson(),
-                                'token': user!.token,
-                              });
+                              final mergedProfile = updatedProfile.copyWith(
+                                token: user!.token,
+                                avatarUrl: avatarUrlController.text.trim(),
+                                displayName: displayNameController.text.trim(),
+                                bio: bioController.text.trim(),
+                                location: location,
+                              );
 
                               if (!mounted) {
                                 return;
@@ -532,7 +545,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       displayNameController.dispose();
       avatarUrlController.dispose();
       bioController.dispose();
-      locationController.dispose();
     }
   }
 
@@ -576,37 +588,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Center(
-          child: Container(
-            width: 88,
-            height: 88,
-            decoration: BoxDecoration(
-              color: AppColors.challengeCard,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.challengeCard.withAlpha(72),
-                  blurRadius: 18,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-              border: Border.all(color: Colors.white.withAlpha(18)),
-            ),
-            child: ClipOval(
-              child: profile.avatarUrl.isNotEmpty
-                  ? Image.network(
-                      profile.avatarUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const Icon(
-                        Icons.person,
-                        size: 40,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Icon(Icons.person, size: 40, color: Colors.white),
-            ),
-          ),
-        ),
+        _buildAvatarPreview(_resolvedAvatarUrl(profile)),
         const SizedBox(height: 16),
         _InfoTile(label: 'Username', value: profile.username),
         _InfoTile(label: 'Email', value: profile.email),
@@ -691,6 +673,66 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   String _displayValue(String value) {
     return value.trim().isNotEmpty ? value : 'Not set';
+  }
+
+  UserProfile _mergeAvatarPreference(UserProfile fetchedProfile) {
+    final localAvatar = user?.avatarUrl.trim() ?? '';
+    if (localAvatar.isNotEmpty &&
+        _isGeneratedAvatarUrl(fetchedProfile.avatarUrl)) {
+      return fetchedProfile.copyWith(avatarUrl: localAvatar);
+    }
+
+    return fetchedProfile;
+  }
+
+  String _resolvedAvatarUrl(UserProfile? profile) {
+    final profileAvatar = profile?.avatarUrl.trim() ?? '';
+    if (profileAvatar.isNotEmpty && !_isGeneratedAvatarUrl(profileAvatar)) {
+      return profileAvatar;
+    }
+
+    final localAvatar = user?.avatarUrl.trim() ?? '';
+    if (localAvatar.isNotEmpty) {
+      return localAvatar;
+    }
+
+    return profileAvatar;
+  }
+
+  bool _isGeneratedAvatarUrl(String value) {
+    return value.contains('ui-avatars.com');
+  }
+
+  Widget _buildAvatarPreview(String avatarUrl) {
+    return Center(
+      child: Container(
+        width: 88,
+        height: 88,
+        decoration: BoxDecoration(
+          color: AppColors.challengeCard,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.challengeCard.withAlpha(72),
+              blurRadius: 18,
+              offset: const Offset(0, 10),
+            ),
+          ],
+          border: Border.all(color: Colors.white.withAlpha(18)),
+        ),
+        child: ClipOval(
+          child: avatarUrl.isNotEmpty
+              ? Image.network(
+                  avatarUrl,
+                  key: ValueKey(avatarUrl),
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) =>
+                      const Icon(Icons.person, size: 40, color: Colors.white),
+                )
+              : const Icon(Icons.person, size: 40, color: Colors.white),
+        ),
+      ),
+    );
   }
 
   String _formatDateTime(DateTime? value) {

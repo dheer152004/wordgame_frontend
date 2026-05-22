@@ -30,6 +30,7 @@ class BackendApi {
   static const String _wordDetailCachePrefix = 'word_frontend_word_detail_';
   static const String _categoryWordsCachePrefix =
       'word_frontend_category_words_';
+  static const String _ipLocationLookupUrl = 'https://ipapi.co/json/';
 
   final http.Client _client = http.Client();
   List<ApiCategory>? _cachedCategories;
@@ -108,6 +109,8 @@ class BackendApi {
       body: jsonEncode({
         'displayName': displayName,
         'avatarUrl': avatarUrl,
+        'avatar': avatarUrl,
+        'avatarURL': avatarUrl,
         'bio': bio,
         'location': location,
       }),
@@ -119,6 +122,42 @@ class BackendApi {
     }
 
     throw const BackendException('Unexpected profile update response.');
+  }
+
+  Future<UserProfile> updateUserProfileFromIp({
+    required String displayName,
+    required String avatarUrl,
+    required String bio,
+  }) async {
+    final location = await fetchLocationFromIp();
+    return updateUserProfile(
+      displayName: displayName,
+      avatarUrl: avatarUrl,
+      bio: bio,
+      location: location,
+    );
+  }
+
+  Future<String> fetchLocationFromIp() async {
+    final response = await _client.get(Uri.parse(_ipLocationLookupUrl));
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw BackendException(
+        'Unable to determine location from IP (${response.statusCode}).',
+      );
+    }
+
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map<String, dynamic>) {
+      throw const BackendException('Unexpected IP location response.');
+    }
+
+    final location = _formatIpLocation(decoded);
+    if (location.isEmpty) {
+      throw const BackendException('Location not available from IP lookup.');
+    }
+
+    return location;
   }
 
   Future<List<ApiCategory>> fetchCategories({bool forceRefresh = false}) async {
@@ -409,6 +448,28 @@ class BackendApi {
     }
 
     throw ArgumentError('Unsupported cache item type: ${item.runtimeType}');
+  }
+
+  String _formatIpLocation(Map<String, dynamic> json) {
+    final city = json['city']?.toString().trim() ?? '';
+    final region = json['region']?.toString().trim() ?? '';
+    final country =
+        json['country_name']?.toString().trim() ??
+        json['country']?.toString().trim() ??
+        '';
+
+    final parts = <String>[];
+    if (city.isNotEmpty) {
+      parts.add(city);
+    }
+    if (region.isNotEmpty && region != city) {
+      parts.add(region);
+    }
+    if (country.isNotEmpty) {
+      parts.add(country);
+    }
+
+    return parts.join(', ');
   }
 
   Future<List<T>?> _readCachedList<T>(
