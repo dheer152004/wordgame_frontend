@@ -70,4 +70,16 @@ class SessionStore {
     final preferences = await SharedPreferences.getInstance();
     await preferences.remove(_usernameKey);
   }
+
+  // Lightweight helpers for UI quick actions. These keys are app-local
+  // and no-op if not present.
+  static Future<void> clearCache() async {
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.remove('word_frontend_app_cache');
+  }
+
+  static Future<void> clearHistory() async {
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.remove('word_frontend_activity_history');
+  }
 }

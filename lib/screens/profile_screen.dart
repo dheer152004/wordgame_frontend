@@ -1,14 +1,16 @@
+import 'dart:ui' as ui;
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
 import '../main.dart';
 import '../models/profile_models.dart';
-import '../services/backend_api.dart';
 import '../services/session_store.dart';
+import '../services/backend_api.dart';
 import '../theme/app_theme.dart';
 import 'auth_screen.dart';
 import '../widgets/profile_saved_words_section.dart';
+import 'saved_words_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final UserProfile? user;
@@ -60,7 +62,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (user == null) {
       return;
     }
-
     setState(() {
       _loadingProfile = true;
     });
@@ -83,7 +84,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _fetchQuizStats({bool forceRefresh = false}) async {
-    // Check if we have cached data and it's not expired
     if (!forceRefresh && _cachedQuizStats != null && _cacheTime != null) {
       final elapsed = DateTime.now().difference(_cacheTime!);
       if (elapsed < _cacheExpiration) {
@@ -108,7 +108,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _loadingStats = false;
         });
       }
-    } catch (error) {
+    } catch (_) {
       if (mounted) {
         setState(() {
           _loadingStats = false;
@@ -132,18 +132,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final isSignedIn = user != null;
-    final profile = _profile;
-    final avatarUrl = _resolvedAvatarUrl(profile);
-    final displayName = profile?.greetingName.isNotEmpty == true
-        ? profile!.greetingName
-        : (isSignedIn && user!.greetingName.isNotEmpty
-              ? user!.greetingName
-              : 'Guest');
-    final subtitle = profile?.bio.isNotEmpty == true
-        ? profile!.bio
-        : (isSignedIn
-              ? 'Your account details and learning stats'
-              : 'You are browsing as a guest');
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -284,6 +272,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: 18),
+                // Badges earned section
+                if (_profile != null && _profile!.recentBadges.isNotEmpty) ...[
+                  _buildBadgesSection(_profile!),
+                  const SizedBox(height: 18),
+                ],
               ],
               Container(
                 width: double.infinity,
@@ -902,8 +895,85 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildAvatarPreview(_resolvedAvatarUrl(profile)),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            _buildAvatarPreview(_resolvedAvatarUrl(profile)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    profile.displayName.isNotEmpty
+                        ? profile.displayName
+                        : (profile.username.isNotEmpty
+                              ? profile.username
+                              : 'Guest'),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    profile.bio.isNotEmpty ? profile.bio : 'No bio',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: ElevatedButton(
+                      onPressed: user == null ? null : _editProfile,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.challengeCard,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
+                      ),
+                      child: const Text('Edit Profile'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
         const SizedBox(height: 16),
+        // Compact metrics row
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _metricCard(label: 'Level', value: profile.level.toString()),
+            const SizedBox(width: 8),
+            _metricCard(label: 'XP', value: profile.totalXp.toString()),
+            const SizedBox(width: 8),
+            _metricCard(
+              label: 'Mastered',
+              value: profile.wordsMastered.toString(),
+            ),
+            const SizedBox(width: 8),
+            _metricCard(
+              label: 'Avg Quiz',
+              value: profile.averageQuizScore.toStringAsFixed(1),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        // Info tiles continue
         _InfoTile(label: 'Username', value: profile.username),
         _InfoTile(label: 'Email', value: profile.email),
         _InfoTile(
@@ -961,27 +1031,310 @@ class _ProfileScreenState extends State<ProfileScreen> {
           label: 'Last quiz date',
           value: _displayValue(profile.lastQuizDate),
         ),
-        if (profile.recentBadges.isNotEmpty) ...[
-          const SizedBox(height: 4),
+        // Badges moved to a dedicated section below (Badges Earned)
+        const SizedBox(height: 18),
+        // Quick actions / tiles
+        const Text(
+          'Quick actions',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 8),
+        _quickActionTile(
+          icon: Icons.favorite_border,
+          label: 'Saved words',
+          subtitle: '${profile.totalWordsSaved} saved',
+          onTap: () => Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => SavedWordsScreen())),
+        ),
+        _quickActionTile(
+          icon: Icons.download_rounded,
+          label: 'Downloads',
+          subtitle: 'Manage offline packs',
+          onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Downloads not implemented yet.')),
+          ),
+        ),
+        _quickActionTile(
+          icon: Icons.language_rounded,
+          label: 'Language',
+          subtitle: profile.location.isNotEmpty
+              ? profile.location
+              : 'Auto-detect',
+          onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Language selector not implemented.')),
+          ),
+        ),
+        _quickActionTile(
+          icon: Icons.location_on_outlined,
+          label: 'Location',
+          subtitle: profile.location.isNotEmpty ? profile.location : 'Unknown',
+          onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Location settings not implemented.')),
+          ),
+        ),
+        _quickActionTile(
+          icon: Icons.clear_all_rounded,
+          label: 'Clear cache',
+          subtitle: 'Free up storage',
+          onTap: () async {
+            await SessionStore.clearCache();
+            if (!mounted) return;
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('Cache cleared.')));
+          },
+        ),
+        _quickActionTile(
+          icon: Icons.history_toggle_off_rounded,
+          label: 'Clear history',
+          subtitle: 'Remove local activity',
+          onTap: () async {
+            await SessionStore.clearHistory();
+            if (!mounted) return;
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('History cleared.')));
+          },
+        ),
+      ],
+    );
+  }
+
+  // Small helper widgets
+  Widget _metricCard({required String label, required String value}) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceAlt,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 11,
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBadgesSection(UserProfile profile) {
+    final earnedBadges = profile.recentBadges
+        .where((badge) => badge.trim().isNotEmpty)
+        .toList(growable: false);
+    final badgeCards = _badgeDefinitions();
+    final badgeLookup = <String, _BadgeDefinition>{
+      for (final badge in badgeCards) badge.label.toLowerCase(): badge,
+      for (final badge in badgeCards) badge.alias.toLowerCase(): badge,
+    };
+    final earnedLookup = earnedBadges
+        .map((badge) => badge.toLowerCase())
+        .toSet();
+    final displayCards = <_BadgeGalleryEntry>[];
+    final targetCount = earnedBadges.length > 7 ? earnedBadges.length : 7;
+
+    for (final earnedBadge in earnedBadges) {
+      final normalized = earnedBadge.toLowerCase();
+      final definition = badgeLookup[normalized];
+      displayCards.add(
+        _BadgeGalleryEntry(
+          label: earnedBadge,
+          icon: definition?.icon ?? Icons.emoji_events_rounded,
+          accentColor: definition?.accentColor ?? AppColors.challengeCard,
+          backgroundColor:
+              definition?.backgroundColor ??
+              AppColors.challengeCard.withAlpha(56),
+          earned: true,
+        ),
+      );
+    }
+
+    for (final badge in badgeCards) {
+      if (displayCards.length >= targetCount) {
+        break;
+      }
+
+      final isEarned =
+          earnedLookup.contains(badge.label.toLowerCase()) ||
+          earnedLookup.contains(badge.alias.toLowerCase());
+      if (isEarned) {
+        continue;
+      }
+
+      displayCards.add(
+        _BadgeGalleryEntry(
+          label: badge.label,
+          icon: badge.icon,
+          accentColor: badge.accentColor,
+          backgroundColor: badge.backgroundColor,
+          earned: false,
+        ),
+      );
+    }
+
+    while (displayCards.length < targetCount) {
+      displayCards.add(
+        _BadgeGalleryEntry(
+          label: 'Future badge',
+          icon: Icons.lock_rounded,
+          accentColor: Colors.white,
+          backgroundColor: AppColors.surface.withAlpha(140),
+          earned: false,
+        ),
+      );
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        border: Border.all(color: Colors.white.withAlpha(20)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           const Text(
-            'Recent badges',
+            'Badges earned',
             style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Earned badges stay bright. Locked badges stay blurred until you unlock them.',
+            style: TextStyle(
+              fontSize: 12,
+              height: 1.35,
               color: AppColors.textSecondary,
             ),
           ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final badge in profile.recentBadges)
-                _BadgeChip(label: badge),
-            ],
+          const SizedBox(height: 12),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                for (final badge in displayCards) ...[
+                  _BadgeGalleryCard(
+                    label: badge.label,
+                    icon: badge.icon,
+                    accentColor: badge.accentColor,
+                    backgroundColor: badge.backgroundColor,
+                    earned: badge.earned,
+                  ),
+                  const SizedBox(width: 12),
+                ],
+              ],
+            ),
           ),
         ],
-      ],
+      ),
+    );
+  }
+
+  List<_BadgeDefinition> _badgeDefinitions() {
+    return const [
+      _BadgeDefinition(
+        label: 'Avoid puddles',
+        alias: 'avoid puddles',
+        icon: Icons.directions_walk_rounded,
+        accentColor: Color(0xFF8EE6C7),
+        backgroundColor: Color(0xFF16372E),
+      ),
+      _BadgeDefinition(
+        label: 'Shake the tree',
+        alias: 'shake the tree',
+        icon: Icons.nature_rounded,
+        accentColor: Color(0xFFA7F07D),
+        backgroundColor: Color(0xFF223B14),
+      ),
+      _BadgeDefinition(
+        label: 'Turn the mill',
+        alias: 'turn the mill',
+        icon: Icons.agriculture_rounded,
+        accentColor: Color(0xFFF0D47A),
+        backgroundColor: Color(0xFF42351B),
+      ),
+      _BadgeDefinition(
+        label: 'Breathe slowly',
+        alias: 'breathe slowly',
+        icon: Icons.spa_rounded,
+        accentColor: Color(0xFFF3A6B8),
+        backgroundColor: Color(0xFF3B2030),
+      ),
+      _BadgeDefinition(
+        label: 'Jump high',
+        alias: 'jump high',
+        icon: Icons.self_improvement_rounded,
+        accentColor: Color(0xFF9FD4FF),
+        backgroundColor: Color(0xFF18324A),
+      ),
+      _BadgeDefinition(
+        label: 'Count stars',
+        alias: 'count stars',
+        icon: Icons.star_rounded,
+        accentColor: Color(0xFFFFD36A),
+        backgroundColor: Color(0xFF45361A),
+      ),
+      _BadgeDefinition(
+        label: 'Sleep well',
+        alias: 'sleep well',
+        icon: Icons.nightlight_round,
+        accentColor: Color(0xFFC3B6FF),
+        backgroundColor: Color(0xFF2D2446),
+      ),
+    ];
+  }
+
+  Widget _quickActionTile({
+    required IconData icon,
+    required String label,
+    String? subtitle,
+    VoidCallback? onTap,
+  }) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withAlpha(12)),
+      ),
+      child: ListTile(
+        leading: CircleAvatar(
+          radius: 18,
+          backgroundColor: AppColors.challengeCard.withAlpha(28),
+          child: Icon(icon, color: AppColors.challengeCard),
+        ),
+        title: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+        subtitle: subtitle != null ? Text(subtitle) : null,
+        trailing: const Icon(Icons.chevron_right_rounded),
+        onTap: onTap,
+      ),
     );
   }
 
@@ -1304,28 +1657,142 @@ class _InfoTile extends StatelessWidget {
   }
 }
 
-class _BadgeChip extends StatelessWidget {
+class _BadgeDefinition {
   final String label;
+  final String alias;
+  final IconData icon;
+  final Color accentColor;
+  final Color backgroundColor;
 
-  const _BadgeChip({required this.label});
+  const _BadgeDefinition({
+    required this.label,
+    required this.alias,
+    required this.icon,
+    required this.accentColor,
+    required this.backgroundColor,
+  });
+}
+
+class _BadgeGalleryEntry {
+  final String label;
+  final IconData icon;
+  final Color accentColor;
+  final Color backgroundColor;
+  final bool earned;
+
+  const _BadgeGalleryEntry({
+    required this.label,
+    required this.icon,
+    required this.accentColor,
+    required this.backgroundColor,
+    required this.earned,
+  });
+}
+
+class _BadgeGalleryCard extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final Color accentColor;
+  final Color backgroundColor;
+  final bool earned;
+
+  const _BadgeGalleryCard({
+    required this.label,
+    required this.icon,
+    required this.accentColor,
+    required this.backgroundColor,
+    required this.earned,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    final badgeBody = Container(
+      width: 76,
+      padding: const EdgeInsets.fromLTRB(8, 10, 8, 10),
       decoration: BoxDecoration(
-        color: AppColors.challengeCard.withAlpha(42),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withAlpha(18)),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
+        color: earned ? backgroundColor : AppColors.surface.withAlpha(140),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: earned
+              ? accentColor.withAlpha(140)
+              : Colors.white.withAlpha(12),
         ),
       ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: earned
+                  ? LinearGradient(
+                      colors: [
+                        accentColor.withAlpha(255),
+                        accentColor.withAlpha(170),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    )
+                  : null,
+              color: earned ? null : Colors.white.withAlpha(10),
+            ),
+            child: Icon(
+              icon,
+              color: earned ? Colors.white : Colors.white.withAlpha(120),
+              size: 24,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 11,
+              height: 1.15,
+              fontWeight: FontWeight.w700,
+              color: earned ? AppColors.textPrimary : AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
     );
+
+    final content = AnimatedOpacity(
+      opacity: earned ? 1 : 0.42,
+      duration: const Duration(milliseconds: 180),
+      child: earned
+          ? badgeBody
+          : ImageFiltered(
+              imageFilter: ui.ImageFilter.blur(sigmaX: 1.9, sigmaY: 1.9),
+              child: Stack(
+                children: [
+                  badgeBody,
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(22),
+                        color: Colors.black.withAlpha(10),
+                      ),
+                    ),
+                  ),
+                  const Positioned(
+                    right: 8,
+                    top: 8,
+                    child: Icon(
+                      Icons.lock_rounded,
+                      size: 15,
+                      color: Colors.white70,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+    );
+
+    return Padding(padding: const EdgeInsets.only(right: 0), child: content);
   }
 }
