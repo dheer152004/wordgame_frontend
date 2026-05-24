@@ -455,6 +455,21 @@ class BackendApi {
     return words;
   }
 
+  Future<List<ApiWord>> fetchRandomWords({int page = 0, int size = 10}) async {
+    final response = await _client.get(
+      _uri('/api/words/random?page=$page&size=$size'),
+      headers: await _headers(authenticated: true),
+    );
+
+    final payload = _decodeResponse(response);
+    final items = _asWordList(payload);
+
+    return items
+        .whereType<Map>()
+        .map((entry) => ApiWord.fromJson(Map<String, dynamic>.from(entry)))
+        .toList();
+  }
+
   Future<ApiWord> fetchWordById(int id, {bool forceRefresh = false}) async {
     if (!forceRefresh) {
       final memoryCached = _cachedWordById[id];

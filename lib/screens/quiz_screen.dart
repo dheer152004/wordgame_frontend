@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/quiz_models.dart';
 import '../services/backend_api.dart';
 import '../theme/app_theme.dart';
+import '../widgets/screen_action_buttons.dart';
 
 class QuizScreen extends StatefulWidget {
   const QuizScreen({super.key});
@@ -244,17 +245,16 @@ class _QuizScreenState extends State<QuizScreen> {
               children: [
                 Row(
                   children: [
-                    IconButton(
+                    AppBackIconButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      icon: const Icon(Icons.arrow_back_ios_new_rounded),
                     ),
                     const SizedBox(width: 6),
                     const Expanded(
                       child: Text('Quiz', style: AppTextStyles.sectionTitle),
                     ),
-                    IconButton(
+                    AppRefreshIconButton(
                       onPressed: _loading ? null : _bootstrap,
-                      icon: const Icon(Icons.refresh_rounded),
+                      tooltip: 'Refresh quiz',
                     ),
                   ],
                 ),

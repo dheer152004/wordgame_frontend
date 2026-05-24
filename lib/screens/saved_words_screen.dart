@@ -4,6 +4,7 @@ import '../models/word_Content_models.dart';
 import '../screens/word_sheet_details.dart';
 import '../services/backend_api.dart';
 import '../theme/app_theme.dart';
+import '../widgets/screen_action_buttons.dart';
 
 class SavedWordsScreen extends StatefulWidget {
   const SavedWordsScreen({super.key});
@@ -174,12 +175,7 @@ class _HeaderCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              IconButton(
-                onPressed: onBack,
-                icon: const Icon(Icons.arrow_back_ios_new_rounded),
-                constraints: const BoxConstraints(),
-                padding: EdgeInsets.zero,
-              ),
+              AppBackIconButton(onPressed: onBack),
               const SizedBox(width: 8),
               const Expanded(
                 child: Text(

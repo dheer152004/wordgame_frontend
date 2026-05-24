@@ -13,6 +13,7 @@ import '../services/backend_api.dart';
 import '../theme/app_theme.dart';
 import '../widgets/common_widgets.dart';
 import '../widgets/custom_native_ad.dart';
+import '../widgets/screen_action_buttons.dart';
 import '../widgets/swipe_feature.dart';
 import 'word_sheet_details.dart';
 
@@ -26,12 +27,14 @@ class FlashCardsScreen extends StatefulWidget {
 }
 
 class _FlashCardsScreenState extends State<FlashCardsScreen> {
+  static const String _randomCategoryKey = '__random__';
+
   final List<ApiCategory> _categories = [];
   List<ApiWord> _words = [];
 
   bool _loadingCategories = true;
   bool _loadingWords = false;
-  String? _selectedCategory;
+  String _selectedCategory = _randomCategoryKey;
   String? _errorMessage;
 
   int _currentIndex = 0;
@@ -91,34 +94,8 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
   }
 
   Future<void> _bootstrap() async {
-    try {
-      final categories = await BackendApi.instance.fetchCategories();
-      if (!mounted) return;
-
-      setState(() {
-        _categories
-          ..clear()
-          ..addAll(categories);
-        _loadingCategories = false;
-        _selectedCategory =
-            widget.categoryName ??
-            (categories.isNotEmpty ? categories.first.name : null);
-      });
-
-      if (_selectedCategory != null) {
-        await _loadWords(_selectedCategory!);
-      }
-    } catch (error) {
-      if (!mounted) return;
-      setState(() {
-        _loadingCategories = false;
-        _errorMessage = error.toString();
-      });
-    }
-  }
-
-  Future<void> _loadWords(String categoryName) async {
     setState(() {
+      _loadingCategories = true;
       _loadingWords = true;
       _errorMessage = null;
       _currentIndex = 0;
@@ -126,10 +103,50 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
       _isDragging = false;
     });
 
+    List<ApiCategory> categories = const [];
     try {
-      final words = await BackendApi.instance.fetchWordsByCategory(
-        categoryName,
-      );
+      categories = await BackendApi.instance.fetchCategories();
+    } catch (_) {
+      categories = const [];
+    }
+
+    final requestedCategory = widget.categoryName?.trim() ?? '';
+    final hasRequestedCategory = requestedCategory.isNotEmpty;
+    final initialCategory = hasRequestedCategory
+        ? requestedCategory
+        : _randomCategoryKey;
+
+    if (!mounted) return;
+    setState(() {
+      _categories
+        ..clear()
+        ..addAll(categories);
+      _loadingCategories = false;
+      _selectedCategory = initialCategory;
+    });
+
+    await _loadWordsForSelection(initialCategory, showLoader: false);
+  }
+
+  Future<void> _loadWordsForSelection(
+    String selection, {
+    bool showLoader = true,
+  }) async {
+    if (showLoader) {
+      setState(() {
+        _loadingWords = true;
+        _errorMessage = null;
+        _currentIndex = 0;
+        _dragOffset = Offset.zero;
+        _isDragging = false;
+      });
+    }
+
+    try {
+      final words = selection == _randomCategoryKey
+          ? await BackendApi.instance.fetchRandomWords(size: 12)
+          : await BackendApi.instance.fetchWordsByCategory(selection);
+
       if (!mounted) return;
 
       setState(() {
@@ -140,7 +157,6 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
       _scheduleVisibleImagePreload();
     } catch (error) {
       if (!mounted) return;
-
       setState(() {
         _loadingWords = false;
         _errorMessage = error.toString();
@@ -148,12 +164,13 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
     }
   }
 
-  void _selectCategory(String categoryName) {
-    if (_selectedCategory == categoryName) return;
+  void _selectCategory(String selection) {
+    if (_selectedCategory == selection) return;
+
     setState(() {
-      _selectedCategory = categoryName;
+      _selectedCategory = selection;
     });
-    _loadWords(categoryName);
+    _loadWordsForSelection(selection);
   }
 
   void _advanceCard() {
@@ -276,9 +293,8 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
             children: [
               Row(
                 children: [
-                  IconButton(
+                  AppBackIconButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.arrow_back_ios_new_rounded),
                   ),
                   const SizedBox(width: 6),
                   const Text('Flash Cards', style: AppTextStyles.sectionTitle),
@@ -286,7 +302,7 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
               ),
               const SizedBox(height: 6),
               const Text(
-                'Browse categories and swipe through words',
+                'Swipe through a random word deck from all categories',
                 style: TextStyle(
                   fontSize: 15,
                   height: 1.5,
@@ -312,23 +328,27 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
       );
     }
 
-    if (_errorMessage != null && _categories.isEmpty) {
-      return InlineError(message: _errorMessage!);
-    }
-
     return SizedBox(
       height: 46,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        itemCount: _categories.length,
+        itemCount: _categories.length + 1,
         separatorBuilder: (_, __) => const SizedBox(width: 10),
         itemBuilder: (context, index) {
-          final category = _categories[index];
-          final selected = category.name == _selectedCategory;
+          final isRandomChip = index == 0;
+          final chipValue = isRandomChip
+              ? _randomCategoryKey
+              : _categories[index - 1].name;
+          final selected = chipValue == _selectedCategory;
+
+          final chipLabel = isRandomChip
+              ? 'Random'
+              : '${_categories[index - 1].name} · ${_categories[index - 1].wordCount}';
+
           return ChoiceChip(
-            label: Text('${category.name} · ${category.wordCount}'),
+            label: Text(chipLabel),
             selected: selected,
-            onSelected: (_) => _selectCategory(category.name),
+            onSelected: (_) => _selectCategory(chipValue),
             labelStyle: TextStyle(
               color: selected ? Colors.black : AppColors.textPrimary,
               fontWeight: FontWeight.w700,
@@ -346,14 +366,12 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
   }
 
   Widget _buildDeck(double swipeThreshold) {
-    if (_loadingWords) {
-      return const Center(child: CircularProgressIndicator());
+    if (_errorMessage != null && _words.isEmpty) {
+      return Center(child: InlineError(message: _errorMessage!));
     }
 
-    if (_selectedCategory == null) {
-      return const Center(
-        child: Text('No categories were returned by the backend.'),
-      );
+    if (_loadingWords) {
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (_words.isEmpty) {
@@ -368,13 +386,15 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
             ),
             const SizedBox(height: 10),
             Text(
-              'No words found for $_selectedCategory',
+              _selectedCategory == _randomCategoryKey
+                  ? 'No random words found right now.'
+                  : 'No words found for $_selectedCategory.',
               style: AppTextStyles.planCardDetail,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 10),
             TextButton(
-              onPressed: () => _loadWords(_selectedCategory!),
+              onPressed: () => _loadWordsForSelection(_selectedCategory),
               child: const Text('Try again'),
             ),
           ],

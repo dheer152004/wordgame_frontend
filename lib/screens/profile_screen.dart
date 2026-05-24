@@ -10,6 +10,7 @@ import '../services/backend_api.dart';
 import '../theme/app_theme.dart';
 import 'auth_screen.dart';
 import '../widgets/profile_saved_words_section.dart';
+import '../widgets/screen_action_buttons.dart';
 import 'saved_words_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -143,9 +144,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             children: [
               Row(
                 children: [
-                  IconButton(
+                  AppBackIconButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.arrow_back_ios_new_rounded),
                   ),
                   const SizedBox(width: 6),
                   const Text('Profile', style: AppTextStyles.sectionTitle),
@@ -196,13 +196,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ),
                               )
                             else
-                              IconButton(
+                              AppRefreshIconButton(
                                 onPressed: isSignedIn ? _fetchProfile : null,
-                                icon: const Icon(Icons.refresh_rounded),
                                 tooltip: 'Refresh profile',
-                                iconSize: 20,
-                                constraints: const BoxConstraints(),
-                                padding: EdgeInsets.zero,
                               ),
                           ],
                         ),
@@ -255,14 +251,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               color: AppColors.textPrimary,
                             ),
                           ),
-                          IconButton(
+                          AppRefreshIconButton(
                             onPressed: () =>
                                 _fetchQuizStats(forceRefresh: true),
-                            icon: const Icon(Icons.refresh_rounded),
                             tooltip: 'Refresh stats',
-                            iconSize: 20,
-                            constraints: const BoxConstraints(),
-                            padding: EdgeInsets.zero,
                           ),
                         ],
                       ),
