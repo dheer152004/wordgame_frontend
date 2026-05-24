@@ -95,8 +95,11 @@ class CardImage extends StatelessWidget {
                 borderRadius: BorderRadius.circular(22),
                 child: Image.network(
                   imageUrl,
+                  width: size,
+                  height: size,
                   fit: BoxFit.contain,
                   filterQuality: FilterQuality.medium,
+                  webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
                   errorBuilder: (_, __, ___) => const Icon(
                     Icons.image_not_supported_outlined,
                     size: 42,

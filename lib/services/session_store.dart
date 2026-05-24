@@ -12,7 +12,8 @@ class SessionStore {
   static Future<void> saveUser(UserProfile user) async {
     _currentUser = user;
     final preferences = await SharedPreferences.getInstance();
-    await preferences.setString(_userKey, jsonEncode(user.toJson()));
+    final persistedUser = user.copyWith(avatarUrl: '');
+    await preferences.setString(_userKey, jsonEncode(persistedUser.toJson()));
   }
 
   static Future<UserProfile?> restoreUser() async {
@@ -28,7 +29,7 @@ class SessionStore {
 
     final decoded = jsonDecode(raw);
     if (decoded is Map<String, dynamic>) {
-      _currentUser = UserProfile.fromJson(decoded);
+      _currentUser = UserProfile.fromJson(decoded).copyWith(avatarUrl: '');
       return _currentUser;
     }
 

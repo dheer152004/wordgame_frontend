@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:path_provider/path_provider.dart';
@@ -191,6 +191,10 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
     for (final word in visibleWords) {
       final imageUrl = word.memeImageUrl.trim();
       if (imageUrl.isEmpty) continue;
+
+      if (kIsWeb) {
+        continue;
+      }
 
       try {
         await precacheImage(NetworkImage(imageUrl), context);

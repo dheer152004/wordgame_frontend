@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 
 import '../main.dart';
@@ -6,6 +8,7 @@ import '../services/backend_api.dart';
 import '../services/session_store.dart';
 import '../theme/app_theme.dart';
 import 'auth_screen.dart';
+import '../widgets/profile_saved_words_section.dart';
 
 class ProfileScreen extends StatefulWidget {
   final UserProfile? user;
@@ -17,6 +20,20 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  static const String _diceBearApiRoot = 'https://api.dicebear.com/9.x';
+  static const List<String> _diceBearAvatarStyles = <String>[
+    'adventurer',
+    'avataaars',
+    'big-ears',
+    'bottts',
+    'fun-emoji',
+    'identicon',
+    'lorelei',
+    'micah',
+    'pixel-art',
+    'shapes',
+  ];
+
   UserProfile? user;
   UserProfile? _profile;
   bool _loadingProfile = false;
@@ -220,6 +237,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               const SizedBox(height: 18),
+              const ProfileSavedWordsSection(),
+              const SizedBox(height: 18),
               if (_loadingStats)
                 Container(
                   padding: const EdgeInsets.symmetric(vertical: 32),
@@ -327,6 +346,55 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(AppRadius.card),
+                  border: Border.all(color: Colors.white.withAlpha(20)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Security',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Update your account password without leaving the profile page.',
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: OutlinedButton.icon(
+                        onPressed: isSignedIn ? _changePassword : null,
+                        icon: const Icon(Icons.lock_reset_rounded),
+                        label: const Text('Change password'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.textPrimary,
+                          side: BorderSide(color: Colors.white.withAlpha(24)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 18),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
                   color: AppColors.challengeCard.withAlpha(31),
                   borderRadius: BorderRadius.circular(AppRadius.card),
                   border: Border.all(color: Colors.white.withAlpha(16)),
@@ -393,10 +461,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
       text: currentProfile.displayName,
     );
     final avatarUrlController = TextEditingController(
-      text: currentProfile.avatarUrl,
+      text: _resolvedAvatarUrl(currentProfile),
     );
     final bioController = TextEditingController(text: currentProfile.bio);
+    final avatarSeed = _avatarSeed(currentProfile);
+    final diceBearAvatars = _diceBearAvatarStyles
+        .map(
+          (style) => (
+            style: style,
+            url: _buildDiceBearAvatarUrl(style: style, seed: avatarSeed),
+          ),
+        )
+        .toList();
     var isSaving = false;
+    var _obscureCurrent = true;
+    var _obscureNew = true;
+    var _obscureConfirm = true;
 
     try {
       await showDialog<void>(
@@ -431,6 +511,54 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           onChanged: (_) => setDialogState(() {}),
                           decoration: const InputDecoration(
                             labelText: 'Avatar URL',
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        const Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Pick from DiceBear avatars',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 10,
+                          runSpacing: 10,
+                          children: [
+                            for (final option in diceBearAvatars)
+                              _buildAvatarOption(
+                                url: option.url,
+                                label: option.style,
+                                selected:
+                                    avatarUrlController.text.trim() ==
+                                        option.url ||
+                                    _diceBearStyleFromUrl(
+                                          avatarUrlController.text.trim(),
+                                        ) ==
+                                        option.style,
+                                enabled: !isSaving,
+                                onTap: () {
+                                  avatarUrlController.text = option.url;
+                                  avatarUrlController.selection =
+                                      TextSelection.collapsed(
+                                        offset: avatarUrlController.text.length,
+                                      );
+                                  setDialogState(() {});
+                                },
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Powered by api.dicebear.com. You can still paste any custom image URL above.',
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 12,
                           ),
                         ),
                         const SizedBox(height: 12),
@@ -489,9 +617,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     location: location,
                                   );
 
-                              final mergedProfile = updatedProfile.copyWith(
+                              final avatarUrl = avatarUrlController.text.trim();
+                              final profileWithAvatar = avatarUrl.isNotEmpty
+                                  ? await BackendApi.instance
+                                        .uploadUserAvatarFromUrl(avatarUrl)
+                                  : updatedProfile.copyWith(avatarUrl: '');
+
+                              final mergedProfile = profileWithAvatar.copyWith(
                                 token: user!.token,
-                                avatarUrl: avatarUrlController.text.trim(),
                                 displayName: displayNameController.text.trim(),
                                 bio: bioController.text.trim(),
                                 location: location,
@@ -545,6 +678,187 @@ class _ProfileScreenState extends State<ProfileScreen> {
       displayNameController.dispose();
       avatarUrlController.dispose();
       bioController.dispose();
+    }
+  }
+
+  Future<void> _changePassword() async {
+    if (user == null) {
+      return;
+    }
+
+    final currentPasswordController = TextEditingController();
+    final newPasswordController = TextEditingController();
+    final confirmPasswordController = TextEditingController();
+    var isSaving = false;
+    var _obscureCurrent = true;
+    var _obscureNew = true;
+    var _obscureConfirm = true;
+
+    try {
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) {
+          return StatefulBuilder(
+            builder: (context, setDialogState) {
+              final currentPassword = currentPasswordController.text;
+              final newPassword = newPasswordController.text;
+              final confirmPassword = confirmPasswordController.text;
+              final canSave =
+                  !isSaving &&
+                  currentPassword.isNotEmpty &&
+                  newPassword.length >= 6 &&
+                  newPassword == confirmPassword;
+
+              return AlertDialog(
+                backgroundColor: AppColors.surface,
+                title: const Text('Change password'),
+                content: SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 420),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        TextField(
+                          controller: currentPasswordController,
+                          enabled: !isSaving,
+                          obscureText: _obscureCurrent,
+                          onChanged: (_) => setDialogState(() {}),
+                          decoration: InputDecoration(
+                            labelText: 'Current password',
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscureCurrent
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                                color: AppColors.textSecondary,
+                              ),
+                              onPressed: () => setDialogState(() {
+                                _obscureCurrent = !_obscureCurrent;
+                              }),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: newPasswordController,
+                          enabled: !isSaving,
+                          obscureText: _obscureNew,
+                          onChanged: (_) => setDialogState(() {}),
+                          decoration: InputDecoration(
+                            labelText: 'New password',
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscureNew
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                                color: AppColors.textSecondary,
+                              ),
+                              onPressed: () => setDialogState(() {
+                                _obscureNew = !_obscureNew;
+                              }),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: confirmPasswordController,
+                          enabled: !isSaving,
+                          obscureText: _obscureConfirm,
+                          onChanged: (_) => setDialogState(() {}),
+                          decoration: InputDecoration(
+                            labelText: 'Confirm new password',
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscureConfirm
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                                color: AppColors.textSecondary,
+                              ),
+                              onPressed: () => setDialogState(() {
+                                _obscureConfirm = !_obscureConfirm;
+                              }),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'Use at least 6 characters and make sure the confirmation matches.',
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: isSaving
+                        ? null
+                        : () => Navigator.of(dialogContext).pop(),
+                    child: const Text('Cancel'),
+                  ),
+                  ElevatedButton(
+                    onPressed: canSave
+                        ? () async {
+                            setDialogState(() {
+                              isSaving = true;
+                            });
+
+                            try {
+                              await BackendApi.instance.changePassword(
+                                currentPassword: currentPasswordController.text
+                                    .trim(),
+                                newPassword: newPasswordController.text.trim(),
+                                confirmPassword: confirmPasswordController.text
+                                    .trim(),
+                              );
+
+                              if (!mounted) {
+                                return;
+                              }
+
+                              if (dialogContext.mounted) {
+                                Navigator.of(dialogContext).pop();
+                              }
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Password updated.'),
+                                ),
+                              );
+                            } catch (error) {
+                              if (!dialogContext.mounted) {
+                                return;
+                              }
+
+                              setDialogState(() {
+                                isSaving = false;
+                              });
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Unable to change password: $error',
+                                  ),
+                                ),
+                              );
+                            }
+                          }
+                        : null,
+                    child: Text(isSaving ? 'Saving...' : 'Update'),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+      );
+    } finally {
+      currentPasswordController.dispose();
+      newPasswordController.dispose();
+      confirmPasswordController.dispose();
     }
   }
 
@@ -676,31 +990,56 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   UserProfile _mergeAvatarPreference(UserProfile fetchedProfile) {
-    final localAvatar = user?.avatarUrl.trim() ?? '';
-    if (localAvatar.isNotEmpty &&
-        _isGeneratedAvatarUrl(fetchedProfile.avatarUrl)) {
-      return fetchedProfile.copyWith(avatarUrl: localAvatar);
+    final normalizedFetchedAvatar = _normalizeLegacyAvatarUrl(
+      fetchedProfile.avatarUrl,
+      fetchedProfile,
+    );
+
+    if (normalizedFetchedAvatar != fetchedProfile.avatarUrl) {
+      return fetchedProfile.copyWith(avatarUrl: normalizedFetchedAvatar);
     }
 
     return fetchedProfile;
   }
 
   String _resolvedAvatarUrl(UserProfile? profile) {
-    final profileAvatar = profile?.avatarUrl.trim() ?? '';
-    if (profileAvatar.isNotEmpty && !_isGeneratedAvatarUrl(profileAvatar)) {
+    final profileAvatar = _normalizeLegacyAvatarUrl(
+      profile?.avatarUrl.trim() ?? '',
+      profile ?? user,
+    );
+    if (profileAvatar.isNotEmpty) {
+      // If backend returns a relative path, prefix with base URL.
+      final trimmed = profileAvatar;
+      if (trimmed.startsWith('/')) {
+        return '${BackendApi.instance.baseUrl}$trimmed';
+      }
+      if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+        return '${BackendApi.instance.baseUrl}/$trimmed';
+      }
       return profileAvatar;
     }
 
-    final localAvatar = user?.avatarUrl.trim() ?? '';
-    if (localAvatar.isNotEmpty) {
-      return localAvatar;
-    }
-
-    return profileAvatar;
+    return '';
   }
 
-  bool _isGeneratedAvatarUrl(String value) {
+  bool _isLegacyUiAvatarUrl(String value) {
     return value.contains('ui-avatars.com');
+  }
+
+  String _normalizeLegacyAvatarUrl(String value, UserProfile? sourceProfile) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      return '';
+    }
+
+    if (_isLegacyUiAvatarUrl(trimmed)) {
+      return _buildDiceBearAvatarUrl(
+        style: 'adventurer',
+        seed: _avatarSeed(sourceProfile ?? user),
+      );
+    }
+
+    return trimmed;
   }
 
   Widget _buildAvatarPreview(String avatarUrl) {
@@ -722,17 +1061,154 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         child: ClipOval(
           child: avatarUrl.isNotEmpty
-              ? Image.network(
-                  avatarUrl,
-                  key: ValueKey(avatarUrl),
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) =>
-                      const Icon(Icons.person, size: 40, color: Colors.white),
+              ? FutureBuilder<Uint8List>(
+                  future: BackendApi.instance.fetchAvatarBytes(avatarUrl),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(
+                        child: SizedBox(
+                          width: 28,
+                          height: 28,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      );
+                    }
+
+                    if (snapshot.hasData) {
+                      return Image.memory(
+                        snapshot.data!,
+                        key: ValueKey(avatarUrl),
+                        fit: BoxFit.cover,
+                      );
+                    }
+
+                    // Fallback to Image.network without auth headers; if that fails show icon
+                    return Image.network(
+                      avatarUrl,
+                      key: ValueKey('fallback-$avatarUrl'),
+                      width: 88,
+                      height: 88,
+                      fit: BoxFit.cover,
+                      webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
+                      errorBuilder: (_, __, ___) => const Icon(
+                        Icons.person,
+                        size: 40,
+                        color: Colors.white,
+                      ),
+                    );
+                  },
                 )
               : const Icon(Icons.person, size: 40, color: Colors.white),
         ),
       ),
     );
+  }
+
+  Widget _buildAvatarOption({
+    required String url,
+    required String label,
+    required bool selected,
+    required bool enabled,
+    required VoidCallback onTap,
+  }) {
+    return Opacity(
+      opacity: enabled ? 1 : 0.6,
+      child: InkWell(
+        onTap: enabled ? onTap : null,
+        borderRadius: BorderRadius.circular(14),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          width: 72,
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceAlt,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: selected
+                  ? AppColors.challengeCard
+                  : Colors.white.withAlpha(20),
+              width: selected ? 2 : 1,
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ClipOval(
+                child: Image.network(
+                  url,
+                  width: 42,
+                  height: 42,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    width: 42,
+                    height: 42,
+                    color: AppColors.challengeCard,
+                    child: const Icon(
+                      Icons.person,
+                      size: 20,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _avatarSeed(UserProfile? profile) {
+    if (profile == null) {
+      return 'guest';
+    }
+
+    final displayName = profile.displayName.trim();
+    if (displayName.isNotEmpty) {
+      return displayName;
+    }
+
+    final username = profile.username.trim();
+    if (username.isNotEmpty) {
+      return username;
+    }
+
+    return 'user-${profile.id}';
+  }
+
+  String _buildDiceBearAvatarUrl({
+    required String style,
+    required String seed,
+  }) {
+    final uri = Uri.parse(
+      '$_diceBearApiRoot/$style/png',
+    ).replace(queryParameters: <String, String>{'seed': seed, 'size': '128'});
+    return uri.toString();
+  }
+
+  String? _diceBearStyleFromUrl(String value) {
+    if (value.trim().isEmpty || !value.contains('api.dicebear.com')) {
+      return null;
+    }
+
+    final uri = Uri.tryParse(value);
+    if (uri == null || uri.pathSegments.length < 3) {
+      return null;
+    }
+
+    return uri.pathSegments[1];
   }
 
   String _formatDateTime(DateTime? value) {

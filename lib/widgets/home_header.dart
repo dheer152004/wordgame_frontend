@@ -52,7 +52,10 @@ class HomeHeader extends StatelessWidget {
             child: hasAvatar
                 ? Image.network(
                     user!.avatarUrl,
+                    width: 44,
+                    height: 44,
                     fit: BoxFit.cover,
+                    webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
                     errorBuilder: (_, __, ___) =>
                         const Icon(Icons.person, color: Colors.white, size: 24),
                   )

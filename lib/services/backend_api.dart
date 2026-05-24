@@ -1,6 +1,8 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../config/app_config.dart';
@@ -30,7 +32,9 @@ class BackendApi {
   static const String _wordDetailCachePrefix = 'word_frontend_word_detail_';
   static const String _categoryWordsCachePrefix =
       'word_frontend_category_words_';
-  static const String _ipLocationLookupUrl = 'https://ipapi.co/json/';
+  static const String _ipLocationLookupBestEffortUrl = 'https://ipinfo.io/json';
+  static const String _ipLocationLookupPrimaryUrl = 'https://ipwho.is/';
+  static const String _ipLocationLookupFallbackUrl = 'https://ipapi.co/json/';
 
   final http.Client _client = http.Client();
   List<ApiCategory>? _cachedCategories;
@@ -108,9 +112,6 @@ class BackendApi {
       headers: await _headers(authenticated: true),
       body: jsonEncode({
         'displayName': displayName,
-        'avatarUrl': avatarUrl,
-        'avatar': avatarUrl,
-        'avatarURL': avatarUrl,
         'bio': bio,
         'location': location,
       }),
@@ -138,9 +139,229 @@ class BackendApi {
     );
   }
 
-  Future<String> fetchLocationFromIp() async {
-    final response = await _client.get(Uri.parse(_ipLocationLookupUrl));
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    final response = await _client.put(
+      _uri('/api/user/profile/change-password'),
+      headers: await _headers(authenticated: true),
+      body: jsonEncode({
+        'currentPassword': currentPassword,
+        'newPassword': newPassword,
+        'confirmPassword': confirmPassword,
+      }),
+    );
 
+    _decodeResponse(response);
+  }
+
+  Future<void> saveWord({required int wordId, String notes = ''}) async {
+    final response = await _client.post(
+      _uri('/api/user/saved-words'),
+      headers: await _headers(authenticated: true),
+      body: jsonEncode({'wordId': wordId, 'notes': notes}),
+    );
+
+    _decodeResponse(response);
+  }
+
+  Future<void> removeSavedWord(int wordId) async {
+    final response = await _client.delete(
+      _uri('/api/user/saved-words/$wordId'),
+      headers: await _headers(authenticated: true),
+    );
+
+    _decodeResponse(response);
+  }
+
+  Future<UserProfile> uploadUserAvatarFromUrl(String avatarUrl) async {
+    final trimmedAvatarUrl = avatarUrl.trim();
+    if (trimmedAvatarUrl.isEmpty) {
+      throw const BackendException('Avatar URL is required.');
+    }
+
+    final downloadResponse = await _client.get(Uri.parse(trimmedAvatarUrl));
+    if (downloadResponse.statusCode < 200 ||
+        downloadResponse.statusCode >= 300) {
+      throw BackendException(
+        'Unable to read avatar image (${downloadResponse.statusCode}).',
+      );
+    }
+
+    final contentType = _avatarContentType(
+      downloadResponse.headers['content-type'],
+      trimmedAvatarUrl,
+    );
+    if (contentType == null) {
+      throw const BackendException('Only image files are allowed.');
+    }
+
+    final request = http.MultipartRequest(
+      'POST',
+      _uri('/api/user/profile/avatar'),
+    );
+    final headers = await _headers(authenticated: true);
+    headers.remove('Content-Type');
+    request.headers.addAll(headers);
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        'avatar',
+        downloadResponse.bodyBytes,
+        filename: 'avatar.png',
+        contentType: contentType,
+      ),
+    );
+
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+    final payload = _decodeResponse(response);
+    if (payload is Map<String, dynamic>) {
+      return UserProfile.fromJson(payload);
+    }
+
+    throw const BackendException('Unexpected avatar upload response.');
+  }
+
+  /// Fetch avatar bytes using authenticated headers when available.
+  Future<Uint8List> fetchAvatarBytes(String avatarUrl) async {
+    final trimmed = avatarUrl.trim();
+    if (trimmed.isEmpty) {
+      throw const BackendException('Avatar URL is empty.');
+    }
+
+    Uri uri;
+    try {
+      uri = Uri.parse(trimmed);
+    } catch (_) {
+      uri = _uri(trimmed);
+    }
+
+    // Use auth headers when available.
+    final headers = await _headers(authenticated: true);
+    // Remove content-type to allow image responses
+    headers.remove('Content-Type');
+
+    final response = await _client.get(uri, headers: headers);
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw BackendException(
+        'Unable to fetch avatar (${response.statusCode}).',
+      );
+    }
+
+    return response.bodyBytes;
+  }
+
+  /// Returns the count of saved words for the authenticated user.
+  Future<int> fetchSavedWordsCount() async {
+    final response = await _client.get(
+      _uri('/api/user/saved-words/count'),
+      headers: await _headers(authenticated: true),
+    );
+
+    final payload = _decodeResponse(response);
+    if (payload is Map<String, dynamic>) {
+      final value = payload['count'] ?? payload['total'] ?? payload['saved'];
+      if (value is int) return value;
+      if (value is String) return int.tryParse(value) ?? 0;
+    }
+
+    if (payload is int) {
+      return payload;
+    }
+
+    if (payload is String) {
+      return int.tryParse(payload) ?? 0;
+    }
+
+    throw const BackendException('Unexpected saved-words count response.');
+  }
+
+  Future<List<SavedWord>> fetchSavedWords() async {
+    final response = await _client.get(
+      _uri('/api/user/saved-words'),
+      headers: await _headers(authenticated: true),
+    );
+
+    final decoded = _decodeResponseObject(response);
+    final content = _asList(decoded);
+
+    return content
+        .whereType<Map>()
+        .map((entry) => SavedWord.fromJson(Map<String, dynamic>.from(entry)))
+        .toList();
+  }
+
+  MediaType? _avatarContentType(String? contentTypeHeader, String avatarUrl) {
+    final normalizedHeader = contentTypeHeader?.split(';').first.trim();
+    if (normalizedHeader != null && normalizedHeader.startsWith('image/')) {
+      return MediaType.parse(normalizedHeader);
+    }
+
+    final uri = Uri.tryParse(avatarUrl);
+    final path = uri?.path.toLowerCase() ?? avatarUrl.toLowerCase();
+    if (path.endsWith('.png')) {
+      return MediaType('image', 'png');
+    }
+    if (path.endsWith('.jpg') || path.endsWith('.jpeg')) {
+      return MediaType('image', 'jpeg');
+    }
+    if (path.endsWith('.webp')) {
+      return MediaType('image', 'webp');
+    }
+    if (path.endsWith('.gif')) {
+      return MediaType('image', 'gif');
+    }
+    if (path.endsWith('.svg')) {
+      return MediaType('image', 'svg+xml');
+    }
+
+    return null;
+  }
+
+  Future<String> fetchLocationFromIp() async {
+    final providers = <String>[
+      _ipLocationLookupBestEffortUrl,
+      _ipLocationLookupPrimaryUrl,
+      _ipLocationLookupFallbackUrl,
+    ];
+
+    Map<String, dynamic>? decoded;
+    for (final provider in providers) {
+      try {
+        decoded = await _fetchIpGeoJson(provider);
+        break;
+      } catch (_) {
+        continue;
+      }
+    }
+
+    if (decoded == null) {
+      throw const BackendException('Unable to determine location from IP.');
+    }
+
+    final detectedIp =
+        decoded['ip']?.toString() ??
+        decoded['query']?.toString() ??
+        decoded['ip_address']?.toString() ??
+        '';
+
+    final location = _formatIpLocation(decoded);
+    if (location.isEmpty) {
+      throw const BackendException('Location not available from IP lookup.');
+    }
+
+    if (detectedIp.isNotEmpty) {
+      debugPrint('Detected public IP: $detectedIp');
+    }
+    debugPrint('Resolved location from IP: $location');
+
+    return location;
+  }
+
+  Future<Map<String, dynamic>> _fetchIpGeoJson(String url) async {
+    final response = await _client.get(Uri.parse(url));
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw BackendException(
         'Unable to determine location from IP (${response.statusCode}).',
@@ -152,12 +373,12 @@ class BackendApi {
       throw const BackendException('Unexpected IP location response.');
     }
 
-    final location = _formatIpLocation(decoded);
-    if (location.isEmpty) {
-      throw const BackendException('Location not available from IP lookup.');
+    final success = decoded['success'];
+    if (success is bool && !success) {
+      throw const BackendException('IP geolocation provider returned failure.');
     }
 
-    return location;
+    return decoded;
   }
 
   Future<List<ApiCategory>> fetchCategories({bool forceRefresh = false}) async {
@@ -386,6 +607,40 @@ class BackendApi {
     return decoded;
   }
 
+  Map<String, dynamic> _decodeResponseObject(http.Response response) {
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      String errorMessage =
+          'Request failed with status ${response.statusCode}.';
+
+      if (response.body.isNotEmpty) {
+        try {
+          final decoded = jsonDecode(response.body);
+          if (decoded is Map<String, dynamic> &&
+              decoded.containsKey('message')) {
+            errorMessage = decoded['message'].toString();
+          } else {
+            errorMessage = response.body;
+          }
+        } catch (_) {
+          errorMessage = response.body;
+        }
+      }
+
+      throw BackendException(errorMessage);
+    }
+
+    if (response.body.trim().isEmpty) {
+      return const {};
+    }
+
+    final decoded = jsonDecode(response.body);
+    if (decoded is Map<String, dynamic>) {
+      return decoded;
+    }
+
+    throw const BackendException('Unexpected response from server.');
+  }
+
   List<dynamic> _asList(dynamic payload) {
     if (payload is List) {
       return payload;
@@ -452,7 +707,10 @@ class BackendApi {
 
   String _formatIpLocation(Map<String, dynamic> json) {
     final city = json['city']?.toString().trim() ?? '';
-    final region = json['region']?.toString().trim() ?? '';
+    final region =
+        json['region']?.toString().trim() ??
+        json['region_name']?.toString().trim() ??
+        '';
     final country =
         json['country_name']?.toString().trim() ??
         json['country']?.toString().trim() ??

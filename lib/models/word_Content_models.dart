@@ -57,6 +57,49 @@ class ApiWord {
   String get primaryExample => examples.isNotEmpty ? examples.first : '';
 }
 
+class SavedWord {
+  final int savedWordId;
+  final int wordId;
+  final String word;
+  final String meaning;
+  final String memeImageUrl;
+  final String categoryName;
+  final String notes;
+
+  const SavedWord({
+    required this.savedWordId,
+    required this.wordId,
+    required this.word,
+    required this.meaning,
+    required this.memeImageUrl,
+    required this.categoryName,
+    required this.notes,
+  });
+
+  factory SavedWord.fromJson(Map<String, dynamic> json) {
+    return SavedWord(
+      savedWordId: _readInt(json['savedWordId']),
+      wordId: _readInt(json['wordId']),
+      word: json['word']?.toString() ?? '',
+      meaning: json['meaning']?.toString() ?? '',
+      memeImageUrl: json['memeImageUrl']?.toString() ?? '',
+      categoryName: json['categoryName']?.toString() ?? '',
+      notes: json['notes']?.toString() ?? '',
+    );
+  }
+
+  ApiWord toApiWord() {
+    return ApiWord(
+      id: wordId,
+      word: word,
+      meaning: meaning,
+      memeImageUrl: memeImageUrl,
+      categoryName: categoryName,
+      examples: const [],
+    );
+  }
+}
+
 int _readInt(Object? value) {
   if (value is int) {
     return value;

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:word_frontend/services/backend_api.dart';
 
 import '../models/word_Content_models.dart';
 import '../services/audio_service.dart';
@@ -9,7 +10,7 @@ import '../widgets/common_widgets.dart';
 class WordDetailSheet extends StatefulWidget {
   final ApiWord word;
 
-  const WordDetailSheet({required this.word, Key? key}) : super(key: key);
+  const WordDetailSheet({required this.word, super.key});
 
   @override
   State<WordDetailSheet> createState() => _WordDetailSheetState();
@@ -17,7 +18,9 @@ class WordDetailSheet extends StatefulWidget {
 
 class _WordDetailSheetState extends State<WordDetailSheet> {
   final AudioService _audioService = AudioService();
+  final TextEditingController _notesController = TextEditingController();
   bool _isPlayingAudio = false;
+  bool _isSavingWord = false;
 
   Future<void> _playPronunciation() async {
     setState(() {
@@ -59,6 +62,47 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
     }
   }
 
+  Future<void> _saveWord() async {
+    if (_isSavingWord) {
+      return;
+    }
+
+    setState(() {
+      _isSavingWord = true;
+    });
+
+    try {
+      await BackendApi.instance.saveWord(
+        wordId: widget.word.id,
+        notes: _notesController.text.trim(),
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Word saved successfully.')));
+      setState(() {
+        _notesController.clear();
+      });
+    } catch (e) {
+      debugPrint('Error saving word: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error saving word: $e')));
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSavingWord = false;
+        });
+      }
+    }
+  }
+
   Future<void> _shareWord(BuildContext context) async {
     try {
       final shareText = StringBuffer()
@@ -67,7 +111,7 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
         ..writeln('Category: ${widget.word.categoryName}');
 
       if (widget.word.primaryExample.isNotEmpty) {
-        shareText..writeln('Example: ${widget.word.primaryExample}');
+        shareText.writeln('Example: ${widget.word.primaryExample}');
       }
 
       shareText
@@ -105,11 +149,9 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
       builder: (context, controller) {
         return Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-          child: Container(
-            decoration: const BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-            ),
+          child: Material(
+            color: AppColors.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             child: ListView(
               controller: controller,
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
@@ -182,11 +224,84 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                       aspectRatio: 1,
                       child: Image.network(
                         widget.word.memeImageUrl,
+                        width: double.infinity,
+                        height: double.infinity,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                        webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
+                        errorBuilder: (_, __, ___) => Container(
+                          color: AppColors.surfaceAlt,
+                          alignment: Alignment.center,
+                          child: const Icon(
+                            Icons.image_not_supported_outlined,
+                            color: AppColors.textSecondary,
+                            size: 40,
+                          ),
+                        ),
                       ),
                     ),
                   ),
+                const SizedBox(height: 18),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceAlt,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: Colors.white.withAlpha(14)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Save this word',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Add a short note before saving it to your library.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _notesController,
+                        enabled: !_isSavingWord,
+                        maxLines: 3,
+                        minLines: 2,
+                        decoration: const InputDecoration(
+                          labelText: 'Notes',
+                          hintText: 'Why are you saving this word?',
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: _isSavingWord ? null : _saveWord,
+                          icon: _isSavingWord
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: AppColors.background,
+                                  ),
+                                )
+                              : const Icon(Icons.bookmark_add_outlined),
+                          label: Text(
+                            _isSavingWord ? 'Saving...' : 'Save word',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 if (widget.word.examples.isNotEmpty) ...[
                   const SizedBox(height: 20),
                   const Text(
@@ -225,5 +340,12 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
         );
       },
     );
+  }
+
+  @override
+  void dispose() {
+    _notesController.dispose();
+    _audioService.stop();
+    super.dispose();
   }
 }
