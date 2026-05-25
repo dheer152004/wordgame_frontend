@@ -968,17 +968,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         // Info tiles continue
         _InfoTile(label: 'Username', value: profile.username),
         _InfoTile(label: 'Email', value: profile.email),
-        _InfoTile(
-          label: 'Display name',
-          value: profile.displayName.isNotEmpty
-              ? profile.displayName
-              : 'Not set',
-        ),
+        // _InfoTile(label: 'Display name',value: profile.displayName.isNotEmpty? profile.displayName: 'Not set',),
         _InfoTile(label: 'Bio', value: _displayValue(profile.bio)),
         _InfoTile(label: 'Location', value: _displayValue(profile.location)),
-        _InfoTile(label: 'User ID', value: profile.id.toString()),
-        _InfoTile(label: 'Level', value: profile.level.toString()),
-        _InfoTile(label: 'Total XP', value: profile.totalXp.toString()),
+        // _InfoTile(label: 'User ID', value: profile.id.toString()),
+        // _InfoTile(label: 'Level', value: profile.level.toString()),
+        // _InfoTile(label: 'Total XP', value: profile.totalXp.toString()),
         _InfoTile(
           label: 'XP to next level',
           value: profile.xpToNextLevel.toString(),
@@ -1043,24 +1038,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
             context,
           ).push(MaterialPageRoute(builder: (_) => SavedWordsScreen())),
         ),
-        _quickActionTile(
-          icon: Icons.download_rounded,
-          label: 'Downloads',
-          subtitle: 'Manage offline packs',
-          onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Downloads not implemented yet.')),
-          ),
-        ),
-        _quickActionTile(
-          icon: Icons.language_rounded,
-          label: 'Language',
-          subtitle: profile.location.isNotEmpty
-              ? profile.location
-              : 'Auto-detect',
-          onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Language selector not implemented.')),
-          ),
-        ),
+        // _quickActionTile(
+        //   icon: Icons.download_rounded,
+        //   label: 'Downloads',
+        //   subtitle: 'Manage offline packs',
+        //   onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+        //     const SnackBar(content: Text('Downloads not implemented yet.')),
+        //   ),
+        // ),
+        // _quickActionTile(
+        //   icon: Icons.language_rounded,
+        //   label: 'Language',
+        //   subtitle: profile.location.isNotEmpty
+        //       ? profile.location
+        //       : 'Auto-detect',
+        //   onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+        //     const SnackBar(content: Text('Language selector not implemented.')),
+        //   ),
+        // ),
         _quickActionTile(
           icon: Icons.location_on_outlined,
           label: 'Location',

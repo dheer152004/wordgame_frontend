@@ -229,7 +229,11 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
       await showModalBottomSheet<void>(
         context: context,
         isScrollControlled: true,
+        isDismissible: true,
+        enableDrag: true,
+        useSafeArea: true,
         backgroundColor: Colors.transparent,
+        barrierColor: Colors.black54,
         builder: (context) => WordDetailSheet(word: detail),
       );
     } catch (error) {
@@ -432,6 +436,9 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
                   child: RepaintBoundary(
                     key: _cleanCardKey,
                     child: SwipeCard(
+                      key: ValueKey<String>(
+                        'clean-${currentWord.id}-${currentWord.memeImageUrl}',
+                      ),
                       word: currentWord,
                       width: cardWidth,
                       height: effectiveCardHeight,
@@ -445,6 +452,9 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
               if (thirdWord != null)
                 RepaintBoundary(
                   child: StackCardBackdrop(
+                    key: ValueKey<String>(
+                      'third-${thirdWord.id}-${thirdWord.memeImageUrl}',
+                    ),
                     word: thirdWord,
                     width: cardWidth * 0.88,
                     height: effectiveCardHeight * 0.82,
@@ -456,6 +466,9 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
               if (nextWord != null)
                 RepaintBoundary(
                   child: StackCardBackdrop(
+                    key: ValueKey<String>(
+                      'next-${nextWord.id}-${nextWord.memeImageUrl}',
+                    ),
                     word: nextWord,
                     width: cardWidth * 0.94,
                     height: effectiveCardHeight * 0.88,
@@ -499,6 +512,9 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
                       angle: _dragOffset.dx / 920,
                       child: Center(
                         child: SwipeCard(
+                          key: ValueKey<String>(
+                            'front-${currentWord.id}-${currentWord.memeImageUrl}',
+                          ),
                           word: currentWord,
                           width: cardWidth,
                           height: effectiveCardHeight,

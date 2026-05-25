@@ -21,6 +21,38 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
   final TextEditingController _notesController = TextEditingController();
   bool _isPlayingAudio = false;
   bool _isSavingWord = false;
+  bool _isAlreadySaved = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedState();
+  }
+
+  Future<void> _loadSavedState() async {
+    try {
+      final savedWords = await BackendApi.instance.fetchSavedWords();
+      if (!mounted) {
+        return;
+      }
+
+      final matchingSavedWord = savedWords.where(
+        (savedWord) => savedWord.wordId == widget.word.id,
+      );
+
+      setState(() {
+        final savedWord = matchingSavedWord.isNotEmpty
+            ? matchingSavedWord.first
+            : null;
+        _isAlreadySaved = savedWord != null;
+        if (savedWord != null) {
+          _notesController.text = savedWord.notes;
+        }
+      });
+    } catch (error) {
+      debugPrint('Error checking saved word state: $error');
+    }
+  }
 
   Future<void> _playPronunciation() async {
     setState(() {
@@ -62,7 +94,7 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
     }
   }
 
-  Future<void> _saveWord() async {
+  Future<void> _toggleSavedWord() async {
     if (_isSavingWord) {
       return;
     }
@@ -72,27 +104,30 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
     });
 
     try {
-      await BackendApi.instance.saveWord(
-        wordId: widget.word.id,
-        notes: _notesController.text.trim(),
-      );
+      if (_isAlreadySaved) {
+        await BackendApi.instance.removeSavedWord(widget.word.id);
+      } else {
+        await BackendApi.instance.saveWord(
+          wordId: widget.word.id,
+          notes: _notesController.text.trim(),
+        );
+      }
 
       if (!mounted) {
         return;
       }
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Word saved successfully.')));
       setState(() {
-        _notesController.clear();
+        _isAlreadySaved = !_isAlreadySaved;
+        if (_isAlreadySaved) {
+          _notesController.clear();
+        }
       });
     } catch (e) {
-      debugPrint('Error saving word: $e');
+      debugPrint('Error toggling saved word: $e');
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error saving word: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error updating saved word: $e')),
+        );
       }
     } finally {
       if (mounted) {
@@ -143,6 +178,7 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
   @override
   Widget build(BuildContext context) {
     return DraggableScrollableSheet(
+      expand: false,
       initialChildSize: 0.78,
       minChildSize: 0.55,
       maxChildSize: 0.95,
@@ -283,7 +319,7 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton.icon(
-                          onPressed: _isSavingWord ? null : _saveWord,
+                          onPressed: _isSavingWord ? null : _toggleSavedWord,
                           icon: _isSavingWord
                               ? const SizedBox(
                                   width: 16,
@@ -293,9 +329,17 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                                     color: AppColors.background,
                                   ),
                                 )
-                              : const Icon(Icons.bookmark_add_outlined),
+                              : Icon(
+                                  _isAlreadySaved
+                                      ? Icons.bookmark_rounded
+                                      : Icons.bookmark_add_outlined,
+                                ),
                           label: Text(
-                            _isSavingWord ? 'Saving...' : 'Save word',
+                            _isSavingWord
+                                ? 'Saving...'
+                                : _isAlreadySaved
+                                ? 'Saved'
+                                : 'Save word',
                           ),
                         ),
                       ),

@@ -92,8 +92,10 @@ class CardImage extends StatelessWidget {
         ),
         child: imageUrl.isNotEmpty
             ? ClipRRect(
+                key: ValueKey<String>('card-image-$imageUrl'),
                 borderRadius: BorderRadius.circular(22),
                 child: Image.network(
+                  key: ValueKey<String>('network-image-$imageUrl'),
                   imageUrl,
                   width: size,
                   height: size,

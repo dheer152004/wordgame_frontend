@@ -31,10 +31,15 @@ class _SavedWordsScreenState extends State<SavedWordsScreen> {
   }
 
   Future<void> _openSavedWord(SavedWord savedWord) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => WordDetailSheet(word: savedWord.toApiWord()),
-      ),
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      isDismissible: true,
+      enableDrag: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black54,
+      builder: (_) => WordDetailSheet(word: savedWord.toApiWord()),
     );
 
     if (mounted) {
@@ -232,101 +237,138 @@ class _SavedWordCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final word = savedWord.toApiWord();
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppRadius.card),
         child: Container(
+          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: AppColors.surface,
-            borderRadius: BorderRadius.circular(AppRadius.card),
+            borderRadius: BorderRadius.circular(34),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withAlpha(90),
+                blurRadius: 24,
+                offset: const Offset(0, 12),
+              ),
+            ],
             border: Border.all(color: Colors.white.withAlpha(16)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _pill(
+                    savedWord.categoryName.isNotEmpty
+                        ? savedWord.categoryName
+                        : 'Saved',
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withAlpha(120),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white.withAlpha(20)),
+                    ),
+                    child: const Icon(
+                      Icons.bookmark_rounded,
+                      size: 16,
+                      color: AppColors.textLight,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
               Expanded(
-                flex: 6,
-                child: Stack(
-                  children: [
-                    Positioned.fill(
-                      child: ClipRRect(
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(AppRadius.card),
-                        ),
-                        child: savedWord.memeImageUrl.isNotEmpty
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: word.memeImageUrl.isNotEmpty
                             ? Image.network(
-                                savedWord.memeImageUrl,
+                                word.memeImageUrl,
                                 fit: BoxFit.cover,
                                 errorBuilder: (_, __, ___) => _imageFallback(),
                               )
                             : _imageFallback(),
                       ),
-                    ),
-                    Positioned(
-                      top: 12,
-                      left: 12,
-                      child: _pill(
-                        savedWord.categoryName.isNotEmpty
-                            ? savedWord.categoryName
-                            : 'Saved',
-                      ),
-                    ),
-                    Positioned(
-                      top: 12,
-                      right: 12,
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withAlpha(120),
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white.withAlpha(20)),
-                        ),
-                        child: const Icon(
-                          Icons.bookmark_rounded,
-                          size: 16,
-                          color: AppColors.textLight,
+                      Positioned.fill(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.transparent,
+                                Colors.black.withAlpha(28),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-              Expanded(
-                flex: 5,
-                child: Padding(
-                  padding: const EdgeInsets.all(14),
+              const SizedBox(height: 12),
+              Text(
+                savedWord.word,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.textPrimary,
+                  letterSpacing: -0.3,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                savedWord.meaning,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 12.5,
+                  height: 1.35,
+                ),
+              ),
+              if (savedWord.notes.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withAlpha(8),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: Colors.white.withAlpha(10)),
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        savedWord.word,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
-                          letterSpacing: -0.3,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        savedWord.meaning,
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                      const Text(
+                        'Note',
+                        style: TextStyle(
                           color: AppColors.textSecondary,
-                          fontSize: 12.5,
-                          height: 1.35,
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.4,
                         ),
                       ),
-                      const Spacer(),
+                      const SizedBox(height: 4),
                       Text(
-                        savedWord.notes.isNotEmpty
-                            ? 'Note: ${savedWord.notes}'
-                            : 'No personal note added',
+                        savedWord.notes,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -338,7 +380,7 @@ class _SavedWordCard extends StatelessWidget {
                     ],
                   ),
                 ),
-              ),
+              ],
             ],
           ),
         ),
