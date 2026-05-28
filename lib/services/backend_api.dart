@@ -703,7 +703,14 @@ class BackendApi {
 
   Map<String, dynamic> itemToJson(Object item) {
     if (item is ApiCategory) {
-      return {'id': item.id, 'name': item.name, 'wordCount': item.wordCount};
+      return {
+        'id': item.id,
+        'name': item.name,
+        'imageUrl': item.imageUrl,
+        'description': item.description,
+        'isActive': item.isActive,
+        'wordCount': item.wordCount,
+      };
     }
 
     if (item is ApiWord) {

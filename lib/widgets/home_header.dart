@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
 import '../models/profile_models.dart';
 import '../theme/app_theme.dart';
+import '../screens/profile_screen.dart';
 
 class HomeHeader extends StatelessWidget {
   final UserProfile? user;
 
   const HomeHeader({super.key, this.user});
+
+  String _initials(String name) {
+    final parts = name.trim().split(RegExp(r'\s+'));
+    if (parts.isEmpty) return '';
+    if (parts.length == 1) return parts[0].substring(0, 1).toUpperCase();
+    return (parts[0].substring(0, 1) + parts[1].substring(0, 1)).toUpperCase();
+  }
 
   // String _formatDate(DateTime date) {
   //   const months = [
@@ -34,32 +42,68 @@ class HomeHeader extends StatelessWidget {
 
     return Row(
       children: [
-        Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: AppColors.challengeCard,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withAlpha(80),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
+        Tooltip(
+          message: 'Open profile',
+          child: Material(
+            color: Colors.transparent,
+            shape: const CircleBorder(),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(22),
+              onTap: user != null
+                  ? () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => ProfileScreen(user: user),
+                      ),
+                    )
+                  : null,
+              child: Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.challengeCard,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withAlpha(80),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: ClipOval(
+                  child: hasAvatar
+                      ? Image.network(
+                          user!.avatarUrl,
+                          width: 44,
+                          height: 44,
+                          fit: BoxFit.cover,
+                          webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
+                          errorBuilder: (_, __, ___) => Container(
+                            color: AppColors.challengeCard,
+                            alignment: Alignment.center,
+                            child: Text(
+                              _initials(displayName),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        )
+                      : Container(
+                          color: AppColors.challengeCard,
+                          alignment: Alignment.center,
+                          child: Text(
+                            _initials(displayName),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                ),
               ),
-            ],
-          ),
-          child: ClipOval(
-            child: hasAvatar
-                ? Image.network(
-                    user!.avatarUrl,
-                    width: 44,
-                    height: 44,
-                    fit: BoxFit.cover,
-                    webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
-                    errorBuilder: (_, __, ___) =>
-                        const Icon(Icons.person, color: Colors.white, size: 24),
-                  )
-                : const Icon(Icons.person, color: Colors.white, size: 24),
+            ),
           ),
         ),
         const SizedBox(width: 12),

@@ -276,76 +276,6 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                       ),
                     ),
                   ),
-                const SizedBox(height: 18),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceAlt,
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: Colors.white.withAlpha(14)),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Save this word',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Add a short note before saving it to your library.',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      TextField(
-                        controller: _notesController,
-                        enabled: !_isSavingWord,
-                        maxLines: 3,
-                        minLines: 2,
-                        decoration: const InputDecoration(
-                          labelText: 'Notes',
-                          hintText: 'Why are you saving this word?',
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: _isSavingWord ? null : _toggleSavedWord,
-                          icon: _isSavingWord
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: AppColors.background,
-                                  ),
-                                )
-                              : Icon(
-                                  _isAlreadySaved
-                                      ? Icons.bookmark_rounded
-                                      : Icons.bookmark_add_outlined,
-                                ),
-                          label: Text(
-                            _isSavingWord
-                                ? 'Saving...'
-                                : _isAlreadySaved
-                                ? 'Saved'
-                                : 'Save word',
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
                 if (widget.word.examples.isNotEmpty) ...[
                   const SizedBox(height: 20),
                   const Text(
@@ -378,6 +308,81 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                     ),
                   ],
                 ],
+                const SizedBox(height: 18),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceAlt,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: Colors.white.withAlpha(14)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Save this word',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Add a short note',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      TextField(
+                        controller: _notesController,
+                        enabled: !_isSavingWord,
+                        maxLines: 3,
+                        minLines: 2,
+                        decoration: const InputDecoration(
+                          labelText: 'Notes',
+                          hintText: 'Why are you saving this word?',
+                          hintStyle: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 10,
+                          ),
+
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: _isSavingWord ? null : _toggleSavedWord,
+                          icon: _isSavingWord
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: AppColors.background,
+                                  ),
+                                )
+                              : Icon(
+                                  _isAlreadySaved
+                                      ? Icons.bookmark_rounded
+                                      : Icons.bookmark_add_outlined,
+                                ),
+                          label: Text(
+                            _isSavingWord
+                                ? 'Saving...'
+                                : _isAlreadySaved
+                                ? 'Saved'
+                                : 'Save word',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),

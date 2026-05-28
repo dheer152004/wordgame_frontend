@@ -1,11 +1,17 @@
 class ApiCategory {
   final int id;
   final String name;
+  final String imageUrl;
+  final String description;
+  final bool isActive;
   final int wordCount;
 
   const ApiCategory({
     required this.id,
     required this.name,
+    required this.imageUrl,
+    required this.description,
+    required this.isActive,
     required this.wordCount,
   });
 
@@ -13,6 +19,9 @@ class ApiCategory {
     return ApiCategory(
       id: _readInt(json['id']),
       name: json['name']?.toString() ?? '',
+      imageUrl: json['imageUrl']?.toString() ?? '',
+      description: json['description']?.toString() ?? '',
+      isActive: _readBool(json['isActive'], fallback: true),
       wordCount: _readInt(json['wordCount']),
     );
   }
@@ -114,4 +123,26 @@ int _readInt(Object? value) {
   }
 
   return 0;
+}
+
+bool _readBool(Object? value, {bool fallback = false}) {
+  if (value is bool) {
+    return value;
+  }
+
+  if (value is String) {
+    final normalized = value.trim().toLowerCase();
+    if (normalized == 'true') {
+      return true;
+    }
+    if (normalized == 'false') {
+      return false;
+    }
+  }
+
+  if (value is num) {
+    return value != 0;
+  }
+
+  return fallback;
 }

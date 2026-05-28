@@ -17,12 +17,14 @@ class _CategoriesSectionState extends State<CategoriesSection> {
   @override
   void initState() {
     super.initState();
-    _categoriesFuture = BackendApi.instance.fetchCategories();
+    _categoriesFuture = BackendApi.instance.fetchCategories(forceRefresh: true);
   }
 
   Future<void> _reloadCategories() async {
     setState(() {
-      _categoriesFuture = BackendApi.instance.fetchCategories();
+      _categoriesFuture = BackendApi.instance.fetchCategories(
+        forceRefresh: true,
+      );
     });
   }
 
@@ -107,6 +109,7 @@ class _CategoryCardData {
   final String title;
   final String label;
   final String examples;
+  final String imageUrl;
   final Color color;
   final IconData icon;
 
@@ -114,6 +117,7 @@ class _CategoryCardData {
     required this.title,
     required this.label,
     required this.examples,
+    required this.imageUrl,
     required this.color,
     required this.icon,
   });
@@ -144,10 +148,33 @@ class _CategoryCardData {
     return _CategoryCardData(
       title: category.name,
       label: '${category.wordCount} words',
-      examples: 'Tap to open the live deck\nSynced from the backend',
+      examples: category.description.trim().isNotEmpty
+          ? category.description.trim()
+          : 'Tap to open the live deck\nSynced from the backend',
+      imageUrl: _resolveCategoryImageUrl(category.imageUrl),
       color: palettes[index % palettes.length],
       icon: icons[index % icons.length],
     );
+  }
+
+  static String _resolveCategoryImageUrl(String rawUrl) {
+    final trimmed = rawUrl.trim();
+    if (trimmed.isEmpty) {
+      return '';
+    }
+
+    final parsed = Uri.tryParse(trimmed);
+    if (parsed != null && parsed.hasScheme) {
+      return trimmed;
+    }
+
+    final base = Uri.tryParse(BackendApi.instance.baseUrl);
+    if (base == null) {
+      return trimmed;
+    }
+
+    final resolved = base.resolve(trimmed);
+    return resolved.toString();
   }
 }
 
@@ -159,6 +186,14 @@ class _CategoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (data.imageUrl.isNotEmpty) {
+      return _buildImageCard();
+    }
+
+    return _buildColorCard();
+  }
+
+  Widget _buildColorCard() {
     final textColor = _idealTextColor(data.color);
     final tagColors = _TagColors.forBackground(data.color);
 
@@ -231,6 +266,116 @@ class _CategoryCard extends StatelessWidget {
                 ),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImageCard() {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 190,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          border: Border.all(color: Colors.white.withAlpha(18)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(60),
+              blurRadius: 20,
+              offset: const Offset(0, 12),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Image.network(
+                data.imageUrl,
+                fit: BoxFit.cover,
+                webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
+                errorBuilder: (_, __, ___) => _buildImageFallback(),
+              ),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  // Left-to-right fade so text remains readable on image cards.
+                  gradient: LinearGradient(
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    colors: [
+                      Colors.black.withAlpha(176),
+                      Colors.black.withAlpha(112),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _IntensityTag(
+                      label: data.label,
+                      backgroundColor: Colors.black.withAlpha(66),
+                      foregroundColor: Colors.white,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      data.title,
+                      style: AppTextStyles.planCardTitle.copyWith(
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: Text(
+                        data.examples,
+                        style: AppTextStyles.planCardDetail.copyWith(
+                          color: Colors.white.withAlpha(220),
+                        ),
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Align(
+                      alignment: Alignment.bottomRight,
+                      child: Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withAlpha(24),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white.withAlpha(24)),
+                        ),
+                        child: Icon(data.icon, color: Colors.white, size: 22),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImageFallback() {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color.lerp(data.color, Colors.white, 0.18)!,
+            data.color,
+            Color.lerp(data.color, Colors.black, 0.10)!,
           ],
         ),
       ),
