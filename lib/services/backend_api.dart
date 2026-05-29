@@ -21,6 +21,22 @@ class BackendException implements Exception {
   String toString() => message;
 }
 
+class RandomWordsPage {
+  final List<ApiWord> words;
+  final int currentPage;
+  final int totalPages;
+  final int pageSize;
+  final bool hasMore;
+
+  const RandomWordsPage({
+    required this.words,
+    required this.currentPage,
+    required this.totalPages,
+    required this.pageSize,
+    required this.hasMore,
+  });
+}
+
 class BackendApi {
   BackendApi._();
 
@@ -30,15 +46,12 @@ class BackendApi {
   static const Duration _cacheTtl = Duration(hours: 6);
   static const String _categoriesCacheKey = 'word_frontend_categories_cache';
   static const String _wordDetailCachePrefix = 'word_frontend_word_detail_';
-  static const String _categoryWordsCachePrefix =
-      'word_frontend_category_words_';
   static const String _ipLocationLookupBestEffortUrl = 'https://ipinfo.io/json';
   static const String _ipLocationLookupPrimaryUrl = 'https://ipwho.is/';
   static const String _ipLocationLookupFallbackUrl = 'https://ipapi.co/json/';
 
   final http.Client _client = http.Client();
   List<ApiCategory>? _cachedCategories;
-  final Map<String, List<ApiWord>> _cachedWordsByCategory = {};
   final Map<int, ApiWord> _cachedWordById = {};
 
   Uri _uri(String path) => Uri.parse('$baseUrl$path');
@@ -414,48 +427,51 @@ class BackendApi {
     return categories;
   }
 
-  Future<List<ApiWord>> fetchWordsByCategory(
+  Future<RandomWordsPage> fetchWordsByCategory(
     String categoryName, {
+    int page = 0,
+    int size = 10,
     bool forceRefresh = false,
   }) async {
-    final cacheKey = _cacheKeyForCategory(categoryName);
-    if (!forceRefresh) {
-      final cached = _cachedWordsByCategory[cacheKey];
-      if (cached != null) {
-        return cached;
-      }
-
-      final persisted = await _readCachedList<ApiWord>(
-        cacheKey,
-        (json) => ApiWord.fromJson(json),
-      );
-      if (persisted != null) {
-        _cachedWordsByCategory[cacheKey] = persisted;
-        return persisted;
-      }
-    }
-
     final response = await _client.get(
-      _uri('/api/words/category/${Uri.encodeComponent(categoryName)}'),
+      _uri(
+        '/api/words/category/${Uri.encodeComponent(categoryName)}?page=$page&size=$size',
+      ),
       headers: await _headers(authenticated: true),
     );
+
     final payload = _decodeResponse(response);
     final items = _asWordList(payload);
+    final payloadMap = payload is Map<String, dynamic>
+        ? payload
+        : const <String, dynamic>{};
 
     final words = items
         .whereType<Map>()
         .map((entry) => ApiWord.fromJson(Map<String, dynamic>.from(entry)))
         .toList();
 
-    _cachedWordsByCategory[cacheKey] = words;
-    await _writeCachedList(
-      cacheKey,
-      words.map((item) => itemToJson(item)).toList(),
+    final currentPage = _readIntValue(payloadMap['currentPage'], page);
+    final totalPages = _readIntValue(payloadMap['totalPages'], currentPage + 1);
+    final pageSize = _readIntValue(payloadMap['pageSize'], size);
+    final hasMore = _readBoolValue(
+      payloadMap['hasMore'],
+      fallback: currentPage + 1 < totalPages,
     );
-    return words;
+
+    return RandomWordsPage(
+      words: words,
+      currentPage: currentPage,
+      totalPages: totalPages,
+      pageSize: pageSize,
+      hasMore: hasMore,
+    );
   }
 
-  Future<List<ApiWord>> fetchRandomWords({int page = 0, int size = 10}) async {
+  Future<RandomWordsPage> fetchRandomWords({
+    int page = 0,
+    int size = 10,
+  }) async {
     final response = await _client.get(
       _uri('/api/words/random?page=$page&size=$size'),
       headers: await _headers(authenticated: true),
@@ -463,11 +479,30 @@ class BackendApi {
 
     final payload = _decodeResponse(response);
     final items = _asWordList(payload);
+    final payloadMap = payload is Map<String, dynamic>
+        ? payload
+        : const <String, dynamic>{};
 
-    return items
+    final words = items
         .whereType<Map>()
         .map((entry) => ApiWord.fromJson(Map<String, dynamic>.from(entry)))
         .toList();
+
+    final currentPage = _readIntValue(payloadMap['currentPage'], page);
+    final totalPages = _readIntValue(payloadMap['totalPages'], currentPage + 1);
+    final pageSize = _readIntValue(payloadMap['pageSize'], size);
+    final hasMore = _readBoolValue(
+      payloadMap['hasMore'],
+      fallback: currentPage + 1 < totalPages,
+    );
+
+    return RandomWordsPage(
+      words: words,
+      currentPage: currentPage,
+      totalPages: totalPages,
+      pageSize: pageSize,
+      hasMore: hasMore,
+    );
   }
 
   Future<ApiWord> fetchWordById(int id, {bool forceRefresh = false}) async {
@@ -697,8 +732,42 @@ class BackendApi {
     return const [];
   }
 
-  String _cacheKeyForCategory(String categoryName) {
-    return '$_categoryWordsCachePrefix${categoryName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '_')}';
+  int _readIntValue(Object? value, int fallback) {
+    if (value is int) {
+      return value;
+    }
+
+    if (value is num) {
+      return value.toInt();
+    }
+
+    if (value is String) {
+      return int.tryParse(value.trim()) ?? fallback;
+    }
+
+    return fallback;
+  }
+
+  bool _readBoolValue(Object? value, {required bool fallback}) {
+    if (value is bool) {
+      return value;
+    }
+
+    if (value is num) {
+      return value != 0;
+    }
+
+    if (value is String) {
+      final normalized = value.trim().toLowerCase();
+      if (normalized == 'true') {
+        return true;
+      }
+      if (normalized == 'false') {
+        return false;
+      }
+    }
+
+    return fallback;
   }
 
   Map<String, dynamic> itemToJson(Object item) {

@@ -28,14 +28,19 @@ class FlashCardsScreen extends StatefulWidget {
 
 class _FlashCardsScreenState extends State<FlashCardsScreen> {
   static const String _randomCategoryKey = '__random__';
+  static const int _randomPageSize = 10;
 
   final List<ApiCategory> _categories = [];
   List<ApiWord> _words = [];
 
   bool _loadingCategories = true;
   bool _loadingWords = false;
+  bool _loadingMoreRandomWords = false;
   String _selectedCategory = _randomCategoryKey;
   String? _errorMessage;
+
+  int _randomPage = 0;
+  bool _hasMoreRandomWords = false;
 
   int _currentIndex = 0;
   Offset _dragOffset = Offset.zero;
@@ -142,16 +147,63 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
       });
     }
 
+    final fetchPage = selection == _randomCategoryKey
+        ? (int page) => BackendApi.instance.fetchRandomWords(
+            page: page,
+            size: _randomPageSize,
+          )
+        : (int page) => BackendApi.instance.fetchWordsByCategory(
+            selection,
+            page: page,
+            size: _randomPageSize,
+          );
+
+    await _loadPagedWords(resetDeck: true, fetchPage: fetchPage);
+  }
+
+  Future<void> _loadPagedWords({
+    required bool resetDeck,
+    required Future<RandomWordsPage> Function(int page) fetchPage,
+  }) async {
+    if (resetDeck) {
+      setState(() {
+        _randomPage = 0;
+        _hasMoreRandomWords = false;
+        _loadingMoreRandomWords = false;
+      });
+    } else if (_loadingMoreRandomWords) {
+      return;
+    }
+
+    if (!resetDeck) {
+      setState(() {
+        _loadingMoreRandomWords = true;
+      });
+    }
+
     try {
-      final words = selection == _randomCategoryKey
-          ? await BackendApi.instance.fetchRandomWords(size: 12)
-          : await BackendApi.instance.fetchWordsByCategory(selection);
+      final page = await fetchPage(resetDeck ? 0 : _randomPage + 1);
 
       if (!mounted) return;
 
       setState(() {
-        _words = words;
+        if (resetDeck) {
+          _words = page.words;
+        } else {
+          final existingIds = _words.map((word) => word.id).toSet();
+          final pageWords = page.words
+              .where((word) => !existingIds.contains(word.id))
+              .toList();
+
+          if (pageWords.isNotEmpty) {
+            _words = [..._words, ...pageWords];
+          }
+        }
+
+        _randomPage = page.currentPage;
+        _hasMoreRandomWords = page.hasMore;
         _loadingWords = false;
+        _loadingMoreRandomWords = false;
       });
 
       _scheduleVisibleImagePreload();
@@ -159,6 +211,7 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
       if (!mounted) return;
       setState(() {
         _loadingWords = false;
+        _loadingMoreRandomWords = false;
         _errorMessage = error.toString();
       });
     }
@@ -183,6 +236,34 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
     });
 
     _scheduleVisibleImagePreload();
+    unawaited(_loadMoreWordsIfNeeded());
+  }
+
+  Future<void> _loadMoreWordsIfNeeded() async {
+    if (!_hasMoreRandomWords || _loadingMoreRandomWords || _loadingWords) {
+      return;
+    }
+
+    if (_words.length < _randomPageSize) {
+      return;
+    }
+
+    if (_currentIndex < _words.length - 2) {
+      return;
+    }
+
+    final fetchPage = _selectedCategory == _randomCategoryKey
+        ? (int page) => BackendApi.instance.fetchRandomWords(
+            page: page,
+            size: _randomPageSize,
+          )
+        : (int page) => BackendApi.instance.fetchWordsByCategory(
+            _selectedCategory,
+            page: page,
+            size: _randomPageSize,
+          );
+
+    await _loadPagedWords(resetDeck: false, fetchPage: fetchPage);
   }
 
   void _scheduleVisibleImagePreload() {
