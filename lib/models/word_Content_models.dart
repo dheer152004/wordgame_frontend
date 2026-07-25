@@ -31,7 +31,7 @@ class ApiWord {
   final int id;
   final String word;
   final String meaning;
-  final String memeImageUrl;
+  final String wordImageUrl;
   final String categoryName;
   final List<String> examples;
   final String audioUrl;
@@ -40,7 +40,7 @@ class ApiWord {
     required this.id,
     required this.word,
     required this.meaning,
-    required this.memeImageUrl,
+    required this.wordImageUrl,
     required this.categoryName,
     required this.examples,
     this.audioUrl = '',
@@ -56,7 +56,7 @@ class ApiWord {
       id: _readInt(json['id']),
       word: json['word']?.toString() ?? '',
       meaning: json['meaning']?.toString() ?? '',
-      memeImageUrl: json['memeImageUrl']?.toString() ?? '',
+      wordImageUrl: json['wordImageUrl']?.toString() ?? '',
       categoryName: json['categoryName']?.toString() ?? '',
       examples: examples,
       audioUrl: json['audioUrl']?.toString() ?? '',
@@ -71,7 +71,7 @@ class SavedWord {
   final int wordId;
   final String word;
   final String meaning;
-  final String memeImageUrl;
+  final String wordImageUrl;
   final String categoryName;
   final String notes;
 
@@ -80,7 +80,7 @@ class SavedWord {
     required this.wordId,
     required this.word,
     required this.meaning,
-    required this.memeImageUrl,
+    required this.wordImageUrl,
     required this.categoryName,
     required this.notes,
   });
@@ -91,7 +91,7 @@ class SavedWord {
       wordId: _readInt(json['wordId']),
       word: json['word']?.toString() ?? '',
       meaning: json['meaning']?.toString() ?? '',
-      memeImageUrl: json['memeImageUrl']?.toString() ?? '',
+      wordImageUrl: json['wordImageUrl']?.toString() ?? '',
       categoryName: json['categoryName']?.toString() ?? '',
       notes: json['notes']?.toString() ?? '',
     );
@@ -102,7 +102,7 @@ class SavedWord {
       id: wordId,
       word: word,
       meaning: meaning,
-      memeImageUrl: memeImageUrl,
+      wordImageUrl: wordImageUrl,
       categoryName: categoryName,
       examples: const [],
     );

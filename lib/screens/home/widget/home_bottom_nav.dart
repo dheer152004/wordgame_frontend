@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../models/profile_models.dart';
-import '../screens/flash_cards_screen.dart';
-import '../screens/quiz_screen.dart';
-import '../screens/profile_screen.dart';
-import '../theme/app_theme.dart';
+import '../../../models/profile_models.dart';
+import '../../flash_cards_screen.dart';
+import '../../quiz/quiz_screen.dart';
+import '../../profile/profile_screen.dart';
+import '../../../theme/app_theme.dart';
 
 class HomeBottomNav extends StatefulWidget {
   final UserProfile? user;

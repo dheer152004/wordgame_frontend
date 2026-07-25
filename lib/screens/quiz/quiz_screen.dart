@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../models/quiz_models.dart';
-import '../services/backend_api.dart';
-import '../theme/app_theme.dart';
-import '../widgets/screen_action_buttons.dart';
+import '../../models/quiz_models.dart';
+import '../../services/backend_api.dart';
+import '../../theme/app_theme.dart';
+import '../../widgets/screen_action_buttons.dart';
 
 class QuizScreen extends StatefulWidget {
   const QuizScreen({super.key});

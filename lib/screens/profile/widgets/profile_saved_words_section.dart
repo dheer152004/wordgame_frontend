@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../screens/saved_words_screen.dart';
-import '../services/backend_api.dart';
-import '../theme/app_theme.dart';
+import '../saved_words_screen.dart';
+import '../../../services/backend_api.dart';
+import '../../../theme/app_theme.dart';
 
 class ProfileSavedWordsSection extends StatelessWidget {
   const ProfileSavedWordsSection({super.key});

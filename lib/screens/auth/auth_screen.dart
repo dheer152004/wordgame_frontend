@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 
-import '../models/auth_models.dart';
-import '../services/backend_api.dart';
-import '../services/session_store.dart';
-import '../theme/app_theme.dart';
-import 'home_screen.dart';
+import '../../models/auth_models.dart';
+import '../../services/backend_api.dart';
+import '../../services/session_store.dart';
+import '../../theme/app_theme.dart';
+import '../home/home_screen.dart';
+import 'login_screen.dart';
+import 'register_screen.dart';
 
 enum _AuthMode { login, register }
 
@@ -363,115 +365,24 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   Widget _buildLoginForm() {
-    return Form(
-      key: _loginFormKey,
-      child: Column(
-        key: const ValueKey('login-form'),
-        children: [
-          _InputField(
-            controller: _loginUsernameController,
-            label: 'Username',
-            icon: Icons.person_outline_rounded,
-            textInputAction: TextInputAction.next,
-            validator: (value) {
-              if (value == null || value.trim().length < 3) {
-                return 'Username must be at least 3 characters.';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 12),
-          _InputField(
-            controller: _loginPasswordController,
-            label: 'Password',
-            icon: Icons.lock_outline_rounded,
-            obscureText: true,
-            validator: (value) {
-              if (value == null || value.length < 6) {
-                return 'Password must be at least 6 characters.';
-              }
-              return null;
-            },
-          ),
-          if (_errorMessage != null) ...[
-            const SizedBox(height: 12),
-            _buildErrorBanner(),
-          ],
-        ],
-      ),
+    return LoginScreen(
+      formKey: _loginFormKey,
+      usernameController: _loginUsernameController,
+      passwordController: _loginPasswordController,
+      errorMessage: _errorMessage,
+      errorBanner: _buildErrorBanner(),
     );
   }
 
   Widget _buildRegisterForm() {
-    return Form(
-      key: _registerFormKey,
-      child: Column(
-        key: const ValueKey('register-form'),
-        children: [
-          _InputField(
-            controller: _registerUsernameController,
-            label: 'Username',
-            icon: Icons.person_outline_rounded,
-            textInputAction: TextInputAction.next,
-            validator: (value) {
-              if (value == null || value.trim().length < 3) {
-                return 'Username must be at least 3 characters.';
-              }
-              if (value.trim().length > 20) {
-                return 'Username must be 20 characters or fewer.';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 12),
-          _InputField(
-            controller: _registerEmailController,
-            label: 'Email',
-            icon: Icons.email_outlined,
-            keyboardType: TextInputType.emailAddress,
-            textInputAction: TextInputAction.next,
-            validator: (value) {
-              final email = value?.trim() ?? '';
-              if (email.isEmpty ||
-                  !email.contains('@') ||
-                  !email.contains('.')) {
-                return 'Enter a valid email address.';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 12),
-          _InputField(
-            controller: _registerDisplayNameController,
-            label: 'Display name',
-            icon: Icons.badge_outlined,
-            textInputAction: TextInputAction.next,
-            validator: (value) {
-              if ((value ?? '').trim().length > 40) {
-                return 'Display name must be 40 characters or fewer.';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 12),
-          _InputField(
-            controller: _registerPasswordController,
-            label: 'Password',
-            icon: Icons.lock_outline_rounded,
-            obscureText: true,
-            validator: (value) {
-              if (value == null || value.length < 6) {
-                return 'Password must be at least 6 characters.';
-              }
-              return null;
-            },
-          ),
-          if (_errorMessage != null) ...[
-            const SizedBox(height: 12),
-            _buildErrorBanner(),
-          ],
-        ],
-      ),
+    return RegisterScreen(
+      formKey: _registerFormKey,
+      usernameController: _registerUsernameController,
+      emailController: _registerEmailController,
+      displayNameController: _registerDisplayNameController,
+      passwordController: _registerPasswordController,
+      errorMessage: _errorMessage,
+      errorBanner: _buildErrorBanner(),
     );
   }
 }
@@ -545,86 +456,6 @@ class _ModeButton extends StatelessWidget {
             fontWeight: FontWeight.w700,
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _InputField extends StatefulWidget {
-  final TextEditingController controller;
-  final String label;
-  final IconData icon;
-  final String? Function(String?) validator;
-  final TextInputType keyboardType;
-  final TextInputAction textInputAction;
-  final bool obscureText;
-
-  const _InputField({
-    required this.controller,
-    required this.label,
-    required this.icon,
-    required this.validator,
-    this.keyboardType = TextInputType.text,
-    this.textInputAction = TextInputAction.done,
-    this.obscureText = false,
-  });
-
-  @override
-  State<_InputField> createState() => _InputFieldState();
-}
-
-class _InputFieldState extends State<_InputField> {
-  late bool _obscurePassword;
-
-  @override
-  void initState() {
-    super.initState();
-    _obscurePassword = widget.obscureText;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return TextFormField(
-      controller: widget.controller,
-      keyboardType: widget.keyboardType,
-      textInputAction: widget.textInputAction,
-      obscureText: _obscurePassword,
-      validator: widget.validator,
-      style: const TextStyle(color: Colors.white),
-      decoration: InputDecoration(
-        labelText: widget.label,
-        labelStyle: const TextStyle(color: Colors.white70),
-        prefixIcon: Icon(widget.icon, color: Colors.white70),
-        suffixIcon: widget.obscureText
-            ? IconButton(
-                icon: Icon(
-                  _obscurePassword
-                      ? Icons.visibility_off_rounded
-                      : Icons.visibility_rounded,
-                  color: Colors.white70,
-                ),
-                onPressed: () {
-                  setState(() {
-                    _obscurePassword = !_obscurePassword;
-                  });
-                },
-              )
-            : null,
-        filled: true,
-        fillColor: Colors.white.withAlpha(20),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide(color: Colors.white.withAlpha(31)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide(color: AppColors.challengeCard.withAlpha(242)),
-        ),
-        errorStyle: const TextStyle(color: Color(0xFFFFA6A6)),
       ),
     );
   }

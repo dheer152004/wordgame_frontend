@@ -287,7 +287,7 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
     }
 
     for (final word in visibleWords) {
-      final imageUrl = word.memeImageUrl.trim();
+      final imageUrl = word.wordImageUrl.trim();
       if (imageUrl.isEmpty) continue;
 
       if (kIsWeb) {
@@ -518,7 +518,7 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
                     key: _cleanCardKey,
                     child: SwipeCard(
                       key: ValueKey<String>(
-                        'clean-${currentWord.id}-${currentWord.memeImageUrl}',
+                        'clean-${currentWord.id}-${currentWord.wordImageUrl}',
                       ),
                       word: currentWord,
                       width: cardWidth,
@@ -534,7 +534,7 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
                 RepaintBoundary(
                   child: StackCardBackdrop(
                     key: ValueKey<String>(
-                      'third-${thirdWord.id}-${thirdWord.memeImageUrl}',
+                      'third-${thirdWord.id}-${thirdWord.wordImageUrl}',
                     ),
                     word: thirdWord,
                     width: cardWidth * 0.88,
@@ -548,7 +548,7 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
                 RepaintBoundary(
                   child: StackCardBackdrop(
                     key: ValueKey<String>(
-                      'next-${nextWord.id}-${nextWord.memeImageUrl}',
+                      'next-${nextWord.id}-${nextWord.wordImageUrl}',
                     ),
                     word: nextWord,
                     width: cardWidth * 0.94,
@@ -594,7 +594,7 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
                       child: Center(
                         child: SwipeCard(
                           key: ValueKey<String>(
-                            'front-${currentWord.id}-${currentWord.memeImageUrl}',
+                            'front-${currentWord.id}-${currentWord.wordImageUrl}',
                           ),
                           word: currentWord,
                           width: cardWidth,

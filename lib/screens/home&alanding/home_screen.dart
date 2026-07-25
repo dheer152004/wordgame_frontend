@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../theme/app_theme.dart';
-import '../widgets/home_header.dart';
-import '../widgets/daily_challenge_card.dart';
-import '../widgets/categories_section.dart';
-import '../widgets/home_bottom_nav.dart';
-import '../models/profile_models.dart';
+import '../../theme/app_theme.dart';
+import '../home/widget/home_header.dart';
+import '../home/widget/daily_challenge_card.dart';
+import '../../widgets/categories_section.dart';
+import '../home/widget/home_bottom_nav.dart';
+import '../../models/profile_models.dart';
 
 class HomeScreen extends StatelessWidget {
   final UserProfile? user;

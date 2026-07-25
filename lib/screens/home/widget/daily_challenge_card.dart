@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../theme/app_theme.dart';
-import '../screens/quiz_screen.dart';
+import '../../../theme/app_theme.dart';
+import '../../quiz/quiz_screen.dart';
 
 class DailyChallengeCard extends StatelessWidget {
   const DailyChallengeCard({super.key});

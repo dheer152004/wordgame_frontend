@@ -505,6 +505,57 @@ class BackendApi {
     );
   }
 
+  Future<RandomWordsPage> searchWords(
+    String query, {
+    int page = 0,
+    int size = 10,
+  }) async {
+    final trimmedQuery = query.trim();
+    if (trimmedQuery.isEmpty) {
+      return const RandomWordsPage(
+        words: [],
+        currentPage: 0,
+        totalPages: 0,
+        pageSize: 0,
+        hasMore: false,
+      );
+    }
+
+    final response = await _client.get(
+      _uri(
+        '/api/words/search?q=${Uri.encodeComponent(trimmedQuery)}&page=$page&size=$size',
+      ),
+      headers: await _headers(authenticated: true),
+    );
+
+    final payload = _decodeResponse(response);
+    final items = _asWordList(payload);
+    final payloadMap = payload is Map<String, dynamic>
+        ? payload
+        : const <String, dynamic>{};
+
+    final words = items
+        .whereType<Map>()
+        .map((entry) => ApiWord.fromJson(Map<String, dynamic>.from(entry)))
+        .toList();
+
+    final currentPage = _readIntValue(payloadMap['currentPage'], page);
+    final totalPages = _readIntValue(payloadMap['totalPages'], currentPage + 1);
+    final pageSize = _readIntValue(payloadMap['pageSize'], size);
+    final hasMore = _readBoolValue(
+      payloadMap['hasMore'],
+      fallback: currentPage + 1 < totalPages,
+    );
+
+    return RandomWordsPage(
+      words: words,
+      currentPage: currentPage,
+      totalPages: totalPages,
+      pageSize: pageSize,
+      hasMore: hasMore,
+    );
+  }
+
   Future<ApiWord> fetchWordById(int id, {bool forceRefresh = false}) async {
     if (!forceRefresh) {
       final memoryCached = _cachedWordById[id];
@@ -787,7 +838,7 @@ class BackendApi {
         'id': item.id,
         'word': item.word,
         'meaning': item.meaning,
-        'memeImageUrl': item.memeImageUrl,
+        'wordImageUrl': item.wordImageUrl,
         'categoryName': item.categoryName,
         'examples': item.examples,
       };

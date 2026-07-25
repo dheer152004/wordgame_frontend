@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
-import 'screens/loading_screen.dart';
+import 'screens/home&alanding/loading_screen.dart';
 import 'theme/app_theme.dart';
 
 // Global theme notifier

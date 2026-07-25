@@ -253,13 +253,13 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                 const SizedBox(height: 10),
                 Text(widget.word.meaning, style: AppTextStyles.planCardDetail),
                 const SizedBox(height: 18),
-                if (widget.word.memeImageUrl.isNotEmpty)
+                if (widget.word.wordImageUrl.isNotEmpty)
                   ClipRRect(
                     borderRadius: BorderRadius.circular(22),
                     child: AspectRatio(
                       aspectRatio: 1,
                       child: Image.network(
-                        widget.word.memeImageUrl,
+                        widget.word.wordImageUrl,
                         width: double.infinity,
                         height: double.infinity,
                         fit: BoxFit.cover,

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../models/word_Content_models.dart';
-import '../screens/word_sheet_details.dart';
-import '../services/backend_api.dart';
-import '../theme/app_theme.dart';
-import '../widgets/screen_action_buttons.dart';
+import '../../models/word_Content_models.dart';
+import '../word_sheet_details.dart';
+import '../../services/backend_api.dart';
+import '../../theme/app_theme.dart';
+import '../../widgets/screen_action_buttons.dart';
 
 class SavedWordsScreen extends StatefulWidget {
   const SavedWordsScreen({super.key});
@@ -291,9 +291,9 @@ class _SavedWordCard extends StatelessWidget {
                   child: Stack(
                     children: [
                       Positioned.fill(
-                        child: word.memeImageUrl.isNotEmpty
+                        child: word.wordImageUrl.isNotEmpty
                             ? Image.network(
-                                word.memeImageUrl,
+                                word.wordImageUrl,
                                 fit: BoxFit.cover,
                                 errorBuilder: (_, __, ___) => _imageFallback(),
                               )

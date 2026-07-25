@@ -120,7 +120,7 @@ class SwipeCard extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 2),
-                        CardImage(imageUrl: word.memeImageUrl, size: imageSize),
+                        CardImage(imageUrl: word.wordImageUrl, size: imageSize),
                         SizedBox(height: height < 500 ? 12 : 20),
                         Text(
                           word.word,

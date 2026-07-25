@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
-import '../models/profile_models.dart';
-import '../theme/app_theme.dart';
-import '../screens/profile_screen.dart';
+import '../../../models/profile_models.dart';
+import '../../../theme/app_theme.dart';
+import '../../profile/profile_screen.dart';
 
 class HomeHeader extends StatelessWidget {
   final UserProfile? user;
+  final VoidCallback? onSearchTap;
 
-  const HomeHeader({super.key, this.user});
+  const HomeHeader({super.key, this.user, this.onSearchTap});
 
   String _initials(String name) {
     final parts = name.trim().split(RegExp(r'\s+'));
@@ -130,24 +131,32 @@ class HomeHeader extends StatelessWidget {
           ),
         ),
 
-        Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withAlpha(15),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
+        Material(
+          color: Colors.transparent,
+          shape: const CircleBorder(),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(22),
+            onTap: onSearchTap,
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(15),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: const Icon(
-            Icons.search_rounded,
-            color: AppColors.textPrimary,
-            size: 20,
+              child: const Icon(
+                Icons.search_rounded,
+                color: AppColors.textPrimary,
+                size: 20,
+              ),
+            ),
           ),
         ),
       ],
