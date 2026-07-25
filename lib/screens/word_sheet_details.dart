@@ -58,6 +58,24 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
     }
   }
 
+  Future<void> _openWordSheet(int wordId, String wordLabel) async {
+    final relatedWord = ApiWord(
+      id: wordId,
+      word: wordLabel,
+      meaning: '',
+      wordImageUrl: '',
+      categoryName: '',
+      examples: const [],
+    );
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => WordDetailSheet(word: relatedWord),
+    );
+  }
+
   Future<void> _loadSavedState() async {
     try {
       final savedWords = await BackendApi.instance.fetchSavedWords();
@@ -447,7 +465,15 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                     runSpacing: 10,
                     children: relatedWords
                         .map(
-                          (related) => Chip(
+                          (related) => ActionChip(
+                            onPressed: () {
+                              _openWordSheet(
+                                related.wordId,
+                                related.word.isNotEmpty
+                                    ? related.word
+                                    : 'Word ${related.wordId}',
+                              );
+                            },
                             label: Text(
                               related.word.isNotEmpty
                                   ? related.word
