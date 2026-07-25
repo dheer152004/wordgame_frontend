@@ -22,11 +22,40 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
   bool _isPlayingAudio = false;
   bool _isSavingWord = false;
   bool _isAlreadySaved = false;
+  bool _loadingDetails = false;
+  ApiWord? _detailWord;
 
   @override
   void initState() {
     super.initState();
+    _detailWord = widget.word;
     _loadSavedState();
+    _loadWordDetails();
+  }
+
+  Future<void> _loadWordDetails() async {
+    setState(() {
+      _loadingDetails = true;
+    });
+
+    try {
+      final detail = await BackendApi.instance.fetchWordById(widget.word.id);
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _detailWord = detail;
+        _loadingDetails = false;
+      });
+    } catch (error) {
+      debugPrint('Error loading word details: $error');
+      if (mounted) {
+        setState(() {
+          _loadingDetails = false;
+        });
+      }
+    }
   }
 
   Future<void> _loadSavedState() async {
@@ -139,14 +168,15 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
   }
 
   Future<void> _shareWord(BuildContext context) async {
+    final word = _detailWord ?? widget.word;
     try {
       final shareText = StringBuffer()
-        ..writeln('Word: ${widget.word.word}')
-        ..writeln('Meaning: ${widget.word.meaning}')
-        ..writeln('Category: ${widget.word.categoryName}');
+        ..writeln('Word: ${word.word}')
+        ..writeln('Meaning: ${word.meaning}')
+        ..writeln('Category: ${word.categoryName}');
 
-      if (widget.word.primaryExample.isNotEmpty) {
-        shareText.writeln('Example: ${widget.word.primaryExample}');
+      if (word.primaryExample.isNotEmpty) {
+        shareText.writeln('Example: ${word.primaryExample}');
       }
 
       shareText
@@ -177,6 +207,10 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final word = _detailWord ?? widget.word;
+    final relatedWords = word.relatedWords;
+    final similarWords = word.alsoAppearsIn;
+
     return DraggableScrollableSheet(
       expand: false,
       initialChildSize: 0.78,
@@ -206,7 +240,7 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    CategoryPill(label: widget.word.categoryName),
+                    CategoryPill(label: word.categoryName),
                     const Spacer(),
                     TextButton.icon(
                       onPressed: () => _shareWord(context),
@@ -221,7 +255,7 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                   children: [
                     Expanded(
                       child: Text(
-                        widget.word.word,
+                        word.word,
                         style: const TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.w900,
@@ -251,9 +285,66 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                   ],
                 ),
                 const SizedBox(height: 10),
-                Text(widget.word.meaning, style: AppTextStyles.planCardDetail),
+                Text(word.meaning, style: AppTextStyles.planCardDetail),
+                if (word.description.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    word.description,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      height: 1.5,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 18),
-                if (widget.word.wordImageUrl.isNotEmpty)
+                if (_loadingDetails &&
+                    word.wordImageUrl.isEmpty &&
+                    word.images.isEmpty)
+                  const Center(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                      child: CircularProgressIndicator(),
+                    ),
+                  )
+                else if (word.images.isNotEmpty) ...[
+                  SizedBox(
+                    height: 210,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: word.images.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 12),
+                      itemBuilder: (context, index) {
+                        final imageUrl = word.images[index];
+                        return ClipRRect(
+                          borderRadius: BorderRadius.circular(22),
+                          child: AspectRatio(
+                            aspectRatio: 1,
+                            child: Image.network(
+                              imageUrl,
+                              width: 210,
+                              height: 210,
+                              fit: BoxFit.cover,
+                              webHtmlElementStrategy:
+                                  WebHtmlElementStrategy.prefer,
+                              errorBuilder: (_, __, ___) => Container(
+                                width: 210,
+                                height: 210,
+                                color: AppColors.surfaceAlt,
+                                alignment: Alignment.center,
+                                child: const Icon(
+                                  Icons.image_not_supported_outlined,
+                                  color: AppColors.textSecondary,
+                                  size: 40,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ] else if (word.wordImageUrl.isNotEmpty)
                   ClipRRect(
                     borderRadius: BorderRadius.circular(22),
                     child: AspectRatio(
@@ -276,6 +367,38 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                       ),
                     ),
                   ),
+                if (word.facts.isNotEmpty) ...[
+                  const SizedBox(height: 20),
+                  const Text(
+                    'Facts',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  for (final fact in word.facts) ...[
+                    Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceAlt,
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: Colors.white.withAlpha(14)),
+                      ),
+                      child: Text(
+                        fact,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          height: 1.45,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
                 if (widget.word.examples.isNotEmpty) ...[
                   const SizedBox(height: 20),
                   const Text(
@@ -287,7 +410,7 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  for (final example in widget.word.examples) ...[
+                  for (final example in word.examples) ...[
                     Container(
                       width: double.infinity,
                       margin: const EdgeInsets.only(bottom: 10),
@@ -307,6 +430,108 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                       ),
                     ),
                   ],
+                ],
+                if (relatedWords.isNotEmpty) ...[
+                  const SizedBox(height: 20),
+                  const Text(
+                    'Related Words',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: relatedWords
+                        .map(
+                          (related) => Chip(
+                            label: Text(
+                              related.word.isNotEmpty
+                                  ? related.word
+                                  : 'Word ${related.wordId}',
+                            ),
+                            backgroundColor: AppColors.surfaceAlt,
+                            side: BorderSide(color: Colors.white.withAlpha(14)),
+                            labelStyle: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ],
+                if (similarWords.isNotEmpty) ...[
+                  const SizedBox(height: 20),
+                  const Text(
+                    'Also Appears In',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: similarWords
+                        .map(
+                          (item) => Chip(
+                            label: Text(
+                              item.categoryName.isNotEmpty
+                                  ? '${item.categoryName} · Word ${item.wordId}'
+                                  : 'Word ${item.wordId}',
+                            ),
+                            backgroundColor: AppColors.surfaceAlt,
+                            side: BorderSide(color: Colors.white.withAlpha(14)),
+                            labelStyle: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ],
+                if (word.sourceAndCredits.isNotEmpty) ...[
+                  const SizedBox(height: 20),
+                  const Text(
+                    'Source & Credits',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceAlt,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: Colors.white.withAlpha(14)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        for (final entry in word.sourceAndCredits.entries) ...[
+                          Text(
+                            '${entry.key}: ${entry.value}',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              height: 1.5,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
                 ],
                 const SizedBox(height: 18),
                 Container(
@@ -349,7 +574,6 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                             color: AppColors.textSecondary,
                             fontSize: 10,
                           ),
-
                         ),
                       ),
                       const SizedBox(height: 10),

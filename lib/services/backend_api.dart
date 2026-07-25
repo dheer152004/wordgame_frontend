@@ -45,7 +45,7 @@ class BackendApi {
   String get baseUrl => AppConfig.backendApiBaseUrl;
   static const Duration _cacheTtl = Duration(hours: 6);
   static const String _categoriesCacheKey = 'word_frontend_categories_cache';
-  static const String _wordDetailCachePrefix = 'word_frontend_word_detail_';
+  static const String _wordDetailCachePrefix = 'word_frontend_word_detail_v2_';
   static const String _ipLocationLookupBestEffortUrl = 'https://ipinfo.io/json';
   static const String _ipLocationLookupPrimaryUrl = 'https://ipwho.is/';
   static const String _ipLocationLookupFallbackUrl = 'https://ipapi.co/json/';
@@ -836,11 +836,33 @@ class BackendApi {
     if (item is ApiWord) {
       return {
         'id': item.id,
+        'categoryId': item.categoryId,
         'word': item.word,
         'meaning': item.meaning,
         'wordImageUrl': item.wordImageUrl,
         'categoryName': item.categoryName,
         'examples': item.examples,
+        'audioUrl': item.audioUrl,
+        'images': item.images,
+        'description': item.description,
+        'facts': item.facts,
+        'quizModes': item.quizModes,
+        'relatedWordIds': item.relatedWords
+            .map((related) => {'wordId': related.wordId, 'word': related.word})
+            .toList(),
+        'alsoAppearsIn': item.alsoAppearsIn
+            .map(
+              (entry) => {
+                'categoryId': entry.categoryId,
+                'wordId': entry.wordId,
+                'categoryName': entry.categoryName,
+              },
+            )
+            .toList(),
+        'displayOrder': item.displayOrder,
+        'created': item.created?.toIso8601String(),
+        'updated': item.updated?.toIso8601String(),
+        'source&credits': item.sourceAndCredits,
       };
     }
 
