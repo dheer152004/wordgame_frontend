@@ -18,9 +18,10 @@ import '../widgets/swipe_feature.dart';
 import 'word_sheet_details.dart';
 
 class FlashCardsScreen extends StatefulWidget {
+  final int? categoryId;
   final String? categoryName;
 
-  const FlashCardsScreen({super.key, this.categoryName});
+  const FlashCardsScreen({super.key, this.categoryId, this.categoryName});
 
   @override
   State<FlashCardsScreen> createState() => _FlashCardsScreenState();
@@ -36,7 +37,8 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
   bool _loadingCategories = true;
   bool _loadingWords = false;
   bool _loadingMoreRandomWords = false;
-  String _selectedCategory = _randomCategoryKey;
+  String _selectedCategoryLabel = _randomCategoryKey;
+  int? _selectedCategoryId;
   String? _errorMessage;
 
   int _randomPage = 0;
@@ -116,10 +118,14 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
     }
 
     final requestedCategory = widget.categoryName?.trim() ?? '';
+    final requestedCategoryId = widget.categoryId;
     final hasRequestedCategory = requestedCategory.isNotEmpty;
-    final initialCategory = hasRequestedCategory
-        ? requestedCategory
+    final initialCategory = requestedCategoryId != null || hasRequestedCategory
+        ? (hasRequestedCategory
+              ? requestedCategory
+              : 'Category $requestedCategoryId')
         : _randomCategoryKey;
+    final initialCategoryId = requestedCategoryId;
 
     if (!mounted) return;
     setState(() {
@@ -127,10 +133,29 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
         ..clear()
         ..addAll(categories);
       _loadingCategories = false;
-      _selectedCategory = initialCategory;
+      _selectedCategoryLabel = initialCategory;
+      _selectedCategoryId = initialCategoryId;
     });
 
     await _loadWordsForSelection(initialCategory, showLoader: false);
+  }
+
+  ApiCategory? _findCategoryByName(String name) {
+    for (final category in _categories) {
+      if (category.name == name) {
+        return category;
+      }
+    }
+    return null;
+  }
+
+  ApiCategory? _findCategoryById(int categoryId) {
+    for (final category in _categories) {
+      if (category.id == categoryId) {
+        return category;
+      }
+    }
+    return null;
   }
 
   Future<void> _loadWordsForSelection(
@@ -147,8 +172,27 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
       });
     }
 
+    final categoryByLabel = selection == _randomCategoryKey
+        ? null
+        : _findCategoryByName(selection);
+    final categoryById = _selectedCategoryId != null
+        ? _findCategoryById(_selectedCategoryId!)
+        : null;
+
     final fetchPage = selection == _randomCategoryKey
         ? (int page) => BackendApi.instance.fetchRandomWords(
+            page: page,
+            size: _randomPageSize,
+          )
+        : categoryById != null
+        ? (int page) => BackendApi.instance.fetchWordsByCategoryId(
+            categoryById.id,
+            page: page,
+            size: _randomPageSize,
+          )
+        : categoryByLabel != null
+        ? (int page) => BackendApi.instance.fetchWordsByCategoryId(
+            categoryByLabel.id,
             page: page,
             size: _randomPageSize,
           )
@@ -218,10 +262,13 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
   }
 
   void _selectCategory(String selection) {
-    if (_selectedCategory == selection) return;
+    if (_selectedCategoryLabel == selection) return;
+
+    final selectedCategory = _findCategoryByName(selection);
 
     setState(() {
-      _selectedCategory = selection;
+      _selectedCategoryLabel = selection;
+      _selectedCategoryId = selectedCategory?.id;
     });
     _loadWordsForSelection(selection);
   }
@@ -252,13 +299,19 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
       return;
     }
 
-    final fetchPage = _selectedCategory == _randomCategoryKey
+    final fetchPage = _selectedCategoryLabel == _randomCategoryKey
         ? (int page) => BackendApi.instance.fetchRandomWords(
             page: page,
             size: _randomPageSize,
           )
+        : _selectedCategoryId != null
+        ? (int page) => BackendApi.instance.fetchWordsByCategoryId(
+            _selectedCategoryId!,
+            page: page,
+            size: _randomPageSize,
+          )
         : (int page) => BackendApi.instance.fetchWordsByCategory(
-            _selectedCategory,
+            _selectedCategoryLabel,
             page: page,
             size: _randomPageSize,
           );
@@ -424,7 +477,7 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
           final chipValue = isRandomChip
               ? _randomCategoryKey
               : _categories[index - 1].name;
-          final selected = chipValue == _selectedCategory;
+          final selected = chipValue == _selectedCategoryLabel;
 
           final chipLabel = isRandomChip
               ? 'Random'
@@ -471,15 +524,15 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
             ),
             const SizedBox(height: 10),
             Text(
-              _selectedCategory == _randomCategoryKey
+              _selectedCategoryLabel == _randomCategoryKey
                   ? 'No random words found right now.'
-                  : 'No words found for $_selectedCategory.',
+                  : 'No words found for $_selectedCategoryLabel.',
               style: AppTextStyles.planCardDetail,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 10),
             TextButton(
-              onPressed: () => _loadWordsForSelection(_selectedCategory),
+              onPressed: () => _loadWordsForSelection(_selectedCategoryLabel),
               child: const Text('Try again'),
             ),
           ],

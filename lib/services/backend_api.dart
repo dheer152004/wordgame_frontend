@@ -468,6 +468,45 @@ class BackendApi {
     );
   }
 
+  Future<RandomWordsPage> fetchWordsByCategoryId(
+    int categoryId, {
+    int page = 0,
+    int size = 10,
+    bool forceRefresh = false,
+  }) async {
+    final response = await _client.get(
+      _uri('/api/words/category/$categoryId?page=$page&size=$size'),
+      headers: await _headers(authenticated: true),
+    );
+
+    final payload = _decodeResponse(response);
+    final items = _asWordList(payload);
+    final payloadMap = payload is Map<String, dynamic>
+        ? payload
+        : const <String, dynamic>{};
+
+    final words = items
+        .whereType<Map>()
+        .map((entry) => ApiWord.fromJson(Map<String, dynamic>.from(entry)))
+        .toList();
+
+    final currentPage = _readIntValue(payloadMap['currentPage'], page);
+    final totalPages = _readIntValue(payloadMap['totalPages'], currentPage + 1);
+    final pageSize = _readIntValue(payloadMap['pageSize'], size);
+    final hasMore = _readBoolValue(
+      payloadMap['hasMore'],
+      fallback: currentPage + 1 < totalPages,
+    );
+
+    return RandomWordsPage(
+      words: words,
+      currentPage: currentPage,
+      totalPages: totalPages,
+      pageSize: pageSize,
+      hasMore: hasMore,
+    );
+  }
+
   Future<RandomWordsPage> fetchRandomWords({
     int page = 0,
     int size = 10,

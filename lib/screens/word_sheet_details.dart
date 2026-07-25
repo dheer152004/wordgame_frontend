@@ -6,6 +6,7 @@ import '../models/word_Content_models.dart';
 import '../services/audio_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/common_widgets.dart';
+import 'flash_cards_screen.dart';
 
 class WordDetailSheet extends StatefulWidget {
   final ApiWord word;
@@ -506,7 +507,17 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                     runSpacing: 10,
                     children: similarWords
                         .map(
-                          (item) => Chip(
+                          (item) => ActionChip(
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => FlashCardsScreen(
+                                    categoryId: item.categoryId,
+                                    categoryName: item.categoryName,
+                                  ),
+                                ),
+                              );
+                            },
                             label: Text(
                               item.categoryName.isNotEmpty
                                   ? '${item.categoryName} · Word ${item.wordId}'
