@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../models/profile_models.dart';
@@ -23,6 +25,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
+  Timer? _searchDebounceTimer;
   bool _showSearchBar = false;
   bool _isSearching = false;
   bool _isLoadingMore = false;
@@ -34,6 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    _searchDebounceTimer?.cancel();
     _searchController.dispose();
     _searchFocusNode.dispose();
     super.dispose();
@@ -115,6 +119,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _clearSearch() {
+    _searchDebounceTimer?.cancel();
     _searchController.clear();
     setState(() {
       _searchResults = [];
@@ -123,6 +128,30 @@ class _HomeScreenState extends State<HomeScreen> {
       _searchError = null;
     });
     _searchFocusNode.requestFocus();
+  }
+
+  void _onQueryChanged(String value) {
+    _searchDebounceTimer?.cancel();
+
+    if (value.trim().isEmpty) {
+      setState(() {
+        _searchResults = [];
+        _hasSearched = false;
+        _hasMore = false;
+        _searchError = null;
+        _isSearching = false;
+        _isLoadingMore = false;
+      });
+      return;
+    }
+
+    _searchDebounceTimer = Timer(const Duration(milliseconds: 500), () {
+      if (!mounted || !_showSearchBar) {
+        return;
+      }
+
+      _performSearch();
+    });
   }
 
   void _toggleSearchBar() {
@@ -187,6 +216,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         searchError: _searchError,
                         searchResults: _searchResults,
                         onSearch: _performSearch,
+                        onQueryChanged: _onQueryChanged,
                         onLoadMore: () => _performSearch(loadMore: true),
                         onClear: _clearSearch,
                         onClose: _closeSearchBar,

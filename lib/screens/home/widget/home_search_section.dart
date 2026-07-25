@@ -14,6 +14,7 @@ class HomeSearchSection extends StatelessWidget {
   final String? searchError;
   final List<ApiWord> searchResults;
   final VoidCallback onSearch;
+  final ValueChanged<String> onQueryChanged;
   final VoidCallback onLoadMore;
   final VoidCallback onClear;
   final VoidCallback onClose;
@@ -29,6 +30,7 @@ class HomeSearchSection extends StatelessWidget {
     required this.searchError,
     required this.searchResults,
     required this.onSearch,
+    required this.onQueryChanged,
     required this.onLoadMore,
     required this.onClear,
     required this.onClose,
@@ -71,6 +73,7 @@ class HomeSearchSection extends StatelessWidget {
             controller: searchController,
             focusNode: searchFocusNode,
             textInputAction: TextInputAction.search,
+            onChanged: onQueryChanged,
             onSubmitted: (_) => onSearch(),
             style: const TextStyle(color: AppColors.textPrimary),
             decoration: InputDecoration(
