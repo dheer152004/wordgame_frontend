@@ -289,12 +289,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         content: Text('Terms of Use will be added soon.'),
                       ),
                     ),
-                onConsentmanagement: () =>
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Consent management will be added soon.'),
-                      ),
-                    ),
+                onConsentmanagement: _openConsentManagement,
               ),
               const SizedBox(height: 18),
               Container(
@@ -458,6 +453,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Future<void> _openConsentManagement() async {
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please log in to view your consents.')),
+      );
+      return;
+    }
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: AppColors.background,
+      builder: (_) => FractionallySizedBox(
+        heightFactor: 0.82,
+        child: _ConsentManagementSheet(formatDateTime: _formatDateTime),
+      ),
+    );
+  }
+
   UserProfile _mergeAvatarPreference(UserProfile fetchedProfile) {
     return ProfileAvatarHelper.mergeAvatarPreference(fetchedProfile, user);
   }
@@ -492,5 +507,241 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final hour = local.hour.toString().padLeft(2, '0');
     final minute = local.minute.toString().padLeft(2, '0');
     return '${local.year}-$month-$day $hour:$minute';
+  }
+}
+
+class _ConsentManagementSheet extends StatefulWidget {
+  final String Function(DateTime?) formatDateTime;
+
+  const _ConsentManagementSheet({required this.formatDateTime});
+
+  @override
+  State<_ConsentManagementSheet> createState() =>
+      _ConsentManagementSheetState();
+}
+
+class _ConsentManagementSheetState extends State<_ConsentManagementSheet> {
+  late Future<List<UserConsent>> _futureConsents;
+
+  @override
+  void initState() {
+    super.initState();
+    _futureConsents = BackendApi.instance.fetchUserConsents();
+  }
+
+  void _reload() {
+    setState(() {
+      _futureConsents = BackendApi.instance.fetchUserConsents();
+    });
+  }
+
+  Color _statusColor(String status) {
+    final normalized = status.trim().toUpperCase();
+    if (normalized == 'GRANTED') {
+      return const Color(0xFF36C68A);
+    }
+    if (normalized == 'WITHDRAWN') {
+      return const Color(0xFFFF8C7A);
+    }
+    return AppColors.textSecondary;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 42,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white.withAlpha(50),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Consent Management',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  onPressed: _reload,
+                  icon: const Icon(Icons.refresh_rounded),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Your consent history with document title, status, accepted time, and source.',
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 13,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 14),
+            Expanded(
+              child: FutureBuilder<List<UserConsent>>(
+                future: _futureConsents,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState != ConnectionState.done) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Failed to load consents',
+                            style: TextStyle(
+                              color: AppColors.textPrimary.withAlpha(220),
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            snapshot.error.toString(),
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 13,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 12),
+                          OutlinedButton(
+                            onPressed: _reload,
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  final consents = snapshot.data ?? const <UserConsent>[];
+                  if (consents.isEmpty) {
+                    return const Center(
+                      child: Text(
+                        'No consent records found.',
+                        style: TextStyle(color: AppColors.textSecondary),
+                      ),
+                    );
+                  }
+
+                  return ListView.separated(
+                    itemCount: consents.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 10),
+                    itemBuilder: (context, index) {
+                      final consent = consents[index];
+                      return Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: Colors.white.withAlpha(16)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              consent.legalDocumentTitle.isNotEmpty
+                                  ? consent.legalDocumentTitle
+                                  : consent.legalDocumentType,
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            _ConsentDetailRow(
+                              label: 'Status',
+                              value: consent.status,
+                              valueColor: _statusColor(consent.status),
+                            ),
+                            const SizedBox(height: 6),
+                            _ConsentDetailRow(
+                              label: 'Accepted At',
+                              value: widget.formatDateTime(consent.acceptedAt),
+                            ),
+                            const SizedBox(height: 6),
+                            _ConsentDetailRow(
+                              label: 'Accepted From',
+                              value: consent.acceptedFrom.isNotEmpty
+                                  ? consent.acceptedFrom
+                                  : 'Unknown',
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ConsentDetailRow extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color? valueColor;
+
+  const _ConsentDetailRow({
+    required this.label,
+    required this.value,
+    this.valueColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 100,
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: TextStyle(
+              color: valueColor ?? AppColors.textPrimary,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }

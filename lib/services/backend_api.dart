@@ -114,6 +114,23 @@ class BackendApi {
     throw const BackendException('Unexpected profile response from server.');
   }
 
+  Future<List<UserConsent>> fetchUserConsents() async {
+    final response = await _client.get(
+      _uri('/api/users/me/consents'),
+      headers: await _headers(authenticated: true),
+    );
+
+    final payload = _decodeResponse(response);
+    final items = payload is Map<String, dynamic> && payload['consents'] is List
+        ? List<dynamic>.from(payload['consents'] as List)
+        : _asList(payload);
+
+    return items
+        .whereType<Map>()
+        .map((entry) => UserConsent.fromJson(Map<String, dynamic>.from(entry)))
+        .toList();
+  }
+
   Future<UserProfile> updateUserProfile({
     required String displayName,
     required String avatarUrl,

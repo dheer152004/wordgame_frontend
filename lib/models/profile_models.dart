@@ -156,6 +156,50 @@ class UserProfile {
       displayName.trim().isNotEmpty ? displayName : username;
 }
 
+class UserConsent {
+  final int id;
+  final int legalDocumentId;
+  final String legalDocumentTitle;
+  final String legalDocumentType;
+  final String status;
+  final DateTime? acceptedAt;
+  final String acceptedFrom;
+  final DateTime? withdrawnAt;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+
+  const UserConsent({
+    required this.id,
+    required this.legalDocumentId,
+    required this.legalDocumentTitle,
+    required this.legalDocumentType,
+    required this.status,
+    required this.acceptedAt,
+    required this.acceptedFrom,
+    required this.withdrawnAt,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory UserConsent.fromJson(Map<String, dynamic> json) {
+    return UserConsent(
+      id: _readInt(json['id']),
+      legalDocumentId: _readInt(json['legalDocumentId']),
+      legalDocumentTitle:
+          json['legalDocumentTitle']?.toString() ??
+          json['documentTitle']?.toString() ??
+          '',
+      legalDocumentType: json['legalDocumentType']?.toString() ?? '',
+      status: json['status']?.toString() ?? '',
+      acceptedAt: _readFlexibleDateTime(json['acceptedAt']),
+      acceptedFrom: json['acceptedFrom']?.toString() ?? '',
+      withdrawnAt: _readFlexibleDateTime(json['withdrawnAt']),
+      createdAt: _readFlexibleDateTime(json['createdAt']),
+      updatedAt: _readFlexibleDateTime(json['updatedAt']),
+    );
+  }
+}
+
 int _readInt(Object? value) {
   if (value is int) {
     return value;
@@ -199,6 +243,35 @@ DateTime? _readDateTime(Object? value) {
 
   if (value is String && value.isNotEmpty) {
     return DateTime.tryParse(value);
+  }
+
+  return null;
+}
+
+DateTime? _readFlexibleDateTime(Object? value) {
+  if (value is DateTime) {
+    return value;
+  }
+
+  if (value is String && value.isNotEmpty) {
+    return DateTime.tryParse(value);
+  }
+
+  if (value is List && value.length >= 3) {
+    final year = _readInt(value[0]);
+    final month = _readInt(value[1]);
+    final day = _readInt(value[2]);
+    final hour = value.length > 3 ? _readInt(value[3]) : 0;
+    final minute = value.length > 4 ? _readInt(value[4]) : 0;
+    final second = value.length > 5 ? _readInt(value[5]) : 0;
+    final nanosecond = value.length > 6 ? _readInt(value[6]) : 0;
+    final microsecond = (nanosecond / 1000).floor();
+
+    try {
+      return DateTime(year, month, day, hour, minute, second, microsecond);
+    } catch (_) {
+      return null;
+    }
   }
 
   return null;
