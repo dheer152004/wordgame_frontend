@@ -37,6 +37,22 @@ class RandomWordsPage {
   });
 }
 
+class CategorySearchPage {
+  final List<ApiCategory> categories;
+  final int currentPage;
+  final int totalPages;
+  final int pageSize;
+  final bool hasMore;
+
+  const CategorySearchPage({
+    required this.categories,
+    required this.currentPage,
+    required this.totalPages,
+    required this.pageSize,
+    required this.hasMore,
+  });
+}
+
 class BackendApi {
   BackendApi._();
 
@@ -182,6 +198,28 @@ class BackendApi {
         'newPassword': newPassword,
         'confirmPassword': confirmPassword,
       }),
+    );
+
+    _decodeResponse(response);
+  }
+
+  Future<void> submitReport({
+    required String reason,
+    required String description,
+    List<String>? screenshotUrls,
+  }) async {
+    final body = <String, dynamic>{
+      'reason': reason,
+      'description': description,
+    };
+    if (screenshotUrls != null && screenshotUrls.isNotEmpty) {
+      body['screenshotUrls'] = screenshotUrls;
+    }
+
+    final response = await _client.post(
+      _uri('/api/report'),
+      headers: await _headers(authenticated: true),
+      body: jsonEncode(body),
     );
 
     _decodeResponse(response);
@@ -612,6 +650,57 @@ class BackendApi {
     );
   }
 
+  Future<CategorySearchPage> searchCategories(
+    String query, {
+    int page = 0,
+    int size = 10,
+  }) async {
+    final trimmedQuery = query.trim();
+    if (trimmedQuery.isEmpty) {
+      return const CategorySearchPage(
+        categories: [],
+        currentPage: 0,
+        totalPages: 0,
+        pageSize: 0,
+        hasMore: false,
+      );
+    }
+
+    final response = await _client.get(
+      _uri(
+        '/api/categories/search?q=${Uri.encodeComponent(trimmedQuery)}&page=$page&size=$size',
+      ),
+      headers: await _headers(authenticated: true),
+    );
+
+    final payload = _decodeResponse(response);
+    final categoryItems = _asCategoryList(payload);
+    final payloadMap = payload is Map<String, dynamic>
+        ? payload
+        : const <String, dynamic>{};
+
+    final categories = categoryItems
+        .whereType<Map>()
+        .map((entry) => ApiCategory.fromJson(Map<String, dynamic>.from(entry)))
+        .toList();
+
+    final currentPage = _readIntValue(payloadMap['currentPage'], page);
+    final totalPages = _readIntValue(payloadMap['totalPages'], currentPage + 1);
+    final pageSize = _readIntValue(payloadMap['pageSize'], size);
+    final hasMore = _readBoolValue(
+      payloadMap['hasMore'],
+      fallback: currentPage + 1 < totalPages,
+    );
+
+    return CategorySearchPage(
+      categories: categories,
+      currentPage: currentPage,
+      totalPages: totalPages,
+      pageSize: pageSize,
+      hasMore: hasMore,
+    );
+  }
+
   Future<ApiWord> fetchWordById(int id, {bool forceRefresh = false}) async {
     if (!forceRefresh) {
       final memoryCached = _cachedWordById[id];
@@ -834,6 +923,29 @@ class BackendApi {
           return nestedWordsFromData;
         }
       }
+    }
+
+    return const [];
+  }
+
+  List<dynamic> _asCategoryList(dynamic payload) {
+    if (payload is Map<String, dynamic>) {
+      final nestedCategories = payload['categories'];
+      if (nestedCategories is List) {
+        return nestedCategories;
+      }
+
+      final nestedData = payload['data'];
+      if (nestedData is Map<String, dynamic>) {
+        final nestedCategoriesFromData = nestedData['categories'];
+        if (nestedCategoriesFromData is List) {
+          return nestedCategoriesFromData;
+        }
+      }
+    }
+
+    if (payload is List) {
+      return payload;
     }
 
     return const [];

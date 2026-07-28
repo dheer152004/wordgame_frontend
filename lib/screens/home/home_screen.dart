@@ -31,9 +31,13 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isLoadingMore = false;
   bool _hasSearched = false;
   bool _hasMore = false;
+  bool _showCategoryResults = false;
   int _currentPage = 0;
   String? _searchError;
   List<ApiWord> _searchResults = [];
+  List<ApiCategory> _categoryResults = [];
+  bool _hasMoreCategories = false;
+  int _categoryCurrentPage = 0;
 
   @override
   void dispose() {
@@ -97,6 +101,10 @@ class _HomeScreenState extends State<HomeScreen> {
         _hasMore = pageResult.hasMore;
         _currentPage = pageResult.currentPage;
       });
+
+      if (_showCategoryResults && !loadMore) {
+        await _performCategorySearch();
+      }
     } catch (error) {
       if (!mounted) {
         return;
@@ -123,11 +131,75 @@ class _HomeScreenState extends State<HomeScreen> {
     _searchController.clear();
     setState(() {
       _searchResults = [];
+      _categoryResults = [];
       _hasSearched = false;
       _hasMore = false;
+      _hasMoreCategories = false;
       _searchError = null;
     });
     _searchFocusNode.requestFocus();
+  }
+
+  Future<void> _performCategorySearch({bool loadMore = false}) async {
+    final query = _searchController.text.trim();
+    if (query.isEmpty) {
+      setState(() {
+        _categoryResults = [];
+        _hasMoreCategories = false;
+        _categoryCurrentPage = 0;
+      });
+      return;
+    }
+
+    if (loadMore && (!_hasMoreCategories || _isLoadingMore)) {
+      return;
+    }
+
+    if (!loadMore) {
+      setState(() {
+        _categoryResults = [];
+        _categoryCurrentPage = 0;
+        _hasMoreCategories = false;
+      });
+    } else {
+      setState(() {
+        _isLoadingMore = true;
+      });
+    }
+
+    try {
+      final page = loadMore ? _categoryCurrentPage + 1 : 0;
+      final pageResult = await BackendApi.instance.searchCategories(
+        query,
+        page: page,
+        size: 10,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        if (loadMore) {
+          _categoryResults.addAll(pageResult.categories);
+        } else {
+          _categoryResults = pageResult.categories;
+        }
+        _hasMoreCategories = pageResult.hasMore;
+        _categoryCurrentPage = pageResult.currentPage;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _searchError = error.toString();
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingMore = false;
+        });
+      }
+    }
   }
 
   void _onQueryChanged(String value) {
@@ -136,8 +208,10 @@ class _HomeScreenState extends State<HomeScreen> {
     if (value.trim().isEmpty) {
       setState(() {
         _searchResults = [];
+        _categoryResults = [];
         _hasSearched = false;
         _hasMore = false;
+        _hasMoreCategories = false;
         _searchError = null;
         _isSearching = false;
         _isLoadingMore = false;
@@ -213,11 +287,29 @@ class _HomeScreenState extends State<HomeScreen> {
                         isLoadingMore: _isLoadingMore,
                         hasSearched: _hasSearched,
                         hasMore: _hasMore,
+                        showCategoryResults: _showCategoryResults,
+                        categoryResults: _categoryResults,
+                        hasMoreCategories: _hasMoreCategories,
                         searchError: _searchError,
                         searchResults: _searchResults,
                         onSearch: _performSearch,
                         onQueryChanged: _onQueryChanged,
                         onLoadMore: () => _performSearch(loadMore: true),
+                        onLoadMoreCategories: () =>
+                            _performCategorySearch(loadMore: true),
+                        onToggleCategoryResults: (value) {
+                          setState(() {
+                            _showCategoryResults = value;
+                          });
+                          if (value) {
+                            _performCategorySearch();
+                          } else {
+                            setState(() {
+                              _categoryResults = [];
+                              _hasMoreCategories = false;
+                            });
+                          }
+                        },
                         onClear: _clearSearch,
                         onClose: _closeSearchBar,
                       ),

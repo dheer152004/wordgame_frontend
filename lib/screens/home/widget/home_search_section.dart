@@ -13,9 +13,14 @@ class HomeSearchSection extends StatelessWidget {
   final bool hasMore;
   final String? searchError;
   final List<ApiWord> searchResults;
+  final bool showCategoryResults;
+  final List<ApiCategory> categoryResults;
+  final bool hasMoreCategories;
   final VoidCallback onSearch;
   final ValueChanged<String> onQueryChanged;
   final VoidCallback onLoadMore;
+  final VoidCallback onLoadMoreCategories;
+  final ValueChanged<bool> onToggleCategoryResults;
   final VoidCallback onClear;
   final VoidCallback onClose;
 
@@ -27,11 +32,16 @@ class HomeSearchSection extends StatelessWidget {
     required this.isLoadingMore,
     required this.hasSearched,
     required this.hasMore,
+    required this.showCategoryResults,
+    required this.categoryResults,
+    required this.hasMoreCategories,
     required this.searchError,
     required this.searchResults,
     required this.onSearch,
     required this.onQueryChanged,
     required this.onLoadMore,
+    required this.onLoadMoreCategories,
+    required this.onToggleCategoryResults,
     required this.onClear,
     required this.onClose,
   });
@@ -125,6 +135,21 @@ class HomeSearchSection extends StatelessWidget {
               ),
             ),
           ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Include category results',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+              ),
+              Switch(
+                value: showCategoryResults,
+                onChanged: onToggleCategoryResults,
+                activeColor: AppColors.challengeCard,
+              ),
+            ],
+          ),
           const SizedBox(height: 18),
           if (isSearching)
             const Center(
@@ -147,7 +172,202 @@ class HomeSearchSection extends StatelessWidget {
                 style: const TextStyle(color: AppColors.textSecondary),
               ),
             )
-          else if (hasSearched && searchResults.isEmpty)
+          else if (searchResults.isNotEmpty ||
+              (showCategoryResults && categoryResults.isNotEmpty))
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (showCategoryResults && categoryResults.isNotEmpty) ...[
+                  const Text(
+                    'Category results',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount:
+                        categoryResults.length + (hasMoreCategories ? 1 : 0),
+                    separatorBuilder: (_, __) => const SizedBox(height: 10),
+                    itemBuilder: (context, index) {
+                      if (index == categoryResults.length) {
+                        return SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton(
+                            onPressed: onLoadMoreCategories,
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColors.textPrimary,
+                              side: BorderSide(
+                                color: Colors.white.withAlpha(24),
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            child: isLoadingMore
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Text('Load more categories'),
+                          ),
+                        );
+                      }
+
+                      final category = categoryResults[index];
+                      return Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: Colors.white.withAlpha(20)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              category.name,
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            if (category.description.isNotEmpty)
+                              Text(
+                                category.description,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: AppColors.textSecondary,
+                                  height: 1.4,
+                                ),
+                              ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Words: ${category.wordCount}',
+                              style: const TextStyle(
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 18),
+                ],
+                if (searchResults.isNotEmpty) ...[
+                  Text(
+                    'Results for “${searchController.text.trim()}”',
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: searchResults.length + (hasMore ? 1 : 0),
+                    separatorBuilder: (_, __) => const SizedBox(height: 10),
+                    itemBuilder: (context, index) {
+                      if (index == searchResults.length) {
+                        return SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton(
+                            onPressed: onLoadMore,
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColors.textPrimary,
+                              side: BorderSide(
+                                color: Colors.white.withAlpha(24),
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            child: isLoadingMore
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Text('Load more results'),
+                          ),
+                        );
+                      }
+
+                      final word = searchResults[index];
+                      return InkWell(
+                        onTap: () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (_) => WordDetailSheet(word: word),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: Colors.white.withAlpha(20),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      word.word,
+                                      style: const TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.textPrimary,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      word.meaning,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        color: AppColors.textSecondary,
+                                        height: 1.4,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Icon(
+                                Icons.chevron_right_rounded,
+                                color: AppColors.textSecondary,
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ],
+            )
+          else if (hasSearched && searchResults.isEmpty && !showCategoryResults)
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(14),
@@ -160,106 +380,6 @@ class HomeSearchSection extends StatelessWidget {
                 'No words found for that search.',
                 style: TextStyle(color: AppColors.textSecondary),
               ),
-            )
-          else if (searchResults.isNotEmpty)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Results for “${searchController.text.trim()}”',
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: searchResults.length + (hasMore ? 1 : 0),
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
-                  itemBuilder: (context, index) {
-                    if (index == searchResults.length) {
-                      return SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton(
-                          onPressed: onLoadMore,
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: AppColors.textPrimary,
-                            side: BorderSide(color: Colors.white.withAlpha(24)),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                          ),
-                          child: isLoadingMore
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Text('Load more results'),
-                        ),
-                      );
-                    }
-
-                    final word = searchResults[index];
-                    return InkWell(
-                      onTap: () {
-                        showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          backgroundColor: Colors.transparent,
-                          builder: (_) => WordDetailSheet(word: word),
-                        );
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: Colors.white.withAlpha(20)),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    word.word,
-                                    style: const TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w700,
-                                      color: AppColors.textPrimary,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    word.meaning,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      color: AppColors.textSecondary,
-                                      height: 1.4,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const Icon(
-                              Icons.chevron_right_rounded,
-                              color: AppColors.textSecondary,
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ],
             ),
         ],
       ),

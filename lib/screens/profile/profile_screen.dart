@@ -21,6 +21,7 @@ import 'widgets/profile_legal_section.dart';
 import 'widgets/profile_Support_section.dart';
 import 'widgets/profile_password_dialog.dart';
 import 'widgets/profile_avatar_helper.dart';
+import 'widgets/profile_report_dialog.dart';
 
 class ProfileScreen extends StatefulWidget {
   final UserProfile? user;
@@ -268,12 +269,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         content: Text('Contact us will be added soon.'),
                       ),
                     ),
-                onReportProblemTap: () =>
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Report problem will be added soon.'),
-                      ),
-                    ),
+                onReportProblemTap: () async {
+                  await showDialog<void>(
+                    context: context,
+                    builder: (_) => const ProfileReportDialog(),
+                  );
+                },
               ),
               const SizedBox(height: 18),
               ProfileLegalSection(
