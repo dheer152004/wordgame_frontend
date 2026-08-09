@@ -533,6 +533,8 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
             const SizedBox(height: 10),
             TextButton(
               onPressed: () => _loadWordsForSelection(_selectedCategoryLabel),
+                style: TextButton.styleFrom(
+                foregroundColor: Colors.purple,),
               child: const Text('Try again'),
             ),
           ],

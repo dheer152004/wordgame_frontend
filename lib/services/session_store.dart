@@ -71,6 +71,18 @@ class SessionStore {
     await preferences.remove(_usernameKey);
   }
 
+  static const String _onboardingKey = 'word_frontend_onboarding_complete';
+
+  static Future<bool> hasSeenOnboarding() async {
+    final preferences = await SharedPreferences.getInstance();
+    return preferences.getBool(_onboardingKey) ?? false;
+  }
+
+  static Future<void> markOnboardingSeen() async {
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setBool(_onboardingKey, true);
+  }
+
   // Lightweight helpers for UI quick actions. These keys are app-local
   // and no-op if not present.
   static Future<void> clearCache() async {

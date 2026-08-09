@@ -8,6 +8,7 @@ class LoginScreen extends StatelessWidget {
   final TextEditingController passwordController;
   final String? errorMessage;
   final Widget? errorBanner;
+  final Future<void> Function(String email)? onForgotPassword;
 
   const LoginScreen({
     super.key,
@@ -16,6 +17,7 @@ class LoginScreen extends StatelessWidget {
     required this.passwordController,
     this.errorMessage,
     this.errorBanner,
+    this.onForgotPassword,
   });
 
   @override
@@ -24,31 +26,98 @@ class LoginScreen extends StatelessWidget {
       key: formKey,
       child: Column(
         key: const ValueKey('login-form'),
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _InputField(
             controller: usernameController,
-            label: 'Username or email',
+            label: 'Email or Phone',
             icon: Icons.person_outline_rounded,
             textInputAction: TextInputAction.next,
             validator: (value) {
-              if (value == null || value.trim().length < 3) {
-                return 'Username must be at least 3 characters.';
+              if (value == null || value.trim().isEmpty) {
+                return 'Please enter your email or phone number.';
               }
               return null;
             },
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           _InputField(
             controller: passwordController,
             label: 'Password',
             icon: Icons.lock_outline_rounded,
             obscureText: true,
+            textInputAction: TextInputAction.done,
             validator: (value) {
               if (value == null || value.length < 6) {
                 return 'Password must be at least 6 characters.';
               }
               return null;
             },
+          ),
+          const SizedBox(height: 10),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: () async {
+                final emailController = TextEditingController();
+                final email = await showDialog<String>(
+                  context: context,
+                  builder: (dialogContext) {
+                    return AlertDialog(
+                      backgroundColor: const Color(0xFFFFFFFF),
+                      surfaceTintColor: Colors.white,
+                      title: const Text(
+                        'Reset password',
+                        style: TextStyle(color: Color(0xFF0F172A)),
+                      ),
+                      content: TextField(
+                        controller: emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        style: const TextStyle(color: Color(0xFF0F172A)),
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: const Color(0xFFF8FAFF),
+                          labelText: 'Email address',
+                          labelStyle: const TextStyle(color: Color(0xFF64748B)),
+                          hintText: 'you@example.com',
+                          hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide(
+                              color: const Color(0xFFE2E8F0),
+                            ),
+                          ),
+                        ),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(dialogContext).pop(),
+                          child: const Text('Cancel'),
+                        ),
+                        FilledButton(
+                          onPressed: () => Navigator.of(
+                            dialogContext,
+                          ).pop(emailController.text.trim()),
+                          child: const Text('Send link'),
+                        ),
+                      ],
+                    );
+                  },
+                );
+
+                if (email != null &&
+                    email.isNotEmpty &&
+                    onForgotPassword != null) {
+                  await onForgotPassword!(email);
+                }
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF2563EB),
+                padding: EdgeInsets.zero,
+                textStyle: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+              child: const Text('Forgot Password?'),
+            ),
           ),
           if (errorMessage != null) ...[
             const SizedBox(height: 12),
@@ -97,11 +166,11 @@ class _InputFieldState extends State<_InputField> {
       textInputAction: widget.textInputAction,
       obscureText: _obscurePassword,
       validator: widget.validator,
-      style: const TextStyle(color: Colors.white),
+      style: const TextStyle(color: Color(0xFF0F172A)),
       decoration: InputDecoration(
         labelText: widget.label,
-        labelStyle: const TextStyle(color: Colors.white70),
-        prefixIcon: Icon(widget.icon, color: Colors.white70),
+        labelStyle: const TextStyle(color: Color(0xFF64748B)),
+        prefixIcon: Icon(widget.icon, color: const Color(0xFF94A3B8)),
         suffixIcon: widget.obscureText
             ? IconButton(
                 icon: Icon(
@@ -118,18 +187,18 @@ class _InputFieldState extends State<_InputField> {
               )
             : null,
         filled: true,
-        fillColor: Colors.white.withAlpha(20),
+        fillColor: const Color(0xFFF8FAFF),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide(color: Colors.white.withAlpha(31)),
+          borderSide: BorderSide(color: const Color(0xFFE2E8F0)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide(color: AppColors.challengeCard.withAlpha(242)),
+          borderSide: BorderSide(color: const Color(0xFF2563EB)),
         ),
         errorStyle: const TextStyle(color: Color(0xFFFFA6A6)),
       ),

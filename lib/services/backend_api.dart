@@ -116,6 +116,24 @@ class BackendApi {
     return null;
   }
 
+  Future<String> forgotPassword(String email) async {
+    final response = await _client.post(
+      _uri('/api/auth/forgot-password'),
+      headers: _jsonHeaders,
+      body: jsonEncode({'email': email.trim()}),
+    );
+
+    final payload = _decodeResponse(response);
+    if (payload is Map<String, dynamic>) {
+      final message = payload['message']?.toString();
+      if (message != null && message.isNotEmpty) {
+        return message;
+      }
+    }
+
+    return 'Password reset instructions have been sent to your email';
+  }
+
   Future<UserProfile> fetchUserProfile() async {
     final response = await _client.get(
       _uri('/api/user/profile'),

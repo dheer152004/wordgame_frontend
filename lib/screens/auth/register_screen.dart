@@ -181,11 +181,11 @@ class _InputFieldState extends State<_InputField> {
       textInputAction: widget.textInputAction,
       obscureText: _obscurePassword,
       validator: widget.validator,
-      style: const TextStyle(color: Colors.white),
+      style: const TextStyle(color: Color(0xFF0F172A)),
       decoration: InputDecoration(
         labelText: widget.label,
-        labelStyle: const TextStyle(color: Colors.white70),
-        prefixIcon: Icon(widget.icon, color: Colors.white70),
+        labelStyle: const TextStyle(color: Color(0xFF64748B)),
+        prefixIcon: Icon(widget.icon, color: const Color(0xFF94A3B8)),
         suffixIcon: widget.obscureText
             ? IconButton(
                 icon: Icon(
@@ -202,18 +202,18 @@ class _InputFieldState extends State<_InputField> {
               )
             : null,
         filled: true,
-        fillColor: Colors.white.withAlpha(20),
+        fillColor: const Color(0xFFF8FAFF),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide(color: Colors.white.withAlpha(31)),
+          borderSide: BorderSide(color: const Color(0xFFE2E8F0)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide(color: AppColors.challengeCard.withAlpha(242)),
+          borderSide: BorderSide(color: const Color(0xFF2563EB)),
         ),
         errorStyle: const TextStyle(color: Color(0xFFFFA6A6)),
       ),

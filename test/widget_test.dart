@@ -21,7 +21,19 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    expect(find.text('Klug'), findsWidgets);
-    expect(find.text('Continue as guest'), findsOneWidget);
+    expect(find.text('KLUG'), findsWidgets);
+    expect(find.text('Forgot password?'), findsOneWidget);
+  });
+
+  testWidgets('shows a forgot password action on the login form', (
+    WidgetTester tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+
+    await tester.pumpWidget(const WordApp());
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('Forgot password?'), findsOneWidget);
   });
 }
