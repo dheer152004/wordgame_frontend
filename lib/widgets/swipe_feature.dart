@@ -24,6 +24,7 @@ class SwipeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? DarkColors.textPrimary : LightColors.textPrimary;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -122,26 +123,33 @@ class SwipeCard extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 2),
-                        CardImage(imageUrl: word.wordImageUrl, size: imageSize),
+                        CardImage(
+                          imageUrl: word.images.isNotEmpty
+                              ? word.images.first
+                              : word.wordImageUrl,
+                          size: imageSize,
+                        ),
                         SizedBox(height: height < 500 ? 12 : 20),
                         Text(
                           word.word,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.w900,
                             letterSpacing: -1.1,
-                            color: AppColors.textPrimary,
-                          ).copyWith(fontSize: wordFontSize),
+                            color: textColor,
+                            fontSize: wordFontSize,
+                          ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 6),
                         Text(
                           word.meaning,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.w700,
                             height: 1.35,
-                            color: AppColors.textPrimary,
-                          ).copyWith(fontSize: meaningFontSize),
+                            color: textColor,
+                            fontSize: meaningFontSize,
+                          ),
                           maxLines: 3,
                           overflow: TextOverflow.ellipsis,
                         ),
