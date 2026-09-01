@@ -73,6 +73,9 @@ class ApiWord {
   final int id;
   final int? categoryId;
   final String word;
+  final String wordType;
+  final String expandedForm;
+  final String partOfSpeech;
   final String meaning;
   final String wordImageUrl;
   final String categoryName;
@@ -93,6 +96,9 @@ class ApiWord {
     required this.id,
     this.categoryId,
     required this.word,
+    this.wordType = '',
+    this.expandedForm = '',
+    this.partOfSpeech = '',
     required this.meaning,
     required this.wordImageUrl,
     required this.categoryName,
@@ -163,6 +169,9 @@ class ApiWord {
       id: _readInt(json['id']),
       categoryId: _readNullableInt(json['categoryId']),
       word: json['word']?.toString() ?? '',
+      wordType: json['wordType']?.toString() ?? '',
+      expandedForm: json['expandedForm']?.toString() ?? '',
+      partOfSpeech: json['partOfSpeech']?.toString() ?? '',
       meaning: json['meaning']?.toString() ?? '',
       wordImageUrl: json['wordImageUrl']?.toString() ?? '',
       categoryName: json['categoryName']?.toString() ?? '',
@@ -223,6 +232,9 @@ class SavedWord {
       wordImageUrl: wordImageUrl,
       categoryName: categoryName,
       examples: const [],
+      wordType: '',
+      expandedForm: '',
+      partOfSpeech: '',
     );
   }
 }

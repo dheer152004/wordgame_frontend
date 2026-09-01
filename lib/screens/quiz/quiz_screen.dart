@@ -233,7 +233,7 @@ class _QuizScreenState extends State<QuizScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppThemeColors.background(context),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _bootstrap,
@@ -261,11 +261,7 @@ class _QuizScreenState extends State<QuizScreen> {
                 const SizedBox(height: 6),
                 const Text(
                   'Take today\'s quiz, submit your answers, and review your score, XP, and history from the backend.',
-                  style: TextStyle(
-                    fontSize: 15,
-                    height: 1.5,
-                    color: AppColors.textSecondary,
-                  ),
+                  style: TextStyle(fontSize: 15, height: 1.5),
                 ),
                 const SizedBox(height: 18),
                 if (_loading)
@@ -277,7 +273,7 @@ class _QuizScreenState extends State<QuizScreen> {
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: AppColors.surface,
+                      color: AppThemeColors.surface(context),
                       borderRadius: BorderRadius.circular(18),
                       border: Border.all(color: Colors.white.withAlpha(20)),
                     ),
@@ -301,16 +297,12 @@ class _QuizScreenState extends State<QuizScreen> {
                                     style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.w800,
-                                      color: AppColors.textPrimary,
                                     ),
                                   ),
                                   const SizedBox(height: 4),
                                   const Text(
                                     'You have already completed today\'s quiz!',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: AppColors.textSecondary,
-                                    ),
+                                    style: TextStyle(fontSize: 14),
                                   ),
                                 ],
                               ),
@@ -441,8 +433,8 @@ class _QuizScreenState extends State<QuizScreen> {
                         const SizedBox(height: 10),
                         Text(
                           '${_selectedOptions.length}/${_questions.length} answered',
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
+                          style: TextStyle(
+                            color: AppThemeColors.textSecondary(context),
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -493,7 +485,7 @@ class _QuizCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppThemeColors.surface(context),
         borderRadius: BorderRadius.circular(AppRadius.card),
         boxShadow: [
           BoxShadow(
@@ -511,10 +503,10 @@ class _QuizCard extends StatelessWidget {
             children: [
               Text(
                 'Question $index',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textSecondary,
+                  color: AppThemeColors.textSecondary(context),
                 ),
               ),
               const Spacer(),
@@ -529,10 +521,10 @@ class _QuizCard extends StatelessWidget {
                 ),
                 child: Text(
                   '${prompt.points} pts',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
+                    color: AppThemeColors.textPrimary(context),
                   ),
                 ),
               ),
@@ -541,21 +533,17 @@ class _QuizCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             prompt.word,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
+              color: AppThemeColors.textPrimary(context),
               height: 1.25,
             ),
           ),
           const SizedBox(height: 6),
           const Text(
             'Choose the best answer for this word.',
-            style: TextStyle(
-              fontSize: 13,
-              color: AppColors.textSecondary,
-              height: 1.4,
-            ),
+            style: TextStyle(fontSize: 13, height: 1.4),
           ),
           const SizedBox(height: 14),
           for (final entry in prompt.options.asMap().entries) ...[
@@ -596,7 +584,7 @@ class _OptionRow extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           decoration: BoxDecoration(
-            color: selected ? Colors.white : AppColors.surfaceAlt,
+            color: selected ? Colors.white : AppThemeColors.surfaceAlt(context),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: selected ? Colors.white : Colors.white.withAlpha(14),
@@ -608,7 +596,9 @@ class _OptionRow extends StatelessWidget {
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
-                  color: selected ? Colors.black : AppColors.challengeCard,
+                  color: selected
+                      ? Colors.black
+                      : AppThemeColors.challengeCard(context),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
@@ -629,7 +619,9 @@ class _OptionRow extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
-                    color: selected ? Colors.black : AppColors.textPrimary,
+                    color: selected
+                        ? Colors.black
+                        : AppThemeColors.textPrimary(context),
                   ),
                 ),
               ),
@@ -653,7 +645,7 @@ class _ResultCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppThemeColors.surface(context),
         borderRadius: BorderRadius.circular(AppRadius.card),
         border: Border.all(color: Colors.white.withAlpha(18)),
       ),
@@ -662,28 +654,24 @@ class _ResultCard extends StatelessWidget {
         children: [
           const Text(
             'Submission result',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textSecondary,
-            ),
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 8),
           Text(
             '${result.score}/${result.totalPossible} correct',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w900,
-              color: AppColors.textPrimary,
+              color: AppThemeColors.textPrimary(context),
             ),
           ),
           const SizedBox(height: 6),
           Text(
             result.message,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
               height: 1.4,
-              color: AppColors.textSecondary,
+              color: AppThemeColors.textSecondary(context),
             ),
           ),
           const SizedBox(height: 14),
@@ -725,19 +713,19 @@ class _MetricChip extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w700,
-              color: AppColors.textSecondary,
+              color: AppThemeColors.textSecondary(context),
             ),
           ),
           const SizedBox(height: 4),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
+              color: AppThemeColors.textPrimary(context),
             ),
           ),
         ],
@@ -760,7 +748,7 @@ class _DetailCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppThemeColors.surface(context),
         borderRadius: BorderRadius.circular(AppRadius.card),
         border: Border.all(color: Colors.white.withAlpha(18)),
       ),
@@ -772,10 +760,10 @@ class _DetailCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   detail.word,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
+                    color: AppThemeColors.textPrimary(context),
                   ),
                 ),
               ),
@@ -802,38 +790,38 @@ class _DetailCard extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             'Your answer: ${detail.yourAnswer}',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               height: 1.4,
-              color: AppColors.textSecondary,
+              color: AppThemeColors.textSecondary(context),
             ),
           ),
           const SizedBox(height: 4),
           Text(
             'Correct answer: ${detail.correctAnswer}',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               height: 1.4,
-              color: AppColors.textSecondary,
+              color: AppThemeColors.textSecondary(context),
             ),
           ),
           const SizedBox(height: 4),
           Text(
             'Points earned: ${detail.pointsEarned}',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               height: 1.4,
-              color: AppColors.textSecondary,
+              color: AppThemeColors.textSecondary(context),
             ),
           ),
           if (detail.explanation.isNotEmpty) ...[
             const SizedBox(height: 10),
             Text(
               detail.explanation,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 height: 1.45,
-                color: AppColors.textPrimary,
+                color: AppThemeColors.textPrimary(context),
               ),
             ),
           ],
@@ -856,19 +844,19 @@ class _SectionTitle extends StatelessWidget {
       children: [
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w900,
-            color: AppColors.textPrimary,
+            color: AppThemeColors.textPrimary(context),
           ),
         ),
         const SizedBox(height: 4),
         Text(
           subtitle,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 13,
             height: 1.4,
-            color: AppColors.textSecondary,
+            color: AppThemeColors.textSecondary(context),
           ),
         ),
       ],
@@ -914,7 +902,7 @@ class _InfoTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppThemeColors.surface(context),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: Colors.white.withAlpha(18)),
       ),
@@ -925,19 +913,19 @@ class _InfoTile extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: AppColors.textSecondary,
+              color: AppThemeColors.textSecondary(context),
             ),
           ),
           const SizedBox(height: 6),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
+              color: AppThemeColors.textPrimary(context),
               height: 1.35,
             ),
           ),
@@ -968,19 +956,15 @@ class _InlineError extends StatelessWidget {
         children: [
           const Text(
             'Unable to load quiz data.',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
-            ),
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 6),
           Text(
             message,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               height: 1.4,
-              color: AppColors.textSecondary,
+              color: AppThemeColors.textSecondary(context),
             ),
           ),
           if (onRetry != null) ...[
@@ -1005,7 +989,7 @@ class _EmptyState extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppThemeColors.surface(context),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: Colors.white.withAlpha(18)),
       ),
@@ -1014,19 +998,19 @@ class _EmptyState extends StatelessWidget {
         children: [
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
+              color: AppThemeColors.textPrimary(context),
             ),
           ),
           const SizedBox(height: 6),
           Text(
             message,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               height: 1.4,
-              color: AppColors.textSecondary,
+              color: AppThemeColors.textSecondary(context),
             ),
           ),
         ],

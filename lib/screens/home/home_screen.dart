@@ -260,7 +260,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppThemeColors.background(context),
       body: SafeArea(
         child: Column(
           children: [

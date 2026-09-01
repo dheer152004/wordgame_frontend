@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/app_theme.dart';
+import 'reset_password_screen.dart';
 
 class LoginScreen extends StatelessWidget {
   final GlobalKey<FormState> formKey;
@@ -30,12 +31,12 @@ class LoginScreen extends StatelessWidget {
         children: [
           _InputField(
             controller: usernameController,
-            label: 'Email or Phone',
+            label: 'Email or Username',
             icon: Icons.person_outline_rounded,
             textInputAction: TextInputAction.next,
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
-                return 'Please enter your email or phone number.';
+                return 'Please enter your email or username.';
               }
               return null;
             },
@@ -58,58 +59,18 @@ class LoginScreen extends StatelessWidget {
           Align(
             alignment: Alignment.centerRight,
             child: TextButton(
-              onPressed: () async {
-                final emailController = TextEditingController();
-                final email = await showDialog<String>(
-                  context: context,
-                  builder: (dialogContext) {
-                    return AlertDialog(
-                      backgroundColor: const Color(0xFFFFFFFF),
-                      surfaceTintColor: Colors.white,
-                      title: const Text(
-                        'Reset password',
-                        style: TextStyle(color: Color(0xFF0F172A)),
-                      ),
-                      content: TextField(
-                        controller: emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        style: const TextStyle(color: Color(0xFF0F172A)),
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: const Color(0xFFF8FAFF),
-                          labelText: 'Email address',
-                          labelStyle: const TextStyle(color: Color(0xFF64748B)),
-                          hintText: 'you@example.com',
-                          hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide: BorderSide(
-                              color: const Color(0xFFE2E8F0),
-                            ),
-                          ),
-                        ),
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.of(dialogContext).pop(),
-                          child: const Text('Cancel'),
-                        ),
-                        FilledButton(
-                          onPressed: () => Navigator.of(
-                            dialogContext,
-                          ).pop(emailController.text.trim()),
-                          child: const Text('Send link'),
-                        ),
-                      ],
-                    );
-                  },
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => ResetPasswordScreen(
+                      onSubmit: (email) async {
+                        if (onForgotPassword != null) {
+                          await onForgotPassword!(email);
+                        }
+                      },
+                    ),
+                  ),
                 );
-
-                if (email != null &&
-                    email.isNotEmpty &&
-                    onForgotPassword != null) {
-                  await onForgotPassword!(email);
-                }
               },
               style: TextButton.styleFrom(
                 foregroundColor: const Color(0xFF2563EB),
@@ -177,7 +138,7 @@ class _InputFieldState extends State<_InputField> {
                   _obscurePassword
                       ? Icons.visibility_off_rounded
                       : Icons.visibility_rounded,
-                  color: Colors.white70,
+                  color: Color(0xFF94A3B8),
                 ),
                 onPressed: () {
                   setState(() {

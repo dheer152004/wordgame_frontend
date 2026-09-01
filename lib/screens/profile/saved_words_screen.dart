@@ -38,7 +38,7 @@ class _SavedWordsScreenState extends State<SavedWordsScreen> {
       enableDrag: true,
       useSafeArea: true,
       backgroundColor: Colors.transparent,
-      barrierColor: Colors.black54,
+      barrierColor: AppThemeColors.overlay(context),
       builder: (_) => WordDetailSheet(word: savedWord.toApiWord()),
     );
 
@@ -50,7 +50,7 @@ class _SavedWordsScreenState extends State<SavedWordsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppThemeColors.background(context),
       body: SafeArea(
         child: FutureBuilder<List<SavedWord>>(
           future: _savedWordsFuture,
@@ -167,13 +167,13 @@ class _HeaderCard extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppColors.surfaceAlt,
-            AppColors.surface,
-            AppColors.surfaceSoft.withAlpha(220),
+            AppThemeColors.surfaceAlt(context),
+            AppThemeColors.surface(context),
+            AppThemeColors.surfaceSoft(context).withAlpha(220),
           ],
         ),
         borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: Colors.white.withAlpha(18)),
+        border: Border.all(color: AppThemeColors.divider(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -182,13 +182,13 @@ class _HeaderCard extends StatelessWidget {
             children: [
               AppBackIconButton(onPressed: onBack),
               const SizedBox(width: 8),
-              const Expanded(
+              Expanded(
                 child: Text(
                   'Saved Words',
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
+                    color: AppThemeColors.textPrimary(context),
                     letterSpacing: -0.4,
                   ),
                 ),
@@ -199,14 +199,14 @@ class _HeaderCard extends StatelessWidget {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(16),
+                  color: AppThemeColors.chipBackground(context),
                   borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: Colors.white.withAlpha(12)),
+                  border: Border.all(color: AppThemeColors.divider(context)),
                 ),
                 child: Text(
                   '$totalCount saved',
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
+                  style: TextStyle(
+                    color: AppThemeColors.textPrimary(context),
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                   ),
@@ -215,10 +215,10 @@ class _HeaderCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          const Text(
+          Text(
             'Your bookmarked words appear here as a visual gallery. Open any card for the full meaning, notes, and actions.',
             style: TextStyle(
-              color: AppColors.textSecondary,
+              color: AppThemeColors.textSecondary(context),
               fontSize: 13,
               height: 1.45,
             ),
@@ -247,16 +247,16 @@ class _SavedWordCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: AppThemeColors.surface(context),
             borderRadius: BorderRadius.circular(34),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withAlpha(90),
+                color: AppThemeColors.shadow(context).withAlpha(90),
                 blurRadius: 24,
                 offset: const Offset(0, 12),
               ),
             ],
-            border: Border.all(color: Colors.white.withAlpha(16)),
+            border: Border.all(color: AppThemeColors.divider(context)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -265,6 +265,7 @@ class _SavedWordCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _pill(
+                    context,
                     savedWord.categoryName.isNotEmpty
                         ? savedWord.categoryName
                         : 'Saved',
@@ -272,14 +273,16 @@ class _SavedWordCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.black.withAlpha(120),
+                      color: AppThemeColors.overlay(context).withAlpha(120),
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white.withAlpha(20)),
+                      border: Border.all(
+                        color: AppThemeColors.divider(context),
+                      ),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.bookmark_rounded,
                       size: 16,
-                      color: AppColors.textLight,
+                      color: AppThemeColors.textPrimary(context),
                     ),
                   ),
                 ],
@@ -295,9 +298,10 @@ class _SavedWordCard extends StatelessWidget {
                             ? Image.network(
                                 word.wordImageUrl,
                                 fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => _imageFallback(),
+                                errorBuilder: (_, __, ___) =>
+                                    _imageFallback(context),
                               )
-                            : _imageFallback(),
+                            : _imageFallback(context),
                       ),
                       Positioned.fill(
                         child: DecoratedBox(
@@ -307,7 +311,7 @@ class _SavedWordCard extends StatelessWidget {
                               end: Alignment.bottomCenter,
                               colors: [
                                 Colors.transparent,
-                                Colors.black.withAlpha(28),
+                                AppThemeColors.overlay(context).withAlpha(72),
                               ],
                             ),
                           ),
@@ -322,10 +326,10 @@ class _SavedWordCard extends StatelessWidget {
                 savedWord.word,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w900,
-                  color: AppColors.textPrimary,
+                  color: AppThemeColors.textPrimary(context),
                   letterSpacing: -0.3,
                 ),
               ),
@@ -334,8 +338,8 @@ class _SavedWordCard extends StatelessWidget {
                 savedWord.meaning,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
+                style: TextStyle(
+                  color: AppThemeColors.textSecondary(context),
                   fontSize: 12.5,
                   height: 1.35,
                 ),
@@ -349,18 +353,20 @@ class _SavedWordCard extends StatelessWidget {
                     vertical: 8,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withAlpha(8),
+                    color: AppThemeColors.chipBackground(
+                      context,
+                    ).withAlpha(180),
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.white.withAlpha(10)),
+                    border: Border.all(color: AppThemeColors.divider(context)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text(
+                      Text(
                         'Note',
                         style: TextStyle(
-                          color: AppColors.textSecondary,
+                          color: AppThemeColors.textSecondary(context),
                           fontSize: 10.5,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 0.4,
@@ -371,8 +377,8 @@ class _SavedWordCard extends StatelessWidget {
                         savedWord.notes,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
+                        style: TextStyle(
+                          color: AppThemeColors.textPrimary(context),
                           fontSize: 11.5,
                           height: 1.35,
                         ),
@@ -388,33 +394,33 @@ class _SavedWordCard extends StatelessWidget {
     );
   }
 
-  Widget _imageFallback() {
+  Widget _imageFallback(BuildContext context) {
     return Container(
-      color: AppColors.surfaceSoft,
-      child: const Center(
+      color: AppThemeColors.surfaceSoft(context),
+      child: Center(
         child: Icon(
           Icons.image_not_supported_outlined,
           size: 44,
-          color: AppColors.textSecondary,
+          color: AppThemeColors.textSecondary(context),
         ),
       ),
     );
   }
 
-  Widget _pill(String label) {
+  Widget _pill(BuildContext context, String label) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: Colors.black.withAlpha(110),
+        color: AppThemeColors.overlay(context).withAlpha(110),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withAlpha(18)),
+        border: Border.all(color: AppThemeColors.divider(context)),
       ),
       child: Text(
         label,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w700,
-          color: AppColors.textLight,
+          color: AppThemeColors.textPrimary(context),
         ),
       ),
     );
@@ -441,9 +447,9 @@ class _EmptyStateCard extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: AppThemeColors.surface(context),
           borderRadius: BorderRadius.circular(AppRadius.card),
-          border: Border.all(color: Colors.white.withAlpha(16)),
+          border: Border.all(color: AppThemeColors.divider(context)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -451,17 +457,17 @@ class _EmptyStateCard extends StatelessWidget {
           children: [
             Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
+                color: AppThemeColors.textPrimary(context),
               ),
             ),
             const SizedBox(height: 10),
             Text(
               message,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
+              style: TextStyle(
+                color: AppThemeColors.textSecondary(context),
                 fontSize: 13,
                 height: 1.45,
               ),

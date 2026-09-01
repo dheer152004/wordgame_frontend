@@ -5,7 +5,6 @@ import 'package:word_frontend/services/backend_api.dart';
 import '../models/word_Content_models.dart';
 import '../services/audio_service.dart';
 import '../theme/app_theme.dart';
-import '../widgets/common_widgets.dart';
 import 'flash_cards_screen.dart';
 
 class WordDetailSheet extends StatefulWidget {
@@ -67,6 +66,9 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
       wordImageUrl: '',
       categoryName: '',
       examples: const [],
+      wordType: '',
+      expandedForm: '',
+      partOfSpeech: '',
     );
 
     await showModalBottomSheet<void>(
@@ -229,6 +231,19 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
     final word = _detailWord ?? widget.word;
     final relatedWords = word.relatedWords;
     final similarWords = word.alsoAppearsIn;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Use theme colors
+    final sheetBackground = isDark ? DarkColors.surface : LightColors.surface;
+    final cardBackground = isDark ? DarkColors.card : LightColors.card;
+    final softPanel = isDark ? DarkColors.surfaceSoft : LightColors.surfaceSoft;
+    final textPrimary = isDark
+        ? DarkColors.textPrimary
+        : LightColors.textPrimary;
+    final textSecondary = isDark
+        ? DarkColors.textSecondary
+        : LightColors.textSecondary;
+    final dividerColor = isDark ? DarkColors.divider : LightColors.divider;
 
     return DraggableScrollableSheet(
       expand: false,
@@ -239,7 +254,7 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
         return Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
           child: Material(
-            color: AppColors.surface,
+            color: sheetBackground,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             child: ListView(
               controller: controller,
@@ -250,7 +265,7 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                     width: 46,
                     height: 5,
                     decoration: BoxDecoration(
-                      color: Colors.white.withAlpha(26),
+                      color: dividerColor,
                       borderRadius: BorderRadius.circular(999),
                     ),
                   ),
@@ -259,12 +274,37 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    CategoryPill(label: word.categoryName),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? DarkColors.cardAlt
+                            : LightColors.cardAlt,
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(color: dividerColor),
+                      ),
+                      child: Text(
+                        word.categoryName.isNotEmpty
+                            ? word.categoryName
+                            : 'General',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: textPrimary,
+                        ),
+                      ),
+                    ),
                     const Spacer(),
                     TextButton.icon(
                       onPressed: () => _shareWord(context),
-                      icon: const Icon(Icons.share_outlined),
-                      label: const Text('Share'),
+                      icon: Icon(Icons.share_outlined, color: textPrimary),
+                      label: Text(
+                        'Share',
+                        style: TextStyle(color: textPrimary),
+                      ),
                     ),
                   ],
                 ),
@@ -275,10 +315,10 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                     Expanded(
                       child: Text(
                         word.word,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.w900,
-                          color: AppColors.textPrimary,
+                          color: textPrimary,
                         ),
                       ),
                     ),
@@ -295,8 +335,10 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                               ? Icons.stop_circle
                               : Icons.volume_up_outlined,
                           color: _isPlayingAudio
-                              ? AppColors.planCardBlue
-                              : AppColors.textPrimary,
+                              ? (isDark
+                                    ? DarkColors.primary
+                                    : LightColors.primary)
+                              : textPrimary,
                         ),
                         tooltip: 'Listen to pronunciation',
                       ),
@@ -304,15 +346,90 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                   ],
                 ),
                 const SizedBox(height: 10),
-                Text(word.meaning, style: AppTextStyles.planCardDetail),
+                Text(
+                  word.meaning,
+                  style: TextStyle(
+                    fontSize: 15,
+                    height: 1.5,
+                    color: textSecondary,
+                  ),
+                ),
+                if (word.wordType.isNotEmpty ||
+                    word.partOfSpeech.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: [
+                      if (word.wordType.isNotEmpty)
+                        Chip(
+                          label: Text(
+                            word.wordType,
+                            style: TextStyle(
+                              color: textPrimary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          backgroundColor: softPanel,
+                          side: BorderSide(color: dividerColor),
+                        ),
+                      if (word.partOfSpeech.isNotEmpty)
+                        Chip(
+                          label: Text(
+                            word.partOfSpeech,
+                            style: TextStyle(
+                              color: textPrimary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          backgroundColor: softPanel,
+                          side: BorderSide(color: dividerColor),
+                        ),
+                    ],
+                  ),
+                ],
+                if (word.expandedForm.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: softPanel,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: dividerColor),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Expanded Form',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          word.expandedForm,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
                 if (word.description.isNotEmpty) ...[
                   const SizedBox(height: 12),
                   Text(
                     word.description,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 15,
                       height: 1.5,
-                      color: AppColors.textSecondary,
+                      color: textSecondary,
                     ),
                   ),
                 ],
@@ -349,11 +466,11 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                               errorBuilder: (_, __, ___) => Container(
                                 width: 210,
                                 height: 210,
-                                color: AppColors.surfaceAlt,
+                                color: softPanel,
                                 alignment: Alignment.center,
-                                child: const Icon(
+                                child: Icon(
                                   Icons.image_not_supported_outlined,
-                                  color: AppColors.textSecondary,
+                                  color: textSecondary,
                                   size: 40,
                                 ),
                               ),
@@ -369,17 +486,17 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                     child: AspectRatio(
                       aspectRatio: 1,
                       child: Image.network(
-                        widget.word.wordImageUrl,
+                        word.wordImageUrl,
                         width: double.infinity,
                         height: double.infinity,
                         fit: BoxFit.cover,
                         webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
                         errorBuilder: (_, __, ___) => Container(
-                          color: AppColors.surfaceAlt,
+                          color: softPanel,
                           alignment: Alignment.center,
-                          child: const Icon(
+                          child: Icon(
                             Icons.image_not_supported_outlined,
-                            color: AppColors.textSecondary,
+                            color: textSecondary,
                             size: 40,
                           ),
                         ),
@@ -388,12 +505,12 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                   ),
                 if (word.facts.isNotEmpty) ...[
                   const SizedBox(height: 20),
-                  const Text(
+                  Text(
                     'Facts',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
+                      color: textPrimary,
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -403,16 +520,16 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                       margin: const EdgeInsets.only(bottom: 10),
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: AppColors.surfaceAlt,
+                        color: softPanel,
                         borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: Colors.white.withAlpha(14)),
+                        border: Border.all(color: dividerColor),
                       ),
                       child: Text(
                         fact,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 15,
                           height: 1.45,
-                          color: AppColors.textPrimary,
+                          color: textPrimary,
                         ),
                       ),
                     ),
@@ -420,12 +537,12 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                 ],
                 if (widget.word.examples.isNotEmpty) ...[
                   const SizedBox(height: 20),
-                  const Text(
+                  Text(
                     'Examples',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
+                      color: textPrimary,
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -435,16 +552,16 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                       margin: const EdgeInsets.only(bottom: 10),
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: AppColors.surfaceAlt,
+                        color: softPanel,
                         borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: Colors.white.withAlpha(14)),
+                        border: Border.all(color: dividerColor),
                       ),
                       child: Text(
                         example,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 15,
                           height: 1.45,
-                          color: AppColors.textPrimary,
+                          color: textPrimary,
                         ),
                       ),
                     ),
@@ -452,12 +569,12 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                 ],
                 if (relatedWords.isNotEmpty) ...[
                   const SizedBox(height: 20),
-                  const Text(
+                  Text(
                     'Related Words',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
+                      color: textPrimary,
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -480,10 +597,10 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                                   ? related.word
                                   : 'Word ${related.wordId}',
                             ),
-                            backgroundColor: AppColors.surfaceAlt,
-                            side: BorderSide(color: Colors.white.withAlpha(14)),
-                            labelStyle: const TextStyle(
-                              color: AppColors.textPrimary,
+                            backgroundColor: softPanel,
+                            side: BorderSide(color: dividerColor),
+                            labelStyle: TextStyle(
+                              color: textPrimary,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -493,12 +610,12 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                 ],
                 if (similarWords.isNotEmpty) ...[
                   const SizedBox(height: 20),
-                  const Text(
+                  Text(
                     'Also Appears In',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
+                      color: textPrimary,
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -523,10 +640,10 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                                   ? '${item.categoryName} · Word ${item.wordId}'
                                   : 'Word ${item.wordId}',
                             ),
-                            backgroundColor: AppColors.surfaceAlt,
-                            side: BorderSide(color: Colors.white.withAlpha(14)),
-                            labelStyle: const TextStyle(
-                              color: AppColors.textPrimary,
+                            backgroundColor: softPanel,
+                            side: BorderSide(color: dividerColor),
+                            labelStyle: TextStyle(
+                              color: textPrimary,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -536,12 +653,12 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                 ],
                 if (word.sourceAndCredits.isNotEmpty) ...[
                   const SizedBox(height: 20),
-                  const Text(
+                  Text(
                     'Source & Credits',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
+                      color: textPrimary,
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -549,9 +666,9 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: AppColors.surfaceAlt,
+                      color: softPanel,
                       borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: Colors.white.withAlpha(14)),
+                      border: Border.all(color: dividerColor),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -559,10 +676,10 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                         for (final entry in word.sourceAndCredits.entries) ...[
                           Text(
                             '${entry.key}: ${entry.value}',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 14,
                               height: 1.5,
-                              color: AppColors.textPrimary,
+                              color: textPrimary,
                             ),
                           ),
                         ],
@@ -575,28 +692,25 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceAlt,
+                    color: cardBackground,
                     borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: Colors.white.withAlpha(14)),
+                    border: Border.all(color: dividerColor),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Save this word',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
+                          color: textPrimary,
                         ),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
+                      Text(
                         'Add a short note',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                        ),
+                        style: TextStyle(fontSize: 12, color: textSecondary),
                       ),
                       const SizedBox(height: 10),
                       TextField(
@@ -604,12 +718,28 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                         enabled: !_isSavingWord,
                         maxLines: 3,
                         minLines: 2,
-                        decoration: const InputDecoration(
+                        style: TextStyle(color: textPrimary),
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: softPanel,
                           labelText: 'Notes',
                           hintText: 'Why are you saving this word?',
+                          labelStyle: TextStyle(color: textSecondary),
                           hintStyle: TextStyle(
-                            color: AppColors.textSecondary,
+                            color: textSecondary,
                             fontSize: 10,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: isDark
+                                  ? DarkColors.primary
+                                  : LightColors.primary,
+                            ),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: dividerColor),
+                            borderRadius: BorderRadius.circular(14),
                           ),
                         ),
                       ),
@@ -618,13 +748,22 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                         width: double.infinity,
                         child: ElevatedButton.icon(
                           onPressed: _isSavingWord ? null : _toggleSavedWord,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: isDark
+                                ? DarkColors.primary
+                                : LightColors.primary,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
                           icon: _isSavingWord
                               ? const SizedBox(
                                   width: 16,
                                   height: 16,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    color: AppColors.background,
+                                    color: Colors.white,
                                   ),
                                 )
                               : Icon(

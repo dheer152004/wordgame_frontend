@@ -18,9 +18,9 @@ class ProfileStatsSection extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppThemeColors.surface(context),
         borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: Colors.white.withAlpha(20)),
+        border: Border.all(color: AppThemeColors.divider(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -28,12 +28,12 @@ class ProfileStatsSection extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Quiz Stats',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+                  color: AppThemeColors.textPrimary(context),
                 ),
               ),
               IconButton(
@@ -47,17 +47,17 @@ class ProfileStatsSection extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          _buildStatsDisplay(),
+          _buildStatsDisplay(context),
         ],
       ),
     );
   }
 
-  Widget _buildStatsDisplay() {
+  Widget _buildStatsDisplay(BuildContext context) {
     if (stats == null) {
-      return const Text(
+      return Text(
         'No stats available',
-        style: TextStyle(color: AppColors.textSecondary),
+        style: TextStyle(color: AppThemeColors.textSecondary(context)),
       );
     }
 
@@ -67,9 +67,9 @@ class ProfileStatsSection extends StatelessWidget {
           .toList();
 
       if (entries.isEmpty) {
-        return const Text(
+        return Text(
           'No stats available',
-          style: TextStyle(color: AppColors.textSecondary),
+          style: TextStyle(color: AppThemeColors.textSecondary(context)),
         );
       }
 
@@ -85,7 +85,7 @@ class ProfileStatsSection extends StatelessWidget {
 
     return Text(
       stats.toString(),
-      style: const TextStyle(color: AppColors.textSecondary),
+      style: TextStyle(color: AppThemeColors.textSecondary(context)),
     );
   }
 }
@@ -103,18 +103,18 @@ class _StatRow extends StatelessWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: AppColors.textSecondary,
+            color: AppThemeColors.textSecondary(context),
           ),
         ),
         Text(
           value,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
+            color: AppThemeColors.textPrimary(context),
           ),
         ),
       ],

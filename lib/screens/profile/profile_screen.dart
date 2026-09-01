@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 
 import '../../main.dart';
@@ -16,9 +14,9 @@ import 'widgets/profile_details_section.dart';
 import 'widgets/profile_settings_section.dart';
 import 'widgets/profile_stats_section.dart';
 import 'widgets/profile_edit_dialog.dart';
-import 'widgets/profile_AppInfo_section.dart';
+import 'widgets/profile_app_info_section.dart';
 import 'widgets/profile_legal_section.dart';
-import 'widgets/profile_Support_section.dart';
+import 'widgets/profile_support_section.dart';
 import 'widgets/profile_password_dialog.dart';
 import 'widgets/profile_avatar_helper.dart';
 import 'widgets/profile_report_dialog.dart';
@@ -131,7 +129,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final isSignedIn = user != null;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppThemeColors.background(context),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
@@ -144,7 +142,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   const SizedBox(width: 6),
-                  const Text('Profile', style: AppTextStyles.sectionTitle),
+                  Text(
+                    'Profile',
+                    style: AppTextStyles.sectionTitle.copyWith(
+                      color: AppThemeColors.textPrimary(context),
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 14),
@@ -188,13 +191,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
-                    color: AppColors.surface,
+                    color: AppThemeColors.surface(context),
                     borderRadius: BorderRadius.circular(AppRadius.card),
-                    border: Border.all(color: Colors.white.withAlpha(20)),
+                    border: Border.all(color: AppThemeColors.divider(context)),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Loading profile details...',
-                    style: TextStyle(color: AppColors.textSecondary),
+                    style: TextStyle(
+                      color: AppThemeColors.textSecondary(context),
+                    ),
                   ),
                 )
               else
@@ -202,13 +207,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
-                    color: AppColors.surface,
+                    color: AppThemeColors.surface(context),
                     borderRadius: BorderRadius.circular(AppRadius.card),
-                    border: Border.all(color: Colors.white.withAlpha(20)),
+                    border: Border.all(color: AppThemeColors.divider(context)),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Log in to load profile details.',
-                    style: TextStyle(color: AppColors.textSecondary),
+                    style: TextStyle(
+                      color: AppThemeColors.textSecondary(context),
+                    ),
                   ),
                 ),
               const SizedBox(height: 18),
@@ -297,26 +304,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
+                  color: AppThemeColors.surface(context),
                   borderRadius: BorderRadius.circular(AppRadius.card),
-                  border: Border.all(color: Colors.white.withAlpha(20)),
+                  border: Border.all(color: AppThemeColors.divider(context)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Security',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
+                        color: AppThemeColors.textPrimary(context),
                       ),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
+                    Text(
                       'Update your account password without leaving the profile page.',
                       style: TextStyle(
-                        color: AppColors.textSecondary,
+                        color: AppThemeColors.textSecondary(context),
                         fontSize: 13,
                         height: 1.4,
                       ),
@@ -330,8 +337,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         icon: const Icon(Icons.lock_reset_rounded),
                         label: const Text('Change password'),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.textPrimary,
-                          side: BorderSide(color: Colors.white.withAlpha(24)),
+                          foregroundColor: AppThemeColors.textPrimary(context),
+                          side: BorderSide(
+                            color: AppThemeColors.divider(context),
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
@@ -346,16 +355,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
-                  color: AppColors.challengeCard.withAlpha(31),
+                  color: AppThemeColors.challengeCard(context).withAlpha(31),
                   borderRadius: BorderRadius.circular(AppRadius.card),
-                  border: Border.all(color: Colors.white.withAlpha(16)),
+                  border: Border.all(color: AppThemeColors.divider(context)),
                 ),
                 child: Text(
                   isSignedIn
                       ? 'Signed in sessions are restored automatically on launch.'
                       : 'Log in to see your profile details and unlock progress sync.',
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
+                  style: TextStyle(
+                    color: AppThemeColors.textPrimary(context),
                     fontSize: 14,
                     height: 1.5,
                   ),
@@ -368,9 +377,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: ElevatedButton(
                   onPressed: isSignedIn ? () => _logout(context) : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.challengeCard,
-                    foregroundColor: Colors.white,
-                    shadowColor: Colors.black.withAlpha(72),
+                    backgroundColor: AppThemeColors.challengeCard(context),
+                    foregroundColor: AppThemeColors.textOnPrimary(context),
+                    shadowColor: AppThemeColors.shadow(context).withAlpha(72),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(18),
                     ),
@@ -466,7 +475,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: AppColors.background,
+      backgroundColor: AppThemeColors.background(context),
       builder: (_) => FractionallySizedBox(
         heightFactor: 0.82,
         child: _ConsentManagementSheet(formatDateTime: _formatDateTime),
@@ -478,23 +487,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return ProfileAvatarHelper.mergeAvatarPreference(fetchedProfile, user);
   }
 
-  String _resolvedAvatarUrl(UserProfile? profile) {
-    return ProfileAvatarHelper.resolveAvatarUrl(profile, user);
-  }
-
   String _avatarSeed(UserProfile? profile) {
     return ProfileAvatarHelper.avatarSeed(profile);
-  }
-
-  String _buildDiceBearAvatarUrl({
-    required String style,
-    required String seed,
-  }) {
-    return ProfileAvatarHelper.buildDiceBearAvatarUrl(style: style, seed: seed);
-  }
-
-  String? _diceBearStyleFromUrl(String value) {
-    return ProfileAvatarHelper.diceBearStyleFromUrl(value);
   }
 
   String _formatDateTime(DateTime? value) {
@@ -536,7 +530,7 @@ class _ConsentManagementSheetState extends State<_ConsentManagementSheet> {
     });
   }
 
-  Color _statusColor(String status) {
+  Color _statusColor(String status, BuildContext context) {
     final normalized = status.trim().toUpperCase();
     if (normalized == 'GRANTED') {
       return const Color(0xFF36C68A);
@@ -544,14 +538,14 @@ class _ConsentManagementSheetState extends State<_ConsentManagementSheet> {
     if (normalized == 'WITHDRAWN') {
       return const Color(0xFFFF8C7A);
     }
-    return AppColors.textSecondary;
+    return AppThemeColors.textSecondary(context);
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: AppThemeColors.background(context),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Padding(
@@ -564,7 +558,7 @@ class _ConsentManagementSheetState extends State<_ConsentManagementSheet> {
                 width: 42,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(50),
+                  color: AppThemeColors.divider(context),
                   borderRadius: BorderRadius.circular(999),
                 ),
               ),
@@ -572,13 +566,13 @@ class _ConsentManagementSheetState extends State<_ConsentManagementSheet> {
             const SizedBox(height: 14),
             Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: Text(
                     'Consent Management',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
+                      color: AppThemeColors.textPrimary(context),
                     ),
                   ),
                 ),
@@ -589,10 +583,10 @@ class _ConsentManagementSheetState extends State<_ConsentManagementSheet> {
               ],
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Your consent history with document title, status, accepted time, and source.',
               style: TextStyle(
-                color: AppColors.textSecondary,
+                color: AppThemeColors.textSecondary(context),
                 fontSize: 13,
                 height: 1.4,
               ),
@@ -614,15 +608,17 @@ class _ConsentManagementSheetState extends State<_ConsentManagementSheet> {
                           Text(
                             'Failed to load consents',
                             style: TextStyle(
-                              color: AppColors.textPrimary.withAlpha(220),
+                              color: AppThemeColors.textPrimary(
+                                context,
+                              ).withAlpha(220),
                               fontWeight: FontWeight.w700,
                             ),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             snapshot.error.toString(),
-                            style: const TextStyle(
-                              color: AppColors.textSecondary,
+                            style: TextStyle(
+                              color: AppThemeColors.textSecondary(context),
                               fontSize: 13,
                             ),
                             textAlign: TextAlign.center,
@@ -639,10 +635,12 @@ class _ConsentManagementSheetState extends State<_ConsentManagementSheet> {
 
                   final consents = snapshot.data ?? const <UserConsent>[];
                   if (consents.isEmpty) {
-                    return const Center(
+                    return Center(
                       child: Text(
                         'No consent records found.',
-                        style: TextStyle(color: AppColors.textSecondary),
+                        style: TextStyle(
+                          color: AppThemeColors.textSecondary(context),
+                        ),
                       ),
                     );
                   }
@@ -655,9 +653,11 @@ class _ConsentManagementSheetState extends State<_ConsentManagementSheet> {
                       return Container(
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: AppColors.surface,
+                          color: AppThemeColors.surface(context),
                           borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: Colors.white.withAlpha(16)),
+                          border: Border.all(
+                            color: AppThemeColors.divider(context),
+                          ),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -666,8 +666,8 @@ class _ConsentManagementSheetState extends State<_ConsentManagementSheet> {
                               consent.legalDocumentTitle.isNotEmpty
                                   ? consent.legalDocumentTitle
                                   : consent.legalDocumentType,
-                              style: const TextStyle(
-                                color: AppColors.textPrimary,
+                              style: TextStyle(
+                                color: AppThemeColors.textPrimary(context),
                                 fontSize: 15,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -676,7 +676,7 @@ class _ConsentManagementSheetState extends State<_ConsentManagementSheet> {
                             _ConsentDetailRow(
                               label: 'Status',
                               value: consent.status,
-                              valueColor: _statusColor(consent.status),
+                              valueColor: _statusColor(consent.status, context),
                             ),
                             const SizedBox(height: 6),
                             _ConsentDetailRow(
@@ -725,8 +725,8 @@ class _ConsentDetailRow extends StatelessWidget {
           width: 100,
           child: Text(
             label,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
+            style: TextStyle(
+              color: AppThemeColors.textSecondary(context),
               fontSize: 13,
               fontWeight: FontWeight.w600,
             ),
@@ -736,7 +736,7 @@ class _ConsentDetailRow extends StatelessWidget {
           child: Text(
             value,
             style: TextStyle(
-              color: valueColor ?? AppColors.textPrimary,
+              color: valueColor ?? AppThemeColors.textPrimary(context),
               fontSize: 13,
               fontWeight: FontWeight.w600,
             ),

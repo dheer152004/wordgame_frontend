@@ -36,9 +36,9 @@ class ProfileDetailsSection extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppThemeColors.surface(context),
         borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: Colors.white.withAlpha(20)),
+        border: Border.all(color: AppThemeColors.divider(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -46,13 +46,13 @@ class ProfileDetailsSection extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Expanded(
+              Expanded(
                 child: Text(
                   'Profile Details',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
+                    color: AppThemeColors.textPrimary(context),
                   ),
                 ),
               ),
@@ -114,18 +114,18 @@ class ProfileDetailsSection extends StatelessWidget {
                         : (profile.username.isNotEmpty
                               ? profile.username
                               : 'Guest'),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
+                      color: AppThemeColors.textPrimary(context),
                     ),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     profile.bio.isNotEmpty ? profile.bio : 'No bio',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
-                      color: AppColors.textSecondary,
+                      color: AppThemeColors.textSecondary(context),
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -136,8 +136,8 @@ class ProfileDetailsSection extends StatelessWidget {
                     child: ElevatedButton(
                       onPressed: isSignedIn ? onEditProfile : null,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.challengeCard,
-                        foregroundColor: Colors.white,
+                        backgroundColor: AppThemeColors.challengeCard(context),
+                        foregroundColor: AppThemeColors.textOnPrimary(context),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(18),
                         ),
@@ -223,12 +223,12 @@ class ProfileDetailsSection extends StatelessWidget {
           value: _displayValue(profile.lastQuizDate),
         ),
         const SizedBox(height: 18),
-        const Text(
+        Text(
           'Quick actions',
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
+            color: AppThemeColors.textPrimary(context),
           ),
         ),
         const SizedBox(height: 8),
@@ -290,26 +290,27 @@ class _MetricCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
         decoration: BoxDecoration(
-          color: AppColors.surfaceAlt,
+          color: AppThemeColors.chipBackground(context),
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppThemeColors.divider(context)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
+                color: AppThemeColors.textPrimary(context),
               ),
             ),
             const SizedBox(height: 4),
             Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 11,
-                color: AppColors.textSecondary,
+                color: AppThemeColors.textSecondary(context),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -333,19 +334,19 @@ class _InfoTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       decoration: BoxDecoration(
-        color: AppColors.surfaceAlt,
+        color: AppThemeColors.chipBackground(context),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withAlpha(16)),
+        border: Border.all(color: AppThemeColors.divider(context)),
       ),
       child: Row(
         children: [
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textSecondary,
+                color: AppThemeColors.textSecondary(context),
               ),
             ),
           ),
@@ -354,10 +355,10 @@ class _InfoTile extends StatelessWidget {
             child: Text(
               value,
               textAlign: TextAlign.right,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+                color: AppThemeColors.textPrimary(context),
               ),
             ),
           ),
@@ -385,19 +386,33 @@ class _QuickActionTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppThemeColors.chipBackground(context),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withAlpha(12)),
+        border: Border.all(color: AppThemeColors.divider(context)),
       ),
       child: ListTile(
         leading: CircleAvatar(
           radius: 18,
-          backgroundColor: AppColors.challengeCard.withAlpha(28),
-          child: Icon(icon, color: AppColors.challengeCard),
+          backgroundColor: AppThemeColors.primary(context).withAlpha(28),
+          child: Icon(icon, color: AppThemeColors.primary(context)),
         ),
-        title: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
-        subtitle: subtitle != null ? Text(subtitle!) : null,
-        trailing: const Icon(Icons.chevron_right_rounded),
+        title: Text(
+          label,
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            color: AppThemeColors.textPrimary(context),
+          ),
+        ),
+        subtitle: subtitle != null
+            ? Text(
+                subtitle!,
+                style: TextStyle(color: AppThemeColors.textSecondary(context)),
+              )
+            : null,
+        trailing: Icon(
+          Icons.chevron_right_rounded,
+          color: AppThemeColors.textSecondary(context),
+        ),
         onTap: onTap,
       ),
     );

@@ -23,6 +23,8 @@ class SwipeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final compactFactor = (height / 420).clamp(0.6, 1.0);
@@ -37,16 +39,10 @@ class SwipeCard extends StatelessWidget {
           width: width,
           height: height,
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: AppThemeColors.card(context),
             borderRadius: BorderRadius.circular(34),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withAlpha(110),
-                blurRadius: 30,
-                offset: const Offset(0, 18),
-              ),
-            ],
-            border: Border.all(color: Colors.white.withAlpha(18)),
+            boxShadow: [],
+            border: Border.all(color: AppThemeColors.divider(context)),
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(34),
@@ -60,7 +56,11 @@ class SwipeCard extends StatelessWidget {
                     height: 190,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: AppColors.challengeCard.withAlpha(120),
+                      color: isDark
+                          ? AppThemeColors.primarySoft(context)
+                          : AppThemeColors.challengeCard(
+                              context,
+                            ).withAlpha(120),
                     ),
                   ),
                 ),
@@ -72,7 +72,9 @@ class SwipeCard extends StatelessWidget {
                     height: 120,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: AppColors.planCardBlue.withAlpha(25),
+                      color: isDark
+                          ? AppThemeColors.accentCyan(context).withAlpha(20)
+                          : AppThemeColors.planCardBlue(context).withAlpha(25),
                     ),
                   ),
                 ),
@@ -104,7 +106,7 @@ class SwipeCard extends StatelessWidget {
                                       Icons.share_outlined,
                                       size: 18,
                                     ),
-                                    color: AppColors.textPrimary,
+                                    color: AppThemeColors.textPrimary(context),
                                     padding: EdgeInsets.zero,
                                   ),
                                 ),
@@ -112,7 +114,7 @@ class SwipeCard extends StatelessWidget {
                                   isDragging
                                       ? Icons.swipe_rounded
                                       : Icons.touch_app_rounded,
-                                  color: AppColors.textPrimary,
+                                  color: AppThemeColors.textPrimary(context),
                                   size: 18,
                                 ),
                               ],
@@ -232,7 +234,7 @@ class BackdropCard extends StatelessWidget {
                 height: 150,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.challengeCard.withAlpha(100),
+                  color: AppThemeColors.challengeCard(context).withAlpha(100),
                 ),
               ),
             ),

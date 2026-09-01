@@ -81,6 +81,7 @@ class RegisterScreen extends StatelessWidget {
             controller: passwordController,
             label: 'Password',
             icon: Icons.lock_outline_rounded,
+
             obscureText: true,
             validator: (value) {
               if (value == null || value.length < 6) {
@@ -95,7 +96,7 @@ class RegisterScreen extends StatelessWidget {
             child: RichText(
               textAlign: TextAlign.center,
               text: TextSpan(
-                style: const TextStyle(color: Colors.white70, fontSize: 12),
+                style: const TextStyle(color: Color.fromARGB(179, 21, 20, 20), fontSize: 12),
                 children: [
                   const TextSpan(text: 'By signing in you accept our '),
                   TextSpan(
@@ -192,7 +193,7 @@ class _InputFieldState extends State<_InputField> {
                   _obscurePassword
                       ? Icons.visibility_off_rounded
                       : Icons.visibility_rounded,
-                  color: Colors.white70,
+                  color: const Color(0xFF94A3B8),
                 ),
                 onPressed: () {
                   setState(() {

@@ -41,7 +41,7 @@ class _ProfilePasswordDialogState extends State<ProfilePasswordDialog> {
         newPassword == confirmPassword;
 
     return AlertDialog(
-      backgroundColor: AppColors.surface,
+      backgroundColor: AppThemeColors.surface(context),
       title: const Text('Change password'),
       content: SingleChildScrollView(
         child: ConstrainedBox(
@@ -59,7 +59,7 @@ class _ProfilePasswordDialogState extends State<ProfilePasswordDialog> {
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscureCurrent ? Icons.visibility_off : Icons.visibility,
-                      color: AppColors.textSecondary,
+                      color: AppThemeColors.textSecondary(context),
                     ),
                     onPressed: () => setState(() {
                       _obscureCurrent = !_obscureCurrent;
@@ -78,7 +78,7 @@ class _ProfilePasswordDialogState extends State<ProfilePasswordDialog> {
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscureNew ? Icons.visibility_off : Icons.visibility,
-                      color: AppColors.textSecondary,
+                      color: AppThemeColors.textSecondary(context),
                     ),
                     onPressed: () => setState(() {
                       _obscureNew = !_obscureNew;
@@ -97,7 +97,7 @@ class _ProfilePasswordDialogState extends State<ProfilePasswordDialog> {
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscureConfirm ? Icons.visibility_off : Icons.visibility,
-                      color: AppColors.textSecondary,
+                      color: AppThemeColors.textSecondary(context),
                     ),
                     onPressed: () => setState(() {
                       _obscureConfirm = !_obscureConfirm;
@@ -106,9 +106,12 @@ class _ProfilePasswordDialogState extends State<ProfilePasswordDialog> {
                 ),
               ),
               const SizedBox(height: 12),
-              const Text(
+              Text(
                 'Use at least 6 characters and make sure the confirmation matches.',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                style: TextStyle(
+                  color: AppThemeColors.textSecondary(context),
+                  fontSize: 12,
+                ),
               ),
             ],
           ),

@@ -420,9 +420,12 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final swipeThreshold = screenWidth * 0.28;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: isDark
+          ? const Color(0xFF0B0E15)
+          : const Color(0xFFF4F7FB),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
@@ -435,16 +438,25 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   const SizedBox(width: 6),
-                  const Text('Flash Cards', style: AppTextStyles.sectionTitle),
+                  Text(
+                    'Flash Cards',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? Colors.white : const Color(0xFF1A202C),
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 6),
-              const Text(
+              Text(
                 'Swipe through a random word deck from all categories',
                 style: TextStyle(
                   fontSize: 15,
                   height: 1.5,
-                  color: AppColors.textSecondary,
+                  color: isDark
+                      ? const Color(0xFFA7B0C5)
+                      : const Color(0xFF54627A),
                 ),
               ),
               const SizedBox(height: 16),
@@ -459,6 +471,8 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
   }
 
   Widget _buildCategoryChips() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     if (_loadingCategories) {
       return const SizedBox(
         height: 46,
@@ -488,14 +502,20 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
             selected: selected,
             onSelected: (_) => _selectCategory(chipValue),
             labelStyle: TextStyle(
-              color: selected ? Colors.black : AppColors.textPrimary,
+              color: selected
+                  ? Colors.white
+                  : AppThemeColors.textPrimary(context),
               fontWeight: FontWeight.w700,
             ),
-            backgroundColor: AppColors.surfaceAlt,
-            selectedColor: Colors.white,
+            backgroundColor: AppThemeColors.surfaceAlt(context),
+            selectedColor: AppThemeColors.primary(context),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(999),
-              side: BorderSide(color: Colors.white.withAlpha(18)),
+              side: BorderSide(
+                color: selected
+                    ? AppThemeColors.primary(context)
+                    : AppThemeColors.divider(context),
+              ),
             ),
           );
         },
@@ -533,8 +553,7 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
             const SizedBox(height: 10),
             TextButton(
               onPressed: () => _loadWordsForSelection(_selectedCategoryLabel),
-                style: TextButton.styleFrom(
-                foregroundColor: Colors.purple,),
+              style: TextButton.styleFrom(foregroundColor: Colors.purple),
               child: const Text('Try again'),
             ),
           ],

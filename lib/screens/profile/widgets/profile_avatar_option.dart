@@ -30,12 +30,12 @@ class ProfileAvatarOption extends StatelessWidget {
           width: 72,
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
           decoration: BoxDecoration(
-            color: AppColors.surfaceAlt,
+            color: AppThemeColors.surfaceAlt(context),
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: selected
-                  ? AppColors.challengeCard
-                  : Colors.white.withAlpha(20),
+                  ? AppThemeColors.challengeCard(context)
+                  : AppThemeColors.divider(context),
               width: selected ? 2 : 1,
             ),
           ),
@@ -51,11 +51,11 @@ class ProfileAvatarOption extends StatelessWidget {
                   errorBuilder: (_, __, ___) => Container(
                     width: 42,
                     height: 42,
-                    color: AppColors.challengeCard,
-                    child: const Icon(
+                    color: AppThemeColors.challengeCard(context),
+                    child: Icon(
                       Icons.person,
                       size: 20,
-                      color: Colors.white,
+                      color: AppThemeColors.textOnPrimary(context),
                     ),
                   ),
                 ),
@@ -66,9 +66,9 @@ class ProfileAvatarOption extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 10,
-                  color: AppColors.textSecondary,
+                  color: AppThemeColors.textSecondary(context),
                   fontWeight: FontWeight.w600,
                 ),
               ),

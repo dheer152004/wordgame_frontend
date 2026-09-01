@@ -70,7 +70,7 @@ class _ProfileEditDialogState extends State<ProfileEditDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: AppColors.surface,
+      backgroundColor: AppThemeColors.surface(context),
       title: const Text('Edit profile'),
       content: SingleChildScrollView(
         child: ConstrainedBox(
@@ -94,14 +94,14 @@ class _ProfileEditDialogState extends State<ProfileEditDialog> {
                 decoration: const InputDecoration(labelText: 'Avatar URL'),
               ),
               const SizedBox(height: 14),
-              const Align(
+              Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
                   'Pick from DiceBear avatars',
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
+                    color: AppThemeColors.textPrimary(context),
                   ),
                 ),
               ),
@@ -133,9 +133,12 @@ class _ProfileEditDialogState extends State<ProfileEditDialog> {
                 ],
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 'Powered by api.dicebear.com. You can still paste any custom image URL above.',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                style: TextStyle(
+                  color: AppThemeColors.textSecondary(context),
+                  fontSize: 12,
+                ),
               ),
               const SizedBox(height: 12),
               TextField(
@@ -147,9 +150,9 @@ class _ProfileEditDialogState extends State<ProfileEditDialog> {
                 decoration: const InputDecoration(labelText: 'Bio'),
               ),
               const SizedBox(height: 12),
-              const Text(
+              Text(
                 'Location is detected automatically from your IP address.',
-                style: TextStyle(color: AppColors.textSecondary),
+                style: TextStyle(color: AppThemeColors.textSecondary(context)),
               ),
               const SizedBox(height: 8),
               Text(
@@ -157,8 +160,8 @@ class _ProfileEditDialogState extends State<ProfileEditDialog> {
                     ? 'Paste a direct image URL to preview the avatar.'
                     : 'Preview updates as you edit the URL.',
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
+                style: TextStyle(
+                  color: AppThemeColors.textSecondary(context),
                   fontSize: 12,
                 ),
               ),

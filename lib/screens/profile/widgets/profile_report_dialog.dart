@@ -40,7 +40,7 @@ class _ProfileReportDialogState extends State<ProfileReportDialog> {
         !_isSubmitting && _descriptionController.text.trim().isNotEmpty;
 
     return AlertDialog(
-      backgroundColor: AppColors.surface,
+      backgroundColor: AppThemeColors.surface(context),
       title: const Text('Report a problem'),
       content: SingleChildScrollView(
         child: ConstrainedBox(
@@ -104,9 +104,12 @@ class _ProfileReportDialogState extends State<ProfileReportDialog> {
                 ),
               ),
               const SizedBox(height: 12),
-              const Text(
+              Text(
                 'Screenshots are optional. Paste direct image URLs separated by new lines or commas.',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                style: TextStyle(
+                  color: AppThemeColors.textSecondary(context),
+                  fontSize: 12,
+                ),
               ),
               if (_errorMessage != null) ...[
                 const SizedBox(height: 12),

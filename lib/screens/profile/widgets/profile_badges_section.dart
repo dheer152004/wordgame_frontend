@@ -33,10 +33,11 @@ class ProfileBadgesSection extends StatelessWidget {
         _BadgeGalleryEntry(
           label: earnedBadge,
           icon: definition?.icon ?? Icons.emoji_events_rounded,
-          accentColor: definition?.accentColor ?? AppColors.challengeCard,
+          accentColor:
+              definition?.accentColor ?? AppThemeColors.challengeCard(context),
           backgroundColor:
               definition?.backgroundColor ??
-              AppColors.challengeCard.withAlpha(56),
+              AppThemeColors.challengeCard(context).withAlpha(56),
           earned: true,
         ),
       );
@@ -70,8 +71,8 @@ class ProfileBadgesSection extends StatelessWidget {
         _BadgeGalleryEntry(
           label: 'Future badge',
           icon: Icons.lock_rounded,
-          accentColor: Colors.white,
-          backgroundColor: AppColors.surface.withAlpha(140),
+          accentColor: AppThemeColors.textPrimary(context),
+          backgroundColor: AppThemeColors.surface(context).withAlpha(140),
           earned: false,
         ),
       );
@@ -81,28 +82,28 @@ class ProfileBadgesSection extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppThemeColors.surface(context),
         borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: Colors.white.withAlpha(20)),
+        border: Border.all(color: AppThemeColors.divider(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Badges earned',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
+              color: AppThemeColors.textPrimary(context),
             ),
           ),
           const SizedBox(height: 6),
-          const Text(
+          Text(
             'Earned badges stay bright. Locked badges stay blurred until you unlock them.',
             style: TextStyle(
               fontSize: 12,
               height: 1.35,
-              color: AppColors.textSecondary,
+              color: AppThemeColors.textSecondary(context),
             ),
           ),
           const SizedBox(height: 12),
@@ -236,12 +237,12 @@ class _BadgeGalleryCard extends StatelessWidget {
       width: 76,
       padding: const EdgeInsets.fromLTRB(8, 10, 8, 10),
       decoration: BoxDecoration(
-        color: earned ? backgroundColor : AppColors.surface.withAlpha(140),
+        color: earned ? backgroundColor : AppThemeColors.surfaceAlt(context),
         borderRadius: BorderRadius.circular(22),
         border: Border.all(
           color: earned
               ? accentColor.withAlpha(140)
-              : Colors.white.withAlpha(12),
+              : AppThemeColors.divider(context),
         ),
       ),
       child: Column(
@@ -262,11 +263,13 @@ class _BadgeGalleryCard extends StatelessWidget {
                       end: Alignment.bottomRight,
                     )
                   : null,
-              color: earned ? null : Colors.white.withAlpha(10),
+              color: earned ? null : AppThemeColors.surfaceAlt(context),
             ),
             child: Icon(
               icon,
-              color: earned ? Colors.white : Colors.white.withAlpha(120),
+              color: earned
+                  ? AppThemeColors.textOnPrimary(context)
+                  : AppThemeColors.textMuted(context),
               size: 24,
             ),
           ),
@@ -280,7 +283,9 @@ class _BadgeGalleryCard extends StatelessWidget {
               fontSize: 11,
               height: 1.15,
               fontWeight: FontWeight.w700,
-              color: earned ? AppColors.textPrimary : AppColors.textSecondary,
+              color: earned
+                  ? AppThemeColors.textPrimary(context)
+                  : AppThemeColors.textSecondary(context),
             ),
           ),
         ],
@@ -301,17 +306,19 @@ class _BadgeGalleryCard extends StatelessWidget {
                     child: DecoratedBox(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(22),
-                        color: Colors.black.withAlpha(10),
+                        color: AppThemeColors.overlay(context).withAlpha(24),
                       ),
                     ),
                   ),
-                  const Positioned(
+                  Positioned(
                     right: 8,
                     top: 8,
                     child: Icon(
                       Icons.lock_rounded,
                       size: 15,
-                      color: Colors.white70,
+                      color: AppThemeColors.textOnPrimary(
+                        context,
+                      ).withAlpha(180),
                     ),
                   ),
                 ],

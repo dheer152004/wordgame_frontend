@@ -51,7 +51,7 @@ class HomeSearchSection extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppThemeColors.surface(context),
         borderRadius: BorderRadius.circular(AppRadius.cardSmall),
         border: Border.all(color: Colors.white.withAlpha(20)),
       ),
@@ -60,20 +60,20 @@ class HomeSearchSection extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: Text(
                   'Search words',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
+                    color: AppThemeColors.textPrimary(context),
                   ),
                 ),
               ),
               IconButton(
                 onPressed: onClose,
                 icon: const Icon(Icons.close_rounded),
-                color: AppColors.textSecondary,
+                color: AppThemeColors.textSecondary(context),
                 tooltip: 'Close search',
               ),
             ],
@@ -139,9 +139,12 @@ class HomeSearchSection extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Include category results',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                style: TextStyle(
+                  color: AppThemeColors.textSecondary(context),
+                  fontSize: 13,
+                ),
               ),
               Switch(
                 value: showCategoryResults,
@@ -163,13 +166,13 @@ class HomeSearchSection extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: AppThemeColors.surface(context),
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: Colors.white.withAlpha(20)),
               ),
               child: Text(
                 searchError!,
-                style: const TextStyle(color: AppColors.textSecondary),
+                style: TextStyle(color: AppThemeColors.textSecondary(context)),
               ),
             )
           else if (searchResults.isNotEmpty ||
@@ -200,7 +203,9 @@ class HomeSearchSection extends StatelessWidget {
                           child: OutlinedButton(
                             onPressed: onLoadMoreCategories,
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: AppColors.textPrimary,
+                              foregroundColor: AppThemeColors.textPrimary(
+                                context,
+                              ),
                               side: BorderSide(
                                 color: Colors.white.withAlpha(24),
                               ),
@@ -225,7 +230,7 @@ class HomeSearchSection extends StatelessWidget {
                       return Container(
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: AppColors.surface,
+                          color: AppThemeColors.surface(context),
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(color: Colors.white.withAlpha(20)),
                         ),
@@ -234,10 +239,10 @@ class HomeSearchSection extends StatelessWidget {
                           children: [
                             Text(
                               category.name,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w700,
-                                color: AppColors.textPrimary,
+                                color: AppThemeColors.textPrimary(context),
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -246,16 +251,16 @@ class HomeSearchSection extends StatelessWidget {
                                 category.description,
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: AppColors.textSecondary,
+                                style: TextStyle(
+                                  color: AppThemeColors.textSecondary(context),
                                   height: 1.4,
                                 ),
                               ),
                             const SizedBox(height: 4),
                             Text(
                               'Words: ${category.wordCount}',
-                              style: const TextStyle(
-                                color: AppColors.textSecondary,
+                              style: TextStyle(
+                                color: AppThemeColors.textSecondary(context),
                               ),
                             ),
                           ],
@@ -287,7 +292,9 @@ class HomeSearchSection extends StatelessWidget {
                           child: OutlinedButton(
                             onPressed: onLoadMore,
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: AppColors.textPrimary,
+                              foregroundColor: AppThemeColors.textPrimary(
+                                context,
+                              ),
                               side: BorderSide(
                                 color: Colors.white.withAlpha(24),
                               ),
@@ -321,7 +328,7 @@ class HomeSearchSection extends StatelessWidget {
                         child: Container(
                           padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
-                            color: AppColors.surface,
+                            color: AppThemeColors.surface(context),
                             borderRadius: BorderRadius.circular(14),
                             border: Border.all(
                               color: Colors.white.withAlpha(20),
@@ -335,10 +342,12 @@ class HomeSearchSection extends StatelessWidget {
                                   children: [
                                     Text(
                                       word.word,
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 15,
                                         fontWeight: FontWeight.w700,
-                                        color: AppColors.textPrimary,
+                                        color: AppThemeColors.textPrimary(
+                                          context,
+                                        ),
                                       ),
                                     ),
                                     const SizedBox(height: 4),
@@ -346,17 +355,19 @@ class HomeSearchSection extends StatelessWidget {
                                       word.meaning,
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        color: AppColors.textSecondary,
+                                      style: TextStyle(
+                                        color: AppThemeColors.textSecondary(
+                                          context,
+                                        ),
                                         height: 1.4,
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
-                              const Icon(
+                              Icon(
                                 Icons.chevron_right_rounded,
-                                color: AppColors.textSecondary,
+                                color: AppThemeColors.textSecondary(context),
                               ),
                             ],
                           ),
@@ -372,13 +383,13 @@ class HomeSearchSection extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: AppThemeColors.surface(context),
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: Colors.white.withAlpha(20)),
               ),
-              child: const Text(
+              child: Text(
                 'No words found for that search.',
-                style: TextStyle(color: AppColors.textSecondary),
+                style: TextStyle(color: AppThemeColors.textSecondary(context)),
               ),
             ),
         ],

@@ -30,7 +30,7 @@ class _HomeBottomNavState extends State<HomeBottomNav> {
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       decoration: BoxDecoration(
-        color: AppColors.navBackground,
+        color: AppThemeColors.navBackground(context),
         borderRadius: BorderRadius.circular(AppRadius.navBar),
         boxShadow: [
           BoxShadow(
@@ -82,7 +82,9 @@ class _HomeBottomNavState extends State<HomeBottomNav> {
               child: Icon(
                 _icons[index],
                 size: 24,
-                color: isActive ? AppColors.navActive : AppColors.navInactive,
+                color: isActive
+                    ? AppThemeColors.navActive(context)
+                    : AppThemeColors.navInactive(context),
               ),
             ),
           );

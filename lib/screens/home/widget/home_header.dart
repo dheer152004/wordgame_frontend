@@ -82,9 +82,9 @@ class HomeHeader extends StatelessWidget {
                           errorBuilder: (_, __, ___) => Container(
                             color: AppColors.challengeCard,
                             alignment: Alignment.center,
-                            child: Text(
-                              _initials(displayName),
-                              style: const TextStyle(
+                            child: const Text(
+                              'Not shown',
+                              style: TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -141,7 +141,7 @@ class HomeHeader extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: AppThemeColors.surface(context),
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
@@ -151,9 +151,9 @@ class HomeHeader extends StatelessWidget {
                   ),
                 ],
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.search_rounded,
-                color: AppColors.textPrimary,
+                color: AppThemeColors.textPrimary(context),
                 size: 20,
               ),
             ),

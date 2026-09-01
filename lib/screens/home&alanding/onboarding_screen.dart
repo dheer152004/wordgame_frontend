@@ -13,11 +13,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   static const _pages = [
     {
+      'image': 'assets/img/girl_sitting.webp',
       'title': 'Learn Words in Real Context',
       'description': 'Understand meanings with examples you can relate to.',
       'button': 'Next',
     },
     {
+      'image': 'assets/img/todo.webp',
       'title': 'Practice. Quiz. Remember.',
       'description':
           'Smart quizzes and spaced repetition help you remember better.',
@@ -90,13 +92,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 padding: const EdgeInsets.all(28),
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
                                   children: [
-                                    const Icon(
-                                      Icons.auto_stories_rounded,
-                                      size: 84,
-                                      color: Color(0xFF2563EB),
+                                    Expanded(
+                                      child: Image.asset(
+                                        page['image'] as String,
+                                        fit: BoxFit.contain,
+                                      ),
                                     ),
-                                    const SizedBox(height: 28),
+
+                                    const SizedBox(height: 22),
                                     Text(
                                       page['title'] as String,
                                       textAlign: TextAlign.center,

@@ -22,26 +22,26 @@ class ProfileAppInfoSection extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppThemeColors.surface(context),
         borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: Colors.white.withAlpha(20)),
+        border: Border.all(color: AppThemeColors.divider(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'About',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
+              color: AppThemeColors.textPrimary(context),
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Quick access to app information and sharing options.',
             style: TextStyle(
-              color: AppColors.textSecondary,
+              color: AppThemeColors.textSecondary(context),
               fontSize: 13,
               height: 1.4,
             ),
@@ -89,18 +89,27 @@ class _SupportOptionTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(top: 8),
       decoration: BoxDecoration(
-        color: AppColors.surfaceAlt,
+        color: AppThemeColors.chipBackground(context),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withAlpha(12)),
+        border: Border.all(color: AppThemeColors.divider(context)),
       ),
       child: ListTile(
         leading: CircleAvatar(
           radius: 18,
-          backgroundColor: AppColors.challengeCard.withAlpha(28),
-          child: Icon(icon, color: AppColors.challengeCard),
+          backgroundColor: AppThemeColors.primary(context).withAlpha(28),
+          child: Icon(icon, color: AppThemeColors.primary(context)),
         ),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-        trailing: const Icon(Icons.chevron_right_rounded),
+        title: Text(
+          title,
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            color: AppThemeColors.textPrimary(context),
+          ),
+        ),
+        trailing: Icon(
+          Icons.chevron_right_rounded,
+          color: AppThemeColors.textSecondary(context),
+        ),
         onTap: onTap,
       ),
     );

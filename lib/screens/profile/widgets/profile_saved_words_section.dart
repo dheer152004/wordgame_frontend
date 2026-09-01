@@ -22,9 +22,9 @@ class ProfileSavedWordsSection extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: AppThemeColors.surface(context),
             borderRadius: BorderRadius.circular(AppRadius.card),
-            border: Border.all(color: Colors.white.withAlpha(20)),
+            border: Border.all(color: AppThemeColors.divider(context)),
           ),
           child: FutureBuilder<int>(
             future: BackendApi.instance.fetchSavedWordsCount(),
@@ -39,12 +39,12 @@ class ProfileSavedWordsSection extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Saved Words',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
+                          color: AppThemeColors.textPrimary(context),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -52,17 +52,17 @@ class ProfileSavedWordsSection extends StatelessWidget {
                         isLoading
                             ? 'Loading...'
                             : '$count saved word${count == 1 ? '' : 's'}',
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
+                        style: TextStyle(
+                          color: AppThemeColors.textSecondary(context),
                           fontSize: 13,
                         ),
                       ),
                     ],
                   ),
-                  const Icon(
+                  Icon(
                     Icons.arrow_forward_ios_rounded,
                     size: 16,
-                    color: AppColors.textSecondary,
+                    color: AppThemeColors.textSecondary(context),
                   ),
                 ],
               );

@@ -22,16 +22,16 @@ class ProfileAvatarPreview extends StatelessWidget {
         width: size,
         height: size,
         decoration: BoxDecoration(
-          color: AppColors.challengeCard,
+          color: AppThemeColors.challengeCard(context),
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: AppColors.challengeCard.withAlpha(72),
+              color: AppThemeColors.challengeCard(context).withAlpha(72),
               blurRadius: 18,
               offset: const Offset(0, 10),
             ),
           ],
-          border: Border.all(color: Colors.white.withAlpha(18)),
+          border: Border.all(color: AppThemeColors.divider(context)),
         ),
         child: ClipOval(
           child: avatarUrl.isNotEmpty
@@ -63,15 +63,19 @@ class ProfileAvatarPreview extends StatelessWidget {
                       height: size,
                       fit: BoxFit.cover,
                       webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
-                      errorBuilder: (_, __, ___) => const Icon(
+                      errorBuilder: (_, __, ___) => Icon(
                         Icons.person,
                         size: 40,
-                        color: Colors.white,
+                        color: AppThemeColors.textOnPrimary(context),
                       ),
                     );
                   },
                 )
-              : const Icon(Icons.person, size: 40, color: Colors.white),
+              : Icon(
+                  Icons.person,
+                  size: 40,
+                  color: AppThemeColors.textOnPrimary(context),
+                ),
         ),
       ),
     );
