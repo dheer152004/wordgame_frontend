@@ -3,6 +3,9 @@ import '../models/word_Content_models.dart';
 import '../theme/app_theme.dart';
 import 'common_widgets.dart';
 
+/// Main flash card widget for displaying words during swiping sessions
+/// Renders the front of a flashcard with word, meaning, image, and category
+/// Supports theme-aware text colors (white in dark mode, black in light mode)
 class SwipeCard extends StatelessWidget {
   final ApiWord word;
   final double width;
@@ -28,11 +31,13 @@ class SwipeCard extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
+        // Calculate responsive sizes based on card height
         final compactFactor = (height / 420).clamp(0.6, 1.0);
         final imageSize = (height * 0.50).clamp(240.0, 360.0);
         final wordFontSize = (28 * compactFactor).clamp(16.0, 34.0);
         final meaningFontSize = (14 * compactFactor).clamp(11.0, 16.0);
 
+        // Adjust padding based on card height for better layout on various screen sizes
         final horizontalPadding = height < 500 ? 10.0 : 12.0;
         final verticalPadding = height < 500 ? 8.0 : 10.0;
 
@@ -124,6 +129,8 @@ class SwipeCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         CardImage(
+                          // Prioritize: images[0] (first image from array) > wordImageUrl (fallback)
+                          // This provides better visual variety by using the primary image
                           imageUrl: word.images.isNotEmpty
                               ? word.images.first
                               : word.wordImageUrl,
@@ -166,13 +173,16 @@ class SwipeCard extends StatelessWidget {
   }
 }
 
+/// Wrapper for backdrop cards with transform animations
+/// Applies translate, rotate, and scale transforms to create layered stack effect
+/// Used to show cards that appear behind the main swipe card during gestures
 class StackCardBackdrop extends StatelessWidget {
   final ApiWord word;
   final double width;
   final double height;
-  final double scale;
-  final double rotation;
-  final Offset offset;
+  final double scale; // Scaling factor for layer effect
+  final double rotation; // Rotation angle for staggered appearance
+  final Offset offset; // Translation offset for positioning
 
   const StackCardBackdrop({
     required this.word,
@@ -202,6 +212,9 @@ class StackCardBackdrop extends StatelessWidget {
   }
 }
 
+/// Background cards visible during swiping interactions
+/// Displays word preview with reduced opacity (55%) to show layered effect
+/// Shows images in background cards to provide visual context while swiping
 class BackdropCard extends StatelessWidget {
   final ApiWord word;
   final double width;
@@ -252,6 +265,14 @@ class BackdropCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   CategoryPill(label: word.categoryName),
+                  const SizedBox(height: 12),
+                  CardImage(
+                    // Display first image from images array for consistency with front card
+                    imageUrl: word.images.isNotEmpty
+                        ? word.images.first
+                        : word.wordImageUrl,
+                    size: (height * 0.40).clamp(100.0, 200.0),
+                  ),
                   const SizedBox(height: 12),
                   Text(
                     word.word,

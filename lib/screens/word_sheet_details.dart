@@ -7,6 +7,9 @@ import '../services/audio_service.dart';
 import '../theme/app_theme.dart';
 import 'flash_cards_screen.dart';
 
+/// Modal bottom sheet displaying comprehensive word details
+/// Shows all word metadata including new fields (wordType, expandedForm, partOfSpeech)
+/// Allows users to save words, add notes, play audio, and navigate to related words
 class WordDetailSheet extends StatefulWidget {
   final ApiWord word;
 
@@ -357,6 +360,9 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                 if (word.wordType.isNotEmpty ||
                     word.partOfSpeech.isNotEmpty) ...[
                   const SizedBox(height: 16),
+                  // Display new word metadata fields as chips for visual clarity
+                  // wordType: Indicates word category (ACRONYM, NOUN, VERB, etc.)
+                  // partOfSpeech: Grammatical role in sentence structure
                   Wrap(
                     spacing: 10,
                     runSpacing: 10,
@@ -390,6 +396,8 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                 ],
                 if (word.expandedForm.isNotEmpty) ...[
                   const SizedBox(height: 12),
+                  // Display expanded form in a container (e.g., MOU = Memorandum of Understanding)
+                  // Useful for acronyms and abbreviated terms
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(14),

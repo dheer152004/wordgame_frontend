@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
+/// Displays category name in a rounded pill-shaped container
+/// Used at the top of cards to show word category
 class CategoryPill extends StatelessWidget {
   final String label;
 
@@ -27,6 +29,8 @@ class CategoryPill extends StatelessWidget {
   }
 }
 
+/// Badge widget for displaying swipe actions with opacity-based indication
+/// Used to show swipe direction feedback during gesture interactions
 class SwipeBadge extends StatelessWidget {
   final String label;
   final Color backgroundColor;
@@ -66,6 +70,9 @@ class SwipeBadge extends StatelessWidget {
   }
 }
 
+/// Network image loader with error handling and fallback support
+/// Used by SwipeCard and BackdropCard to display word images
+/// Features: rounded corners, shadow effects, web optimization
 class CardImage extends StatelessWidget {
   final String imageUrl;
   final double size;

@@ -17,6 +17,12 @@ import '../widgets/screen_action_buttons.dart';
 import '../widgets/swipe_feature.dart';
 import 'word_sheet_details.dart';
 
+/// Main flash card learning screen with swipeable word cards
+/// Coordinates:
+/// - SwipeCard: Front card with word, meaning, and image
+/// - BackdropCard: Background cards showing preview with images during swipes
+/// - WordDetailSheet: Modal for detailed word information including new metadata fields
+/// - Theme colors: Uses device brightness to select light/dark text colors
 class FlashCardsScreen extends StatefulWidget {
   final int? categoryId;
   final String? categoryName;

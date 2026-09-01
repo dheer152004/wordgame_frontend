@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+/// Light theme colors for day mode
+/// Primary text: Dark (0xFF0B0E15 - black) for readability on light backgrounds
+/// Used by SwipeCard and WordDetailSheet when Theme.brightness == Brightness.light
 class LightColors {
   // ─────────────────────────────────────────────
   // BACKGROUNDS & SURFACES
@@ -37,6 +40,7 @@ class LightColors {
   // ─────────────────────────────────────────────
   // TEXT
   // ─────────────────────────────────────────────
+  /// Dark text color for light mode - ensures contrast on light backgrounds
   static const Color textPrimary = Color(0xFF0B0E15);
   static const Color textSecondary = Color(0xFF5A6580);
   static const Color textLight = Color(0xFF1A1A1A);
@@ -121,6 +125,9 @@ class LightColors {
   static const Color shadow = Color(0x140B0E15);
 }
 
+/// Dark theme colors for night mode
+/// Primary text: Light (0xFFF5F7FB - white) for readability on dark backgrounds
+/// Used by SwipeCard and WordDetailSheet when Theme.brightness == Brightness.dark
 class DarkColors {
   // ─────────────────────────────────────────────
   // BACKGROUNDS & SURFACES
@@ -158,6 +165,7 @@ class DarkColors {
   // ─────────────────────────────────────────────
   // TEXT
   // ─────────────────────────────────────────────
+  /// Light text color for dark mode - ensures contrast on dark backgrounds
   static const Color textPrimary = Color(0xFFF5F7FB);
   static const Color textSecondary = Color(0xFFAAB5C7);
   static const Color textLight = Color(0xFFE6EBF3);
