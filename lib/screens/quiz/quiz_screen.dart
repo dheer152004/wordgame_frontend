@@ -129,6 +129,10 @@ class _QuizScreenState extends State<QuizScreen> {
       return;
     }
 
+    final streakBefore = _stats is Map
+        ? int.tryParse('${_stats['currentStreak']}') ?? 0
+        : 0;
+
     setState(() {
       _submitting = true;
       _errorMessage = null;
@@ -154,6 +158,14 @@ class _QuizScreenState extends State<QuizScreen> {
         _result = result;
         _submitting = false;
       });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Your streak increased from $streakBefore to ${result.currentStreak}!',
+          ),
+        ),
+      );
 
       await _refreshQuizMetadata();
     } catch (error) {

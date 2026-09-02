@@ -191,6 +191,98 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
     }
   }
 
+  Future<void> _openSaveDialog() async {
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        final isDark = Theme.of(dialogContext).brightness == Brightness.dark;
+        final dialogBackground = isDark ? DarkColors.card : LightColors.card;
+        final textPrimary = isDark
+            ? DarkColors.textPrimary
+            : LightColors.textPrimary;
+        final textSecondary = isDark
+            ? DarkColors.textSecondary
+            : LightColors.textSecondary;
+        final softPanel = isDark
+            ? DarkColors.surfaceSoft
+            : LightColors.surfaceSoft;
+        final dividerColor = isDark ? DarkColors.border : LightColors.border;
+        final primaryColor = isDark ? DarkColors.primary : LightColors.primary;
+
+        return AlertDialog(
+          backgroundColor: dialogBackground,
+          title: Text(
+            _isAlreadySaved ? 'Saved word' : 'Save this word',
+            style: TextStyle(color: textPrimary),
+          ),
+          content: TextField(
+            controller: _notesController,
+            enabled: !_isSavingWord,
+            autofocus: true,
+            maxLines: 3,
+            minLines: 2,
+            style: TextStyle(color: textPrimary),
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: softPanel,
+              labelText: 'Notes',
+              hintText: 'Why are you saving this word?',
+              labelStyle: TextStyle(color: textSecondary),
+              hintStyle: TextStyle(color: textSecondary, fontSize: 10),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: primaryColor),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: dividerColor),
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: _isSavingWord
+                  ? null
+                  : () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancel'),
+            ),
+            if (_isAlreadySaved)
+              TextButton(
+                onPressed: _isSavingWord
+                    ? null
+                    : () async {
+                        await _toggleSavedWord();
+                        if (dialogContext.mounted) {
+                          Navigator.of(dialogContext).pop();
+                        }
+                      },
+                child: const Text('Remove'),
+              ),
+            ElevatedButton(
+              onPressed: _isSavingWord
+                  ? null
+                  : () async {
+                      if (_isAlreadySaved) {
+                        Navigator.of(dialogContext).pop();
+                        return;
+                      }
+                      await _toggleSavedWord();
+                      if (dialogContext.mounted) {
+                        Navigator.of(dialogContext).pop();
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                foregroundColor: Colors.white,
+              ),
+              child: Text(_isAlreadySaved ? 'Done' : 'Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _shareWord(BuildContext context) async {
     final word = _detailWord ?? widget.word;
     try {
@@ -707,55 +799,10 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Save this word',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          color: textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Add a short note',
-                        style: TextStyle(fontSize: 12, color: textSecondary),
-                      ),
-                      const SizedBox(height: 10),
-                      TextField(
-                        controller: _notesController,
-                        enabled: !_isSavingWord,
-                        maxLines: 3,
-                        minLines: 2,
-                        style: TextStyle(color: textPrimary),
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: softPanel,
-                          labelText: 'Notes',
-                          hintText: 'Why are you saving this word?',
-                          labelStyle: TextStyle(color: textSecondary),
-                          hintStyle: TextStyle(
-                            color: textSecondary,
-                            fontSize: 10,
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: isDark
-                                  ? DarkColors.primary
-                                  : LightColors.primary,
-                            ),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: dividerColor),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton.icon(
-                          onPressed: _isSavingWord ? null : _toggleSavedWord,
+                          onPressed: _isSavingWord ? null : _openSaveDialog,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: isDark
                                 ? DarkColors.primary
