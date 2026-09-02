@@ -7,7 +7,7 @@ import '../../models/word_Content_models.dart';
 import '../../services/backend_api.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/categories_section.dart';
-import '../word_sheet_details.dart';
+import '../flash_cards_screen.dart';
 import 'widget/daily_challenge_card.dart';
 import 'widget/home_bottom_nav.dart';
 import 'widget/home_header.dart';
@@ -297,6 +297,16 @@ class _HomeScreenState extends State<HomeScreen> {
                         onLoadMore: () => _performSearch(loadMore: true),
                         onLoadMoreCategories: () =>
                             _performCategorySearch(loadMore: true),
+                        onCategoryTap: (category) {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => FlashCardsScreen(
+                                categoryId: category.id,
+                                categoryName: category.name,
+                              ),
+                            ),
+                          );
+                        },
                         onToggleCategoryResults: (value) {
                           setState(() {
                             _showCategoryResults = value;

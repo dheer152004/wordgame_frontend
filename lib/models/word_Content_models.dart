@@ -79,27 +79,30 @@ class AlsoAppearsInRef {
 /// Includes word metadata, examples, images, and relationships to other words
 /// Supports multiple word types: ACRONYM, NOUN, VERB, ADJECTIVE, etc.
 class ApiWord {
-  final int id;                                    // Unique word identifier
-  final int? categoryId;                           // Category the word belongs to
-  final String word;                               // The word itself
-  final String wordType;                           // Type: ACRONYM, NOUN, VERB, etc.
-  final String expandedForm;                       // Expansion for acronyms (e.g., MOU → Memorandum of Understanding)
-  final String partOfSpeech;                       // Grammatical role: NOUN, VERB, ADJECTIVE, etc.
-  final String meaning;                            // Primary definition
-  final String wordImageUrl;                       // Main image URL
-  final String categoryName;                       // Category name
-  final List<String> examples;                     // Usage examples
-  final String audioUrl;                           // Audio pronunciation URL
-  final List<String> images;                       // Multiple images for visual learning
-  final String description;                        // Detailed description
-  final List<String> facts;                        // Interesting facts about the word
-  final List<String> quizModes;                    // Available quiz types: IMAGE, TEXT, etc.
-  final List<RelatedWordRef> relatedWords;         // Semantically related words
-  final List<AlsoAppearsInRef> alsoAppearsIn;      // Other categories containing this word
-  final int? displayOrder;                         // Order for sorting within category
-  final DateTime? created;                         // Creation timestamp
-  final DateTime? updated;                         // Last update timestamp
-  final Map<String, dynamic> sourceAndCredits;     // Attribution info and source details
+  final int id; // Unique word identifier
+  final int? categoryId; // Category the word belongs to
+  final String word; // The word itself
+  final String wordType; // Type: ACRONYM, NOUN, VERB, etc.
+  final String
+  expandedForm; // Expansion for acronyms (e.g., MOU → Memorandum of Understanding)
+  final String partOfSpeech; // Grammatical role: NOUN, VERB, ADJECTIVE, etc.
+  final String meaning; // Primary definition
+  final String wordImageUrl; // Main image URL
+  final String categoryName; // Category name
+  final List<String> examples; // Usage examples
+  final String audioUrl; // Audio pronunciation URL
+  final List<String> images; // Multiple images for visual learning
+  final String description; // Detailed description
+  final List<String> facts; // Interesting facts about the word
+  final List<String> quizModes; // Available quiz types: IMAGE, TEXT, etc.
+  final List<RelatedWordRef> relatedWords; // Semantically related words
+  final List<AlsoAppearsInRef>
+  alsoAppearsIn; // Other categories containing this word
+  final int? displayOrder; // Order for sorting within category
+  final DateTime? created; // Creation timestamp
+  final DateTime? updated; // Last update timestamp
+  final Map<String, dynamic>
+  sourceAndCredits; // Attribution info and source details
 
   const ApiWord({
     required this.id,
@@ -216,13 +219,13 @@ class ApiWord {
 /// Model for user-saved words with personal notes
 /// Represents a word that a user has bookmarked and annotated
 class SavedWord {
-  final int savedWordId;           // Unique saved word record ID
-  final int wordId;                // Reference to original ApiWord
-  final String word;               // The word text
-  final String meaning;            // Word definition
-  final String wordImageUrl;       // Associated image
-  final String categoryName;       // Category name
-  final String notes;              // User's personal notes
+  final int savedWordId; // Unique saved word record ID
+  final int wordId; // Reference to original ApiWord
+  final String word; // The word text
+  final String meaning; // Word definition
+  final String wordImageUrl; // Associated image
+  final String categoryName; // Category name
+  final String notes; // User's personal notes
 
   const SavedWord({
     required this.savedWordId,

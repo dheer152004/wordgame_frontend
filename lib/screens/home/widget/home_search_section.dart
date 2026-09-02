@@ -20,6 +20,7 @@ class HomeSearchSection extends StatelessWidget {
   final ValueChanged<String> onQueryChanged;
   final VoidCallback onLoadMore;
   final VoidCallback onLoadMoreCategories;
+  final ValueChanged<ApiCategory> onCategoryTap;
   final ValueChanged<bool> onToggleCategoryResults;
   final VoidCallback onClear;
   final VoidCallback onClose;
@@ -41,6 +42,7 @@ class HomeSearchSection extends StatelessWidget {
     required this.onQueryChanged,
     required this.onLoadMore,
     required this.onLoadMoreCategories,
+    required this.onCategoryTap,
     required this.onToggleCategoryResults,
     required this.onClear,
     required this.onClose,
@@ -227,43 +229,69 @@ class HomeSearchSection extends StatelessWidget {
                       }
 
                       final category = categoryResults[index];
-                      return Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: AppThemeColors.surface(context),
+                      return Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () => onCategoryTap(category),
                           borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: Colors.white.withAlpha(20)),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              category.name,
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                                color: AppThemeColors.textPrimary(context),
+                          child: Container(
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: AppThemeColors.surface(context),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: Colors.white.withAlpha(20),
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            if (category.description.isNotEmpty)
-                              Text(
-                                category.description,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  color: AppThemeColors.textSecondary(context),
-                                  height: 1.4,
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        category.name,
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppThemeColors.textPrimary(
+                                            context,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      if (category.description.isNotEmpty)
+                                        Text(
+                                          category.description,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            color: AppThemeColors.textSecondary(
+                                              context,
+                                            ),
+                                            height: 1.4,
+                                          ),
+                                        ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'Words: ${category.wordCount}',
+                                        style: TextStyle(
+                                          color: AppThemeColors.textSecondary(
+                                            context,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Words: ${category.wordCount}',
-                              style: TextStyle(
-                                color: AppThemeColors.textSecondary(context),
-                              ),
+                                Icon(
+                                  Icons.chevron_right_rounded,
+                                  color: AppThemeColors.textSecondary(context),
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
                       );
                     },
