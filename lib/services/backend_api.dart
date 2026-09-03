@@ -780,6 +780,19 @@ class BackendApi {
         .toList();
   }
 
+  Future<List<QuizQuestion>> fetchImageQuizToday() async {
+    final response = await _client.get(
+      _uri('/api/quiz/today/image'),
+      headers: await _headers(authenticated: true),
+    );
+
+    final payload = _decodeResponse(response);
+    return _asList(payload)
+        .whereType<Map>()
+        .map((entry) => QuizQuestion.fromJson(Map<String, dynamic>.from(entry)))
+        .toList();
+  }
+
   Future<dynamic> fetchQuizTodayAvailability() async {
     final response = await _client.get(
       _uri('/api/quiz/today/available'),
@@ -829,6 +842,25 @@ class BackendApi {
     }
 
     throw const BackendException('Unexpected quiz submission response.');
+  }
+
+  Future<QuizSubmissionResult> submitImageQuizAnswers(
+    List<QuizAnswerSubmission> answers,
+  ) async {
+    final response = await _client.post(
+      _uri('/api/quiz/today/image/submit'),
+      headers: await _headers(authenticated: true),
+      body: jsonEncode({
+        'answers': answers.map((answer) => answer.toJson()).toList(),
+      }),
+    );
+
+    final payload = _decodeResponse(response);
+    if (payload is Map<String, dynamic>) {
+      return QuizSubmissionResult.fromJson(payload);
+    }
+
+    throw const BackendException('Unexpected image quiz submission response.');
   }
 
   dynamic _decodeResponse(http.Response response) {

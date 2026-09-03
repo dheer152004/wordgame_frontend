@@ -34,7 +34,7 @@ class _HomeBottomNavState extends State<HomeBottomNav> {
         borderRadius: BorderRadius.circular(AppRadius.navBar),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.25),
+            color: Colors.black.withValues(alpha: 0.25),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -55,9 +55,7 @@ class _HomeBottomNavState extends State<HomeBottomNav> {
               }
 
               if (index == 2) {
-                Navigator.of(
-                  context,
-                ).push(MaterialPageRoute(builder: (_) => const QuizScreen()));
+                openQuizModePicker(context);
               }
 
               if (index == 3) {
@@ -75,7 +73,7 @@ class _HomeBottomNavState extends State<HomeBottomNav> {
               height: 48,
               decoration: BoxDecoration(
                 color: isActive
-                    ? Colors.white.withOpacity(0.12)
+                    ? Colors.white.withValues(alpha: 0.12)
                     : Colors.transparent,
                 shape: BoxShape.circle,
               ),

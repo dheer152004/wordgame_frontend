@@ -5,8 +5,58 @@ import '../../services/backend_api.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/screen_action_buttons.dart';
 
+enum QuizMode { text, image }
+
+Future<void> openQuizModePicker(BuildContext context) async {
+  final mode = await showModalBottomSheet<QuizMode>(
+    context: context,
+    backgroundColor: AppThemeColors.surface(context),
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    builder: (context) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(20, 20, 20, 8),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Choose quiz mode',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+              ),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.text_fields_rounded),
+            title: const Text('Text mode'),
+            subtitle: const Text('Answer word-based multiple choice questions'),
+            onTap: () => Navigator.of(context).pop(QuizMode.text),
+          ),
+          ListTile(
+            leading: const Icon(Icons.image_rounded),
+            title: const Text('Image mode'),
+            subtitle: const Text('Identify the word shown in each image'),
+            onTap: () => Navigator.of(context).pop(QuizMode.image),
+          ),
+          const SizedBox(height: 12),
+        ],
+      ),
+    ),
+  );
+
+  if (mode != null && context.mounted) {
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => QuizScreen(mode: mode)));
+  }
+}
+
 class QuizScreen extends StatefulWidget {
-  const QuizScreen({super.key});
+  final QuizMode mode;
+
+  const QuizScreen({super.key, this.mode = QuizMode.text});
 
   @override
   State<QuizScreen> createState() => _QuizScreenState();
@@ -43,7 +93,9 @@ class _QuizScreenState extends State<QuizScreen> {
 
     try {
       final responses = await Future.wait<dynamic>([
-        BackendApi.instance.fetchQuizToday(),
+        widget.mode == QuizMode.image
+            ? BackendApi.instance.fetchImageQuizToday()
+            : BackendApi.instance.fetchQuizToday(),
         BackendApi.instance.fetchQuizTodayAvailability(),
         BackendApi.instance.fetchQuizStatus(),
         BackendApi.instance.fetchQuizStats(),
@@ -143,13 +195,16 @@ class _QuizScreenState extends State<QuizScreen> {
         final startedAt =
             _questionLoadedAt[question.questionId] ?? DateTime.now();
         return QuizAnswerSubmission(
-          questionId: question.questionId,
+          questionId: widget.mode == QuizMode.text ? question.questionId : null,
+          wordId: widget.mode == QuizMode.image ? question.wordId : null,
           selectedOption: _selectedOptions[question.questionId]!,
           timeTakenMs: DateTime.now().difference(startedAt).inMilliseconds,
         );
       }).toList();
 
-      final result = await BackendApi.instance.submitQuizAnswers(answers);
+      final result = widget.mode == QuizMode.image
+          ? await BackendApi.instance.submitImageQuizAnswers(answers)
+          : await BackendApi.instance.submitQuizAnswers(answers);
       if (!mounted) {
         return;
       }
@@ -161,8 +216,34 @@ class _QuizScreenState extends State<QuizScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            'Your streak increased from $streakBefore to ${result.currentStreak}!',
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 4),
+          margin: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+          elevation: 8,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          backgroundColor: AppThemeColors.surface(context),
+          content: Row(
+            children: [
+              Icon(
+                Icons.local_fire_department_rounded,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? DarkColors.streak
+                    : LightColors.streak,
+                size: 28,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Your streak increased from $streakBefore to ${result.currentStreak}!',
+                  style: TextStyle(
+                    color: AppThemeColors.textPrimary(context),
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       );
@@ -261,8 +342,13 @@ class _QuizScreenState extends State<QuizScreen> {
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                     const SizedBox(width: 6),
-                    const Expanded(
-                      child: Text('Quiz', style: AppTextStyles.sectionTitle),
+                    Expanded(
+                      child: Text(
+                        widget.mode == QuizMode.image
+                            ? 'Image Quiz'
+                            : 'Text Quiz',
+                        style: AppTextStyles.sectionTitle,
+                      ),
                     ),
                     AppRefreshIconButton(
                       onPressed: _loading ? null : _bootstrap,
@@ -271,8 +357,10 @@ class _QuizScreenState extends State<QuizScreen> {
                   ],
                 ),
                 const SizedBox(height: 6),
-                const Text(
-                  'Take today\'s quiz, submit your answers, and review your score, XP, and history from the backend.',
+                Text(
+                  widget.mode == QuizMode.image
+                      ? 'Identify the word represented by each image.'
+                      : 'Answer today\'s word questions and review your score, XP, and history.',
                   style: TextStyle(fontSize: 15, height: 1.5),
                 ),
                 const SizedBox(height: 18),
@@ -411,6 +499,7 @@ class _QuizScreenState extends State<QuizScreen> {
                                 _selectedOptions[entry.value.questionId],
                             onSelect: (option) =>
                                 _selectOption(entry.value.questionId, option),
+                            isImageMode: widget.mode == QuizMode.image,
                           ),
                           const SizedBox(height: 14),
                         ],
@@ -484,12 +573,14 @@ class _QuizCard extends StatelessWidget {
   final int index;
   final String? selectedOption;
   final ValueChanged<String> onSelect;
+  final bool isImageMode;
 
   const _QuizCard({
     required this.prompt,
     required this.index,
     required this.selectedOption,
     required this.onSelect,
+    required this.isImageMode,
   });
 
   @override
@@ -543,18 +634,37 @@ class _QuizCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          Text(
-            prompt.word,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              color: AppThemeColors.textPrimary(context),
-              height: 1.25,
+          if (isImageMode && prompt.imageUrl.isNotEmpty)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Image.network(
+                prompt.imageUrl,
+                width: double.infinity,
+                height: 190,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  height: 190,
+                  color: AppThemeColors.surfaceAlt(context),
+                  alignment: Alignment.center,
+                  child: const Icon(Icons.broken_image_outlined, size: 42),
+                ),
+              ),
+            )
+          else
+            Text(
+              prompt.word,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: AppThemeColors.textPrimary(context),
+                height: 1.25,
+              ),
             ),
-          ),
           const SizedBox(height: 6),
-          const Text(
-            'Choose the best answer for this word.',
+          Text(
+            isImageMode
+                ? 'Which word matches this image?'
+                : 'Choose the best answer for this word.',
             style: TextStyle(fontSize: 13, height: 1.4),
           ),
           const SizedBox(height: 14),
@@ -562,8 +672,14 @@ class _QuizCard extends StatelessWidget {
             _OptionRow(
               letter: String.fromCharCode(65 + entry.key),
               label: entry.value,
-              selected: selectedOption == String.fromCharCode(65 + entry.key),
-              onTap: () => onSelect(String.fromCharCode(65 + entry.key)),
+              selected:
+                  selectedOption ==
+                  (isImageMode
+                      ? entry.value
+                      : String.fromCharCode(65 + entry.key)),
+              onTap: () => onSelect(
+                isImageMode ? entry.value : String.fromCharCode(65 + entry.key),
+              ),
             ),
             const SizedBox(height: 10),
           ],

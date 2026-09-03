@@ -3,12 +3,17 @@ import '../../../theme/app_theme.dart';
 import '../../quiz/quiz_screen.dart';
 
 class DailyChallengeCard extends StatelessWidget {
-  const DailyChallengeCard({super.key});
+  final VoidCallback? onTap;
+
+  const DailyChallengeCard({super.key, this.onTap});
 
   void _navigateToQuiz(BuildContext context) {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const QuizScreen()));
+    if (onTap != null) {
+      onTap!();
+      return;
+    }
+
+    openQuizModePicker(context);
   }
 
   @override

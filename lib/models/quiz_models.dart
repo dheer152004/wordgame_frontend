@@ -2,6 +2,8 @@ class QuizQuestion {
   final int questionId;
   final int wordId;
   final String word;
+  final String imageUrl;
+  final String quizMode;
   final List<String> options;
   final int points;
 
@@ -9,6 +11,8 @@ class QuizQuestion {
     required this.questionId,
     required this.wordId,
     required this.word,
+    this.imageUrl = '',
+    this.quizMode = 'TEXT',
     required this.options,
     required this.points,
   });
@@ -23,6 +27,8 @@ class QuizQuestion {
       questionId: _readInt(json['questionId']),
       wordId: _readInt(json['wordId']),
       word: json['word']?.toString() ?? '',
+      imageUrl: json['imageUrl']?.toString() ?? '',
+      quizMode: json['quizMode']?.toString() ?? 'TEXT',
       options: options,
       points: _readInt(json['points']),
     );
@@ -30,19 +36,22 @@ class QuizQuestion {
 }
 
 class QuizAnswerSubmission {
-  final int questionId;
+  final int? questionId;
+  final int? wordId;
   final String selectedOption;
   final int timeTakenMs;
 
   const QuizAnswerSubmission({
-    required this.questionId,
+    this.questionId,
+    this.wordId,
     required this.selectedOption,
     required this.timeTakenMs,
   });
 
   Map<String, dynamic> toJson() {
     return {
-      'questionId': questionId,
+      if (questionId != null) 'questionId': questionId,
+      if (wordId != null) 'wordId': wordId,
       'selectedOption': selectedOption,
       'timeTakenMs': timeTakenMs,
     };

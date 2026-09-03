@@ -8,6 +8,7 @@ import '../../services/backend_api.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/categories_section.dart';
 import '../flash_cards_screen.dart';
+import '../quiz/quiz_screen.dart';
 import 'widget/daily_challenge_card.dart';
 import 'widget/home_bottom_nav.dart';
 import 'widget/home_header.dart';
@@ -25,6 +26,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
+  UserProfile? _profile;
   Timer? _searchDebounceTimer;
   bool _showSearchBar = false;
   bool _isSearching = false;
@@ -45,6 +47,34 @@ class _HomeScreenState extends State<HomeScreen> {
     _searchController.dispose();
     _searchFocusNode.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchProfile();
+  }
+
+  Future<void> _fetchProfile() async {
+    try {
+      final profile = await BackendApi.instance.fetchUserProfile();
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _profile = profile;
+      });
+    } catch (_) {
+      // Keep the profile passed during login visible if the refresh fails.
+    }
+  }
+
+  Future<void> _openDailyQuiz() async {
+    await openQuizModePicker(context);
+    if (mounted) {
+      await _fetchProfile();
+    }
   }
 
   Future<void> _performSearch({bool loadMore = false}) async {
@@ -275,7 +305,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     const SizedBox(height: 16),
                     HomeHeader(
-                      user: widget.user,
+                      user: _profile ?? widget.user,
                       onSearchTap: _toggleSearchBar,
                     ),
                     if (_showSearchBar) ...[
@@ -325,7 +355,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 18),
                     ],
-                    const DailyChallengeCard(),
+                    DailyChallengeCard(onTap: _openDailyQuiz),
                     const SizedBox(height: 24),
                     const CategoriesSection(),
                     const SizedBox(height: 16),
@@ -333,7 +363,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            HomeBottomNav(user: widget.user),
+            HomeBottomNav(user: _profile ?? widget.user),
           ],
         ),
       ),
