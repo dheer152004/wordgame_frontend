@@ -551,7 +551,7 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                       itemCount: word.images.length,
                       separatorBuilder: (_, __) => const SizedBox(width: 12),
                       itemBuilder: (context, index) {
-                        final imageUrl = word.images[index];
+                        final imageUrl = word.images[index].imageUrl;
                         return ClipRRect(
                           borderRadius: BorderRadius.circular(22),
                           child: AspectRatio(

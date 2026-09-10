@@ -67,6 +67,7 @@ class _QuizScreenState extends State<QuizScreen> {
   final Map<int, DateTime> _questionLoadedAt = {};
 
   List<QuizQuestion> _questions = [];
+  int _currentQuestionIndex = 0;
   dynamic _todayAvailable;
   dynamic _status;
   dynamic _stats;
@@ -116,6 +117,7 @@ class _QuizScreenState extends State<QuizScreen> {
         _loading = false;
         _result = null;
         _selectedOptions.clear();
+        _currentQuestionIndex = 0;
         _questionLoadedAt
           ..clear()
           ..addEntries(
@@ -164,6 +166,23 @@ class _QuizScreenState extends State<QuizScreen> {
     setState(() {
       _selectedOptions[questionId] = option;
     });
+  }
+
+  Future<void> _continueImageQuiz() async {
+    final question = _questions[_currentQuestionIndex];
+    if (_selectedOptions[question.questionId] == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Select an answer to continue.')),
+      );
+      return;
+    }
+
+    if (_currentQuestionIndex == _questions.length - 1) {
+      await _submitQuiz();
+      return;
+    }
+
+    setState(() => _currentQuestionIndex += 1);
   }
 
   Future<void> _submitQuiz() async {
@@ -444,107 +463,171 @@ class _QuizScreenState extends State<QuizScreen> {
                     _ResultCard(result: _result!),
                     const SizedBox(height: 16),
                   ],
-                  _SectionTitle(
-                    title: 'Quiz overview',
-                    subtitle:
-                        'Availability, status, stats, and history at a glance.',
-                  ),
-                  const SizedBox(height: 12),
-                  _InfoGrid(
-                    items: [
-                      _InfoTile(
-                        title: 'Available today',
-                        value: _describe(_todayAvailable),
-                        icon: Icons.event_available_rounded,
-                      ),
-                      _InfoTile(
-                        title: 'Current status',
-                        value: _describe(_status),
-                        icon: Icons.insights_rounded,
-                      ),
-                      _InfoTile(
-                        title: 'Stats',
-                        value: _describe(_stats),
-                        icon: Icons.bar_chart_rounded,
-                      ),
-                      _InfoTile(
-                        title: 'History',
-                        value: _describe(_history),
-                        icon: Icons.history_rounded,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 18),
-                  _SectionTitle(
-                    title: 'Today\'s questions',
-                    subtitle: _questions.isEmpty
-                        ? 'No questions were returned for today.'
-                        : 'Select one option per question and submit when ready.',
-                  ),
-                  const SizedBox(height: 12),
-                  if (_questions.isEmpty)
-                    const _EmptyState(
-                      title: 'No quiz available',
-                      message:
-                          'The today endpoint returned no questions. Pull to refresh later.',
-                    )
-                  else
-                    Column(
-                      children: [
-                        for (final entry in _questions.asMap().entries) ...[
-                          _QuizCard(
-                            prompt: entry.value,
-                            index: entry.key + 1,
-                            selectedOption:
-                                _selectedOptions[entry.value.questionId],
-                            onSelect: (option) =>
-                                _selectOption(entry.value.questionId, option),
-                            isImageMode: widget.mode == QuizMode.image,
-                          ),
-                          const SizedBox(height: 14),
-                        ],
-                        const SizedBox(height: 6),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: _submitting ? null : _submitQuiz,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              foregroundColor: Colors.black,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(18),
-                              ),
-                            ),
-                            child: _submitting
-                                ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2.2,
-                                    ),
-                                  )
-                                : Text(
-                                    _result == null
-                                        ? 'Submit quiz'
-                                        : 'Submit again',
-                                  ),
-                          ),
+                  if (_result == null) ...[
+                    _SectionTitle(
+                      title: 'Quiz overview',
+                      subtitle:
+                          'Availability, status, stats, and history at a glance.',
+                    ),
+                    const SizedBox(height: 12),
+                    _InfoGrid(
+                      items: [
+                        _InfoTile(
+                          title: 'Available today',
+                          value: _describe(_todayAvailable),
+                          icon: Icons.event_available_rounded,
                         ),
-                        const SizedBox(height: 10),
-                        Text(
-                          '${_selectedOptions.length}/${_questions.length} answered',
-                          style: TextStyle(
-                            color: AppThemeColors.textSecondary(context),
-                            fontWeight: FontWeight.w600,
-                          ),
+                        _InfoTile(
+                          title: 'Current status',
+                          value: _describe(_status),
+                          icon: Icons.insights_rounded,
                         ),
-                        if (_errorMessage != null) ...[
-                          const SizedBox(height: 10),
-                          _InlineError(message: _errorMessage!),
-                        ],
+                        _InfoTile(
+                          title: 'Stats',
+                          value: _describe(_stats),
+                          icon: Icons.bar_chart_rounded,
+                        ),
+                        _InfoTile(
+                          title: 'History',
+                          value: _describe(_history),
+                          icon: Icons.history_rounded,
+                        ),
                       ],
                     ),
+                    const SizedBox(height: 18),
+                    _SectionTitle(
+                      title: 'Today\'s questions',
+                      subtitle: _questions.isEmpty
+                          ? 'No questions were returned for today.'
+                          : widget.mode == QuizMode.image
+                          ? 'Question ${_currentQuestionIndex + 1} of ${_questions.length}'
+                          : 'Select one option per question and submit when ready.',
+                    ),
+                    const SizedBox(height: 12),
+                    if (_questions.isEmpty)
+                      const _EmptyState(
+                        title: 'No quiz available',
+                        message:
+                            'The today endpoint returned no questions. Pull to refresh later.',
+                      )
+                    else if (widget.mode == QuizMode.image)
+                      Column(
+                        children: [
+                          _QuizCard(
+                            prompt: _questions[_currentQuestionIndex],
+                            index: _currentQuestionIndex + 1,
+                            selectedOption:
+                                _selectedOptions[_questions[_currentQuestionIndex]
+                                    .questionId],
+                            onSelect: (option) => _selectOption(
+                              _questions[_currentQuestionIndex].questionId,
+                              option,
+                            ),
+                            isImageMode: true,
+                          ),
+                          const SizedBox(height: 20),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: _submitting
+                                  ? null
+                                  : _continueImageQuiz,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                foregroundColor: Colors.black,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(18),
+                                ),
+                              ),
+                              child: _submitting
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.2,
+                                      ),
+                                    )
+                                  : Text(
+                                      _currentQuestionIndex ==
+                                              _questions.length - 1
+                                          ? 'Show results'
+                                          : 'Next question',
+                                    ),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            '${_selectedOptions.length}/${_questions.length} answered',
+                            style: TextStyle(
+                              color: AppThemeColors.textSecondary(context),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          if (_errorMessage != null) ...[
+                            const SizedBox(height: 10),
+                            _InlineError(message: _errorMessage!),
+                          ],
+                        ],
+                      )
+                    else
+                      Column(
+                        children: [
+                          for (final entry in _questions.asMap().entries) ...[
+                            _QuizCard(
+                              prompt: entry.value,
+                              index: entry.key + 1,
+                              selectedOption:
+                                  _selectedOptions[entry.value.questionId],
+                              onSelect: (option) =>
+                                  _selectOption(entry.value.questionId, option),
+                              isImageMode: false,
+                            ),
+                            const SizedBox(height: 14),
+                          ],
+                          const SizedBox(height: 6),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: _submitting ? null : _submitQuiz,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                foregroundColor: Colors.black,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(18),
+                                ),
+                              ),
+                              child: _submitting
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.2,
+                                      ),
+                                    )
+                                  : const Text('Submit quiz'),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            '${_selectedOptions.length}/${_questions.length} answered',
+                            style: TextStyle(
+                              color: AppThemeColors.textSecondary(context),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          if (_errorMessage != null) ...[
+                            const SizedBox(height: 10),
+                            _InlineError(message: _errorMessage!),
+                          ],
+                        ],
+                      ),
+                  ],
                   if (_result != null && _result!.details.isNotEmpty) ...[
                     const SizedBox(height: 18),
                     _SectionTitle(
@@ -642,6 +725,7 @@ class _QuizCard extends StatelessWidget {
                 width: double.infinity,
                 height: 190,
                 fit: BoxFit.cover,
+                webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
                 errorBuilder: (_, __, ___) => Container(
                   height: 190,
                   color: AppThemeColors.surfaceAlt(context),

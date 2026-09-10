@@ -19,10 +19,10 @@ class CategoryPill extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w800,
-          color: AppColors.textPrimary,
+          color: AppThemeColors.textPrimary(context),
         ),
       ),
     );

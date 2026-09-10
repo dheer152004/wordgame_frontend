@@ -75,6 +75,48 @@ class AlsoAppearsInRef {
   }
 }
 
+class WordImage {
+  final String imageUrl;
+
+  const WordImage({required this.imageUrl});
+
+  factory WordImage.fromDynamic(Object? value) {
+    if (value is Map) {
+      final json = Map<String, dynamic>.from(value);
+      return WordImage(imageUrl: json['imageUrl']?.toString() ?? '');
+    }
+    return WordImage(imageUrl: value?.toString() ?? '');
+  }
+}
+
+class WordVideo {
+  final String videoUrl;
+
+  const WordVideo({required this.videoUrl});
+
+  factory WordVideo.fromDynamic(Object? value) {
+    if (value is Map) {
+      final json = Map<String, dynamic>.from(value);
+      return WordVideo(videoUrl: json['videoUrl']?.toString() ?? '');
+    }
+    return WordVideo(videoUrl: value?.toString() ?? '');
+  }
+}
+
+class WordAudio {
+  final String audioUrl;
+
+  const WordAudio({required this.audioUrl});
+
+  factory WordAudio.fromDynamic(Object? value) {
+    if (value is Map) {
+      final json = Map<String, dynamic>.from(value);
+      return WordAudio(audioUrl: json['audioUrl']?.toString() ?? '');
+    }
+    return WordAudio(audioUrl: value?.toString() ?? '');
+  }
+}
+
 /// Main word model containing all word data from backend API
 /// Includes word metadata, examples, images, and relationships to other words
 /// Supports multiple word types: ACRONYM, NOUN, VERB, ADJECTIVE, etc.
@@ -90,8 +132,10 @@ class ApiWord {
   final String wordImageUrl; // Main image URL
   final String categoryName; // Category name
   final List<String> examples; // Usage examples
-  final String audioUrl; // Audio pronunciation URL
-  final List<String> images; // Multiple images for visual learning
+  final String audioUrl; // Legacy pronunciation URL
+  final List<WordImage> images; // Multiple images for visual learning
+  final List<WordVideo> videos;
+  final List<WordAudio> audios;
   final String description; // Detailed description
   final List<String> facts; // Interesting facts about the word
   final List<String> quizModes; // Available quiz types: IMAGE, TEXT, etc.
@@ -117,6 +161,8 @@ class ApiWord {
     required this.examples,
     this.audioUrl = '',
     this.images = const [],
+    this.videos = const [],
+    this.audios = const [],
     this.description = '',
     this.facts = const [],
     this.quizModes = const [],
@@ -137,11 +183,21 @@ class ApiWord {
         ? rawExamples.map((entry) => entry.toString()).toList()
         : <String>[];
 
-    // Parse images list with fallback to empty list
+    // Accept both the current object format and the legacy string format.
     final rawImages = json['images'];
     final images = rawImages is List
-        ? rawImages.map((entry) => entry.toString()).toList()
-        : <String>[];
+        ? rawImages.map(WordImage.fromDynamic).toList()
+        : <WordImage>[];
+
+    final rawVideos = json['videos'];
+    final videos = rawVideos is List
+        ? rawVideos.map(WordVideo.fromDynamic).toList()
+        : <WordVideo>[];
+
+    final rawAudios = json['audios'];
+    final audios = rawAudios is List
+        ? rawAudios.map(WordAudio.fromDynamic).toList()
+        : <WordAudio>[];
 
     // Parse facts/learning points
     final rawFacts = json['facts'];
@@ -200,6 +256,8 @@ class ApiWord {
       examples: examples,
       audioUrl: json['audioUrl']?.toString() ?? '',
       images: images,
+      videos: videos,
+      audios: audios,
       description: json['description']?.toString() ?? '',
       facts: facts,
       quizModes: quizModes,

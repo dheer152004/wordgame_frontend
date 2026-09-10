@@ -18,6 +18,7 @@ import 'widgets/profile_app_info_section.dart';
 import 'widgets/profile_legal_section.dart';
 import 'widgets/profile_support_section.dart';
 import 'widgets/profile_password_dialog.dart';
+import 'widgets/profile_account_section.dart';
 import 'widgets/profile_avatar_helper.dart';
 import 'widgets/profile_report_dialog.dart';
 
@@ -300,55 +301,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onConsentmanagement: _openConsentManagement,
               ),
               const SizedBox(height: 18),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: AppThemeColors.surface(context),
-                  borderRadius: BorderRadius.circular(AppRadius.card),
-                  border: Border.all(color: AppThemeColors.divider(context)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Security',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: AppThemeColors.textPrimary(context),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Update your account password without leaving the profile page.',
-                      style: TextStyle(
-                        color: AppThemeColors.textSecondary(context),
-                        fontSize: 13,
-                        height: 1.4,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: OutlinedButton.icon(
-                        onPressed: isSignedIn ? _changePassword : null,
-                        icon: const Icon(Icons.lock_reset_rounded),
-                        label: const Text('Change password'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppThemeColors.textPrimary(context),
-                          side: BorderSide(
-                            color: AppThemeColors.divider(context),
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+              ProfileAccountSection(
+                isSignedIn: isSignedIn,
+                onChangePassword: _changePassword,
+                onDeleteAccount: _deleteAccount,
               ),
               const SizedBox(height: 18),
               Container(
@@ -461,6 +417,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
         return const ProfilePasswordDialog();
       },
     );
+  }
+
+  Future<void> _deleteAccount() async {
+    if (user == null) return;
+
+    final deleted = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => ProfileDeleteAccountDialog(
+        onDelete: (reason) =>
+            BackendApi.instance.deleteUserAccount(reason: reason),
+      ),
+    );
+
+    if (deleted != true || !mounted) return;
+    await _logout(context);
   }
 
   Future<void> _openConsentManagement() async {

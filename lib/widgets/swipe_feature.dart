@@ -132,7 +132,7 @@ class SwipeCard extends StatelessWidget {
                           // Prioritize: images[0] (first image from array) > wordImageUrl (fallback)
                           // This provides better visual variety by using the primary image
                           imageUrl: word.images.isNotEmpty
-                              ? word.images.first
+                              ? word.images.first.imageUrl
                               : word.wordImageUrl,
                           size: imageSize,
                         ),
@@ -229,11 +229,13 @@ class BackdropCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textColor = AppThemeColors.textPrimary(context);
+
     return Container(
       width: width,
       height: height,
       decoration: BoxDecoration(
-        color: Colors.transparent,
+        color: AppThemeColors.card(context),
         borderRadius: BorderRadius.circular(34),
         boxShadow: [
           BoxShadow(
@@ -269,26 +271,26 @@ class BackdropCard extends StatelessWidget {
                   CardImage(
                     // Display first image from images array for consistency with front card
                     imageUrl: word.images.isNotEmpty
-                        ? word.images.first
+                        ? word.images.first.imageUrl
                         : word.wordImageUrl,
                     size: (height * 0.40).clamp(100.0, 200.0),
                   ),
                   const SizedBox(height: 12),
                   Text(
                     word.word,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.w900,
-                      color: AppColors.textPrimary,
+                      color: textColor,
                     ),
                   ),
                   const SizedBox(height: 10),
                   Text(
                     word.meaning,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
+                      color: textColor,
                     ),
                   ),
                 ],

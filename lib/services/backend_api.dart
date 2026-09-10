@@ -221,6 +221,16 @@ class BackendApi {
     _decodeResponse(response);
   }
 
+  Future<void> deleteUserAccount({required String reason}) async {
+    final response = await _client.delete(
+      _uri('/api/user/profile'),
+      headers: await _headers(authenticated: true),
+      body: jsonEncode({'reason': reason.trim()}),
+    );
+
+    _decodeResponse(response);
+  }
+
   Future<void> submitReport({
     required String reason,
     required String description,
@@ -1061,7 +1071,15 @@ class BackendApi {
         'categoryName': item.categoryName,
         'examples': item.examples,
         'audioUrl': item.audioUrl,
-        'images': item.images,
+        'images': item.images
+            .map((image) => {'imageUrl': image.imageUrl})
+            .toList(),
+        'videos': item.videos
+            .map((video) => {'videoUrl': video.videoUrl})
+            .toList(),
+        'audios': item.audios
+            .map((audio) => {'audioUrl': audio.audioUrl})
+            .toList(),
         'description': item.description,
         'facts': item.facts,
         'quizModes': item.quizModes,
