@@ -277,7 +277,7 @@ class _AuthScreenState extends State<AuthScreen> {
     const cardBackground = Color(0xFFFFFFFF);
     const primaryText = Color(0xFF0F172A);
     const secondaryText = Color(0xFF475569);
-    const mutedText = Color(0xFF64748B);
+    // const mutedText = Color(0xFF64748B);
     const borderColor = Color(0xFFE2E8F0);
     const primaryBlue = Color(0xFF2563EB);
 
@@ -384,81 +384,88 @@ class _AuthScreenState extends State<AuthScreen> {
                   ),
                 ),
                 if (isLogin) ...[
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Expanded(child: Container(height: 1, color: borderColor)),
-                      const SizedBox(width: 12),
-                      Text(
-                        'or continue with',
-                        style: TextStyle(
-                          color: mutedText,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(child: Container(height: 1, color: borderColor)),
-                    ],
-                  ),
-                  const SizedBox(height: 18),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () {},
-                          icon: Image.asset(
-                            'assets/logo/google_logo.png',
-                            width: 18,
-                            height: 18,
-                          ),
-                          label: const Text(
-                            'Google',
-                            style: TextStyle(
-                              color: Color(0xFF0F172A),
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: primaryText,
-                            backgroundColor: cardBackground,
-                            side: BorderSide(color: borderColor),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(18),
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () {},
-                          icon: Image.asset(
-                            'assets/logo/apple_logo.png',
-                            width: 18,
-                            height: 18,
-                          ),
-                          label: const Text(
-                            'Apple',
-                            style: TextStyle(
-                              color: Color(0xFF0F172A),
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: primaryText,
-                            backgroundColor: cardBackground,
-                            side: BorderSide(color: borderColor),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(18),
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                  // const SizedBox(height: 20),
+                  // Row(
+                  //   children: [
+                  //     Expanded(child: Container(height: 1, color: borderColor)),
+                  //     const SizedBox(width: 12),
+                  //     Text(
+                  //       'or continue with',
+                  //       style: TextStyle(
+                  //         color: mutedText,
+                  //         fontSize: 12,
+                  //         fontWeight: FontWeight.w500,
+                  //       ),
+                  //     ),
+                  //     const SizedBox(width: 12),
+                  //     Expanded(child: Container(height: 1, color: borderColor)),
+                  //   ],
+                  // ),
+                  // const SizedBox(height: 18),
+                  // Row(
+                  //   children: [
+                  //     Expanded(
+                  //       child: OutlinedButton.icon(
+                  //         onPressed: () {},
+                  //         icon: Image.asset(
+                  //           'assets/logo/google_logo.png',
+                  //           width: 18,
+                  //           height: 18,
+                  //         ),
+                  //         label: const Text(
+                  //           'Google',
+                  //           style: TextStyle(
+                  //             color: Color(0xFF0F172A),
+                  //             fontWeight: FontWeight.w600,
+                  //           ),
+                  //         ),
+                  //         style: OutlinedButton.styleFrom(
+                  //           foregroundColor: primaryText,
+                  //           backgroundColor: cardBackground,
+                  //           side: BorderSide(color: borderColor),
+                  //           shape: RoundedRectangleBorder(
+                  //             borderRadius: BorderRadius.circular(18),
+                  //           ),
+                  //           padding: const EdgeInsets.symmetric(vertical: 16),
+                  //         ),
+                  //       ),
+                  //     ),
+                  //     const SizedBox(width: 12),
+                  //     Expanded(
+                  //       child: OutlinedButton.icon(
+                  //         onPressed: () {},
+                  //         icon: Image.asset(
+                  //           'assets/logo/apple_logo.png',
+                  //           width: 18,
+                  //           height: 18,
+                  //         ),
+                  //         label: const Text(
+                  //           'Apple',
+                  //           style: TextStyle(
+                  //             color: Color(0xFF0F172A),
+                  //             fontWeight: FontWeight.w600,
+                  //           ),
+                  //         ),
+                  //         style: OutlinedButton.styleFrom(
+                  //           foregroundColor: primaryText,
+                  //           backgroundColor: cardBackground,
+                  //           side: BorderSide(color: borderColor),
+                  //           shape: RoundedRectangleBorder(
+                  //             borderRadius: BorderRadius.circular(18),
+                  //           ),
+                  //           padding: const EdgeInsets.symmetric(vertical: 16),
+                  //         ),
+                  //       ),
+                  //     ),
+                  //   ],
+                  // ),
+
+
+
+                  //social icons are comment down right now
+
+
+                  
                   const SizedBox(height: 20),
                   Center(
                     child: Row(

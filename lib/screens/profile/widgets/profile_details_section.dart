@@ -13,7 +13,7 @@ class ProfileDetailsSection extends StatelessWidget {
   final VoidCallback onOpenSavedWords;
   final VoidCallback onClearCache;
   final VoidCallback onClearHistory;
-  final VoidCallback onShowLocationNotice;
+  // final VoidCallback onShowLocationNotice;
   final String resolvedAvatarUrl;
 
   const ProfileDetailsSection({
@@ -26,7 +26,7 @@ class ProfileDetailsSection extends StatelessWidget {
     required this.onOpenSavedWords,
     required this.onClearCache,
     required this.onClearHistory,
-    required this.onShowLocationNotice,
+    // required this.onShowLocationNotice,
     required this.resolvedAvatarUrl,
   });
 
@@ -177,7 +177,7 @@ class ProfileDetailsSection extends StatelessWidget {
         _InfoTile(label: 'Username', value: profile.username),
         _InfoTile(label: 'Email', value: profile.email),
         _InfoTile(label: 'Bio', value: _displayValue(profile.bio)),
-        _InfoTile(label: 'Location', value: _displayValue(profile.location)),
+        // _InfoTile(label: 'Location', value: _displayValue(profile.location)),
         _InfoTile(
           label: 'XP to next level',
           value: profile.xpToNextLevel.toString(),
@@ -238,12 +238,16 @@ class ProfileDetailsSection extends StatelessWidget {
           subtitle: '${profile.totalWordsSaved} saved',
           onTap: onOpenSavedWords,
         ),
-        _QuickActionTile(
-          icon: Icons.location_on_outlined,
-          label: 'Location',
-          subtitle: profile.location.isNotEmpty ? profile.location : 'Unknown',
-          onTap: onShowLocationNotice,
-        ),
+
+        //  Location
+        // _QuickActionTile(
+        //   icon: Icons.location_on_outlined,
+        //   label: 'Location',
+        //   subtitle: profile.location.isNotEmpty ? profile.location : 'Unknown',
+        //   onTap: onShowLocationNotice,
+        // ),
+
+
         _QuickActionTile(
           icon: Icons.clear_all_rounded,
           label: 'Clear cache',

@@ -6,17 +6,14 @@ import '../../services/session_store.dart';
 import '../../services/backend_api.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/screen_action_buttons.dart';
+import '../../widgets/settings_widgets.dart';
 import '../auth/auth_screen.dart';
 import 'widgets/profile_saved_words_section.dart';
 import 'saved_words_screen.dart';
 import 'widgets/profile_badges_section.dart';
 import 'widgets/profile_details_section.dart';
-import 'widgets/profile_settings_section.dart';
 import 'widgets/profile_stats_section.dart';
 import 'widgets/profile_edit_dialog.dart';
-import 'widgets/profile_app_info_section.dart';
-import 'widgets/profile_legal_section.dart';
-import 'widgets/profile_support_section.dart';
 import 'widgets/profile_password_dialog.dart';
 import 'widgets/profile_account_section.dart';
 import 'widgets/profile_avatar_helper.dart';
@@ -176,12 +173,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       const SnackBar(content: Text('History cleared.')),
                     );
                   },
-                  onShowLocationNotice: () =>
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Location settings not implemented.'),
-                        ),
-                      ),
+                  // onShowLocationNotice: () =>
+                  //     ScaffoldMessenger.of(context).showSnackBar(
+                  //       const SnackBar(
+                  //         content: Text('Location settings not implemented.'),
+                  //       ),
+                  //     ),
                   resolvedAvatarUrl: ProfileAvatarHelper.resolveAvatarUrl(
                     _profile,
                     user,
@@ -238,113 +235,154 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(height: 18),
                 ],
               ],
-              ProfileSettingsSection(
-                selectedTheme: themeNotifier.value,
-                onThemeChanged: (themeMode) {
-                  setState(() {
-                    themeNotifier.value = themeMode;
-                  });
-                },
-              ),
-              const SizedBox(height: 18),
-              ProfileAppInfoSection(
-                onAboutTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('About section coming soon.')),
-                ),
-                onAppVersionTap: () =>
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('App version details coming soon.'),
-                      ),
-                    ),
-                onRateAppTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Rate app action coming soon.')),
-                ),
-                onShareAppTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Share app action coming soon.'),
+              SettingsSection(
+                title: 'Account',
+                subtitle: 'Manage your account and sign-in settings.',
+                children: [
+                  SettingsTile(
+                    title: 'Account',
+                    icon: Icons.person_outline_rounded,
+                    onTap: _editProfile,
                   ),
-                ),
+                  SettingsTile(
+                    title: 'Security',
+                    icon: Icons.security_outlined,
+                    onTap: isSignedIn ? _changePassword : null,
+                  ),
+                  SettingsTile(
+                    title: 'Delete Account',
+                    icon: Icons.delete_outline_rounded,
+                    onTap: isSignedIn ? _deleteAccount : null,
+                  ),
+                  SettingsTile(
+                    title: 'Log Out',
+                    icon: Icons.logout_rounded,
+                    onTap: isSignedIn ? () => _logout(context) : null,
+                  ),
+                ],
               ),
               const SizedBox(height: 18),
-              ProfileSupportSection(
-                onFAQTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('FAQ will be added soon.')),
-                ),
-                onContactUsTap: () =>
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Contact us will be added soon.'),
-                      ),
-                    ),
-                onReportProblemTap: () async {
-                  await showDialog<void>(
-                    context: context,
-                    builder: (_) => const ProfileReportDialog(),
-                  );
-                },
+              SettingsSection(
+                title: 'Preferences',
+                subtitle: 'Customize how KLUG works for you.',
+                children: [
+                  SettingsTile(
+                    title: 'Language',
+                    icon: Icons.language_rounded,
+                    onTap: () => _showPlaceholder('Language settings'),
+                  ),
+                  SettingsTile(
+                    title: 'Notifications',
+                    icon: Icons.notifications_none_rounded,
+                    onTap: () => _showPlaceholder('Notification settings'),
+                  ),
+                  SettingsTile(
+                    title: 'Appearance',
+                    icon: Icons.palette_outlined,
+                    onTap: _showAppearanceSettings,
+                  ),
+                ],
               ),
               const SizedBox(height: 18),
-              ProfileLegalSection(
-                onPrivacyPolicyTap: () =>
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Privacy Policy will be added soon.'),
-                      ),
-                    ),
-                onTermsOfUseTap: () =>
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Terms of Use will be added soon.'),
-                      ),
-                    ),
-                onConsentmanagement: _openConsentManagement,
+              SettingsSection(
+                title: 'About',
+                subtitle:
+                    'Quick access to app information and sharing options.',
+                children: [
+                  SettingsTile(
+                    title: 'About',
+                    icon: Icons.info_outline_rounded,
+                    onTap: () => _showPlaceholder('About'),
+                  ),
+                  SettingsTile(
+                    title: 'App Version',
+                    icon: Icons.rocket_launch_outlined,
+                    onTap: () => _showPlaceholder('App version details'),
+                  ),
+                  SettingsTile(
+                    title: 'Rate App',
+                    icon: Icons.star_outline_rounded,
+                    onTap: () => _showPlaceholder('Rate app'),
+                  ),
+                  SettingsTile(
+                    title: 'Share App',
+                    icon: Icons.share_outlined,
+                    onTap: () => _showPlaceholder('Share app'),
+                  ),
+                ],
               ),
               const SizedBox(height: 18),
-              ProfileAccountSection(
-                isSignedIn: isSignedIn,
-                onChangePassword: _changePassword,
-                onDeleteAccount: _deleteAccount,
+              SettingsSection(
+                title: 'Support',
+                subtitle:
+                    'Need help? Browse common questions or reach out to us directly.',
+                children: [
+                  SettingsTile(
+                    title: 'FAQ',
+                    icon: Icons.quiz_outlined,
+                    onTap: () => _showPlaceholder('FAQ'),
+                  ),
+                  SettingsTile(
+                    title: 'Contact Us',
+                    icon: Icons.mail_outline_rounded,
+                    onTap: () => _showPlaceholder('Contact Us'),
+                  ),
+                  SettingsTile(
+                    title: 'Report a Problem',
+                    icon: Icons.report_problem_outlined,
+                    onTap: () async {
+                      await showDialog<void>(
+                        context: context,
+                        builder: (_) => const ProfileReportDialog(),
+                      );
+                    },
+                  ),
+                ],
               ),
               const SizedBox(height: 18),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: AppThemeColors.challengeCard(context).withAlpha(31),
-                  borderRadius: BorderRadius.circular(AppRadius.card),
-                  border: Border.all(color: AppThemeColors.divider(context)),
-                ),
-                child: Text(
-                  isSignedIn
-                      ? 'Signed in sessions are restored automatically on launch.'
-                      : 'Log in to see your profile details and unlock progress sync.',
+              SettingsSection(
+                title: 'Privacy & Legal',
+                subtitle:
+                    'Review the policies and terms that apply to your account.',
+                children: [
+                  SettingsTile(
+                    title: 'Privacy Policy',
+                    icon: Icons.privacy_tip_outlined,
+                    onTap: () => _showPlaceholder('Privacy Policy'),
+                  ),
+                  SettingsTile(
+                    title: 'Terms of Use',
+                    icon: Icons.description_outlined,
+                    onTap: () => _showPlaceholder('Terms of Use'),
+                  ),
+                  SettingsTile(
+                    title: 'Consent Management',
+                    icon: Icons.fact_check_outlined,
+                    onTap: _openConsentManagement,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              SettingsSection(
+                title: 'Other',
+                children: [
+                  SettingsTile(
+                    title: 'Open Source Licenses',
+                    icon: Icons.code_outlined,
+                    onTap: () => showLicensePage(context: context),
+                  ),
+                ],
+              ),
+              if (!isSignedIn) ...[
+                const SizedBox(height: 18),
+                Text(
+                  'Log in to manage your account settings.',
                   style: TextStyle(
-                    color: AppThemeColors.textPrimary(context),
-                    fontSize: 14,
-                    height: 1.5,
+                    color: AppThemeColors.textSecondary(context),
+                    fontSize: 13,
                   ),
                 ),
-              ),
-              const SizedBox(height: 18),
-              SizedBox(
-                width: double.infinity,
-                height: 54,
-                child: ElevatedButton(
-                  onPressed: isSignedIn ? () => _logout(context) : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppThemeColors.challengeCard(context),
-                    foregroundColor: AppThemeColors.textOnPrimary(context),
-                    shadowColor: AppThemeColors.shadow(context).withAlpha(72),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                  ),
-                  child: Text(
-                    isSignedIn ? 'Log out' : 'Log in to manage profile',
-                  ),
-                ),
-              ),
+              ],
             ],
           ),
         ),
@@ -416,6 +454,55 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (dialogContext) {
         return const ProfilePasswordDialog();
       },
+    );
+  }
+
+  void _showPlaceholder(String label) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('$label is not available yet.')));
+  }
+
+  Future<void> _showAppearanceSettings() async {
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            title: const Text('Appearance'),
+            content: SegmentedButton<ThemeMode>(
+              segments: const [
+                ButtonSegment(
+                  value: ThemeMode.light,
+                  label: Text('Light'),
+                  icon: Icon(Icons.light_mode_outlined),
+                ),
+                ButtonSegment(
+                  value: ThemeMode.dark,
+                  label: Text('Dark'),
+                  icon: Icon(Icons.dark_mode_outlined),
+                ),
+                ButtonSegment(
+                  value: ThemeMode.system,
+                  label: Text('System'),
+                  icon: Icon(Icons.settings_brightness_outlined),
+                ),
+              ],
+              selected: {themeNotifier.value},
+              onSelectionChanged: (selection) {
+                themeNotifier.value = selection.first;
+                setDialogState(() {});
+              },
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text('Done'),
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 
