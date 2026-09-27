@@ -7,6 +7,7 @@ import '../../services/session_store.dart';
 import '../home/home_screen.dart';
 import 'login_screen.dart';
 import 'register_screen.dart';
+import '../profile/widgets/date_of_birth_dialog.dart';
 
 enum _AuthMode { login, register }
 
@@ -188,6 +189,14 @@ class _AuthScreenState extends State<AuthScreen> {
 
       if (user != null) {
         await SessionStore.saveUser(user);
+        if (!mounted) {
+          return;
+        }
+        await showDialog<void>(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => const DateOfBirthDialog(canSkip: true),
+        );
         if (!mounted) {
           return;
         }
@@ -460,12 +469,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   //   ],
                   // ),
 
-
-
                   //social icons are comment down right now
-
-
-                  
                   const SizedBox(height: 20),
                   Center(
                     child: Row(

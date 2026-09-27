@@ -1,4 +1,4 @@
-package com.example.word_frontend
+package com.nroq.word
 
 import android.view.LayoutInflater
 import android.widget.Button
@@ -9,7 +9,6 @@ import com.google.android.gms.ads.nativead.NativeAd
 import com.google.android.gms.ads.nativead.NativeAdView
 
 import io.flutter.plugins.googlemobileads.GoogleMobileAdsPlugin
-
 class SwipeNativeAdFactory(
     private val layoutInflater: LayoutInflater
 ) : GoogleMobileAdsPlugin.NativeAdFactory {

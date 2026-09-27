@@ -10,7 +10,7 @@ import 'screens/home&alanding/loading_screen.dart';
 import 'firebase_options.dart';
 import 'theme/app_theme.dart';
 
-const String _themeModeKey = 'klug_theme_mode';
+const String _themeModeKey = 'nroq_theme_mode';
 
 // Global theme notifier
 final themeNotifier = ValueNotifier<ThemeMode>(ThemeMode.dark);
@@ -91,7 +91,7 @@ class _WordAppState extends State<WordApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'KLUG',
+      title: 'NROQ',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.getLightTheme(),
       darkTheme: AppTheme.getDarkTheme(),

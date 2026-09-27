@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../main.dart';
 import '../../models/profile_models.dart';
@@ -7,6 +8,7 @@ import '../../services/backend_api.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/screen_action_buttons.dart';
 import '../../widgets/settings_widgets.dart';
+import 'package:share_plus/share_plus.dart';
 import '../auth/auth_screen.dart';
 import 'widgets/profile_saved_words_section.dart';
 import 'saved_words_screen.dart';
@@ -14,10 +16,10 @@ import 'widgets/profile_badges_section.dart';
 import 'widgets/profile_details_section.dart';
 import 'widgets/profile_stats_section.dart';
 import 'widgets/profile_edit_dialog.dart';
-import 'widgets/profile_password_dialog.dart';
-import 'widgets/profile_account_section.dart';
 import 'widgets/profile_avatar_helper.dart';
 import 'widgets/profile_report_dialog.dart';
+import 'widgets/date_of_birth_dialog.dart';
+import 'settings_detail_page.dart';
 
 class ProfileScreen extends StatefulWidget {
   final UserProfile? user;
@@ -34,6 +36,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _loadingProfile = false;
   dynamic _quizStats;
   bool _loadingStats = false;
+  bool _dateOfBirthPromptShown = false;
   dynamic _cachedQuizStats;
   DateTime? _cacheTime;
   static const Duration _cacheExpiration = Duration(hours: 24);
@@ -66,6 +69,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _profile = _mergeAvatarPreference(profile);
           _loadingProfile = false;
         });
+        if (profile.dateOfBirth == null && !_dateOfBirthPromptShown) {
+          _dateOfBirthPromptShown = true;
+          if (!context.mounted) {
+            return;
+          }
+          final selectedDate = await showDialog<DateTime>(
+            context: context,
+            barrierDismissible: false,
+            builder: (_) => const DateOfBirthDialog(canSkip: true),
+          );
+          if (selectedDate != null && context.mounted) {
+            setState(() {
+              _profile = _profile?.copyWith(dateOfBirth: selectedDate);
+            });
+          }
+        }
       }
     } catch (_) {
       if (mounted) {
@@ -242,17 +261,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   SettingsTile(
                     title: 'Account',
                     icon: Icons.person_outline_rounded,
-                    onTap: _editProfile,
+                    onTap: () => _openSettingsPage(
+                      title: 'Account',
+                      description: 'Account details and profile settings.',
+                      icon: Icons.person_outline_rounded,
+                    ),
                   ),
                   SettingsTile(
                     title: 'Security',
                     icon: Icons.security_outlined,
-                    onTap: isSignedIn ? _changePassword : null,
+                    onTap: () => _openSettingsPage(
+                      title: 'Security',
+                      description:
+                          'Security settings will be connected to your account service.',
+                      icon: Icons.security_outlined,
+                    ),
                   ),
                   SettingsTile(
                     title: 'Delete Account',
                     icon: Icons.delete_outline_rounded,
-                    onTap: isSignedIn ? _deleteAccount : null,
+                    onTap: () => _openSettingsPage(
+                      title: 'Delete Account',
+                      description:
+                          'Account deletion functionality will be connected to your account service.',
+                      icon: Icons.delete_outline_rounded,
+                    ),
                   ),
                   SettingsTile(
                     title: 'Log Out',
@@ -264,22 +297,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 18),
               SettingsSection(
                 title: 'Preferences',
-                subtitle: 'Customize how KLUG works for you.',
+                subtitle: 'Customize how NROQ works for you.',
                 children: [
                   SettingsTile(
                     title: 'Language',
                     icon: Icons.language_rounded,
-                    onTap: () => _showPlaceholder('Language settings'),
+                    onTap: () => _openSettingsPage(
+                      title: 'Language',
+                      description:
+                          'Language preferences will be available here.',
+                      icon: Icons.language_rounded,
+                    ),
                   ),
                   SettingsTile(
                     title: 'Notifications',
                     icon: Icons.notifications_none_rounded,
-                    onTap: () => _showPlaceholder('Notification settings'),
+                    onTap: () => _openSettingsPage(
+                      title: 'Notifications',
+                      description:
+                          'Notification preferences will be connected to notification services.',
+                      icon: Icons.notifications_none_rounded,
+                    ),
                   ),
                   SettingsTile(
                     title: 'Appearance',
                     icon: Icons.palette_outlined,
-                    onTap: _showAppearanceSettings,
+                    onTap: () => _openSettingsPage(
+                      title: 'Appearance',
+                      description: 'Choose how NROQ looks on your device.',
+                      icon: Icons.palette_outlined,
+                      content: _appearanceControl(),
+                    ),
                   ),
                 ],
               ),
@@ -292,22 +340,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   SettingsTile(
                     title: 'About',
                     icon: Icons.info_outline_rounded,
-                    onTap: () => _showPlaceholder('About'),
+                    onTap: () => _openSettingsPage(
+                      title: 'About',
+                      description: 'Information about the NROQ app.',
+                      icon: Icons.info_outline_rounded,
+                    ),
                   ),
                   SettingsTile(
                     title: 'App Version',
                     icon: Icons.rocket_launch_outlined,
-                    onTap: () => _showPlaceholder('App version details'),
+                    onTap: () => _openSettingsPage(
+                      title: 'App Version',
+                      description: 'NROQ version information will appear here.',
+                      icon: Icons.rocket_launch_outlined,
+                    ),
                   ),
                   SettingsTile(
                     title: 'Rate App',
                     icon: Icons.star_outline_rounded,
-                    onTap: () => _showPlaceholder('Rate app'),
+                    onTap: () => _openSettingsPage(
+                      title: 'Rate App',
+                      description:
+                          'App review functionality will be connected here.',
+                      icon: Icons.star_outline_rounded,
+                    ),
                   ),
                   SettingsTile(
                     title: 'Share App',
                     icon: Icons.share_outlined,
-                    onTap: () => _showPlaceholder('Share app'),
+                    onTap: () => Share.share(
+                      'Discover NROQ, your vocabulary learning companion.',
+                      subject: 'NROQ',
+                    ),
                   ),
                 ],
               ),
@@ -320,12 +384,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   SettingsTile(
                     title: 'FAQ',
                     icon: Icons.quiz_outlined,
-                    onTap: () => _showPlaceholder('FAQ'),
+                    onTap: () => _openSettingsPage(
+                      title: 'FAQ',
+                      description:
+                          'Frequently asked questions will appear here.',
+                      icon: Icons.quiz_outlined,
+                    ),
                   ),
                   SettingsTile(
                     title: 'Contact Us',
                     icon: Icons.mail_outline_rounded,
-                    onTap: () => _showPlaceholder('Contact Us'),
+                    onTap: () => _openSettingsPage(
+                      title: 'Contact Us',
+                      description: 'Contact options will be connected here.',
+                      icon: Icons.mail_outline_rounded,
+                    ),
                   ),
                   SettingsTile(
                     title: 'Report a Problem',
@@ -348,17 +421,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   SettingsTile(
                     title: 'Privacy Policy',
                     icon: Icons.privacy_tip_outlined,
-                    onTap: () => _showPlaceholder('Privacy Policy'),
+                    onTap: () => _openLegalLink(
+                      Uri.parse('https://www.nroq.in/privacy-policy'),
+                    ),
                   ),
                   SettingsTile(
                     title: 'Terms of Use',
                     icon: Icons.description_outlined,
-                    onTap: () => _showPlaceholder('Terms of Use'),
+                    onTap: () => _openLegalLink(
+                      Uri.parse('https://www.nroq.in/terms-of-service'),
+                    ),
                   ),
                   SettingsTile(
                     title: 'Consent Management',
                     icon: Icons.fact_check_outlined,
-                    onTap: _openConsentManagement,
+                    onTap: () => _openLegalLink(
+                      Uri.parse('https://www.nroq.in/privacy-consent'),
+                    ),
                   ),
                 ],
               ),
@@ -443,102 +522,61 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Future<void> _changePassword() async {
-    if (user == null) {
-      return;
-    }
-
-    await showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) {
-        return const ProfilePasswordDialog();
-      },
-    );
-  }
-
-  void _showPlaceholder(String label) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('$label is not available yet.')));
-  }
-
-  Future<void> _showAppearanceSettings() async {
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) {
-          return AlertDialog(
-            title: const Text('Appearance'),
-            content: SegmentedButton<ThemeMode>(
-              segments: const [
-                ButtonSegment(
-                  value: ThemeMode.light,
-                  label: Text('Light'),
-                  icon: Icon(Icons.light_mode_outlined),
-                ),
-                ButtonSegment(
-                  value: ThemeMode.dark,
-                  label: Text('Dark'),
-                  icon: Icon(Icons.dark_mode_outlined),
-                ),
-                ButtonSegment(
-                  value: ThemeMode.system,
-                  label: Text('System'),
-                  icon: Icon(Icons.settings_brightness_outlined),
-                ),
-              ],
-              selected: {themeNotifier.value},
-              onSelectionChanged: (selection) {
-                themeNotifier.value = selection.first;
-                setDialogState(() {});
-              },
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(),
-                child: const Text('Done'),
-              ),
-            ],
-          );
-        },
+  void _openSettingsPage({
+    required String title,
+    required String description,
+    required IconData icon,
+    Widget? content,
+  }) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => SettingsDetailPage(
+          title: title,
+          description: description,
+          icon: icon,
+          content: content,
+        ),
       ),
     );
   }
 
-  Future<void> _deleteAccount() async {
-    if (user == null) return;
-
-    final deleted = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => ProfileDeleteAccountDialog(
-        onDelete: (reason) =>
-            BackendApi.instance.deleteUserAccount(reason: reason),
-      ),
-    );
-
-    if (deleted != true || !mounted) return;
-    await _logout(context);
-  }
-
-  Future<void> _openConsentManagement() async {
-    if (user == null) {
+  Future<void> _openLegalLink(Uri uri) async {
+    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!launched && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please log in to view your consents.')),
+        const SnackBar(content: Text('Unable to open this page.')),
       );
-      return;
     }
+  }
 
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: AppThemeColors.background(context),
-      builder: (_) => FractionallySizedBox(
-        heightFactor: 0.82,
-        child: _ConsentManagementSheet(formatDateTime: _formatDateTime),
-      ),
+  Widget _appearanceControl() {
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: themeNotifier,
+      builder: (context, selectedTheme, _) {
+        return SegmentedButton<ThemeMode>(
+          segments: const [
+            ButtonSegment(
+              value: ThemeMode.light,
+              label: Text('Light'),
+              icon: Icon(Icons.light_mode_outlined),
+            ),
+            ButtonSegment(
+              value: ThemeMode.dark,
+              label: Text('Dark'),
+              icon: Icon(Icons.dark_mode_outlined),
+            ),
+            ButtonSegment(
+              value: ThemeMode.system,
+              label: Text('System'),
+              icon: Icon(Icons.settings_brightness_outlined),
+            ),
+          ],
+          selected: {selectedTheme},
+          onSelectionChanged: (selection) {
+            themeNotifier.value = selection.first;
+          },
+        );
+      },
     );
   }
 
@@ -548,260 +586,5 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   String _avatarSeed(UserProfile? profile) {
     return ProfileAvatarHelper.avatarSeed(profile);
-  }
-
-  String _formatDateTime(DateTime? value) {
-    if (value == null) {
-      return 'Not set';
-    }
-
-    final local = value.toLocal();
-    final month = local.month.toString().padLeft(2, '0');
-    final day = local.day.toString().padLeft(2, '0');
-    final hour = local.hour.toString().padLeft(2, '0');
-    final minute = local.minute.toString().padLeft(2, '0');
-    return '${local.year}-$month-$day $hour:$minute';
-  }
-}
-
-class _ConsentManagementSheet extends StatefulWidget {
-  final String Function(DateTime?) formatDateTime;
-
-  const _ConsentManagementSheet({required this.formatDateTime});
-
-  @override
-  State<_ConsentManagementSheet> createState() =>
-      _ConsentManagementSheetState();
-}
-
-class _ConsentManagementSheetState extends State<_ConsentManagementSheet> {
-  late Future<List<UserConsent>> _futureConsents;
-
-  @override
-  void initState() {
-    super.initState();
-    _futureConsents = BackendApi.instance.fetchUserConsents();
-  }
-
-  void _reload() {
-    setState(() {
-      _futureConsents = BackendApi.instance.fetchUserConsents();
-    });
-  }
-
-  Color _statusColor(String status, BuildContext context) {
-    final normalized = status.trim().toUpperCase();
-    if (normalized == 'GRANTED') {
-      return const Color(0xFF36C68A);
-    }
-    if (normalized == 'WITHDRAWN') {
-      return const Color(0xFFFF8C7A);
-    }
-    return AppThemeColors.textSecondary(context);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppThemeColors.background(context),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 42,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppThemeColors.divider(context),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-              ),
-            ),
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Consent Management',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                      color: AppThemeColors.textPrimary(context),
-                    ),
-                  ),
-                ),
-                IconButton(
-                  onPressed: _reload,
-                  icon: const Icon(Icons.refresh_rounded),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Your consent history with document title, status, accepted time, and source.',
-              style: TextStyle(
-                color: AppThemeColors.textSecondary(context),
-                fontSize: 13,
-                height: 1.4,
-              ),
-            ),
-            const SizedBox(height: 14),
-            Expanded(
-              child: FutureBuilder<List<UserConsent>>(
-                future: _futureConsents,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState != ConnectionState.done) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  if (snapshot.hasError) {
-                    return Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'Failed to load consents',
-                            style: TextStyle(
-                              color: AppThemeColors.textPrimary(
-                                context,
-                              ).withAlpha(220),
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            snapshot.error.toString(),
-                            style: TextStyle(
-                              color: AppThemeColors.textSecondary(context),
-                              fontSize: 13,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 12),
-                          OutlinedButton(
-                            onPressed: _reload,
-                            child: const Text('Retry'),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-
-                  final consents = snapshot.data ?? const <UserConsent>[];
-                  if (consents.isEmpty) {
-                    return Center(
-                      child: Text(
-                        'No consent records found.',
-                        style: TextStyle(
-                          color: AppThemeColors.textSecondary(context),
-                        ),
-                      ),
-                    );
-                  }
-
-                  return ListView.separated(
-                    itemCount: consents.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
-                    itemBuilder: (context, index) {
-                      final consent = consents[index];
-                      return Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: AppThemeColors.surface(context),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: AppThemeColors.divider(context),
-                          ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              consent.legalDocumentTitle.isNotEmpty
-                                  ? consent.legalDocumentTitle
-                                  : consent.legalDocumentType,
-                              style: TextStyle(
-                                color: AppThemeColors.textPrimary(context),
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            _ConsentDetailRow(
-                              label: 'Status',
-                              value: consent.status,
-                              valueColor: _statusColor(consent.status, context),
-                            ),
-                            const SizedBox(height: 6),
-                            _ConsentDetailRow(
-                              label: 'Accepted At',
-                              value: widget.formatDateTime(consent.acceptedAt),
-                            ),
-                            const SizedBox(height: 6),
-                            _ConsentDetailRow(
-                              label: 'Accepted From',
-                              value: consent.acceptedFrom.isNotEmpty
-                                  ? consent.acceptedFrom
-                                  : 'Unknown',
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ConsentDetailRow extends StatelessWidget {
-  final String label;
-  final String value;
-  final Color? valueColor;
-
-  const _ConsentDetailRow({
-    required this.label,
-    required this.value,
-    this.valueColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 100,
-          child: Text(
-            label,
-            style: TextStyle(
-              color: AppThemeColors.textSecondary(context),
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-        Expanded(
-          child: Text(
-            value,
-            style: TextStyle(
-              color: valueColor ?? AppThemeColors.textPrimary(context),
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ],
-    );
   }
 }

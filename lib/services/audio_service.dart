@@ -107,7 +107,7 @@ class AudioService {
     if (text.isEmpty) return;
     try {
       await _setFemaleVoice();
-      await _flutterTts.setSpeechRate(0.45);
+      await _flutterTts.setSpeechRate(1.0);
       await _flutterTts.setVolume(1.0);
       await _flutterTts.setPitch(1.0);
       // ignore: avoid_print

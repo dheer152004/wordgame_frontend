@@ -26,8 +26,14 @@ import 'word_sheet_details.dart';
 class FlashCardsScreen extends StatefulWidget {
   final int? categoryId;
   final String? categoryName;
+  final ApiWord? initialWord;
 
-  const FlashCardsScreen({super.key, this.categoryId, this.categoryName});
+  const FlashCardsScreen({
+    super.key,
+    this.categoryId,
+    this.categoryName,
+    this.initialWord,
+  });
 
   @override
   State<FlashCardsScreen> createState() => _FlashCardsScreenState();
@@ -132,6 +138,7 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
               : 'Category $requestedCategoryId')
         : _randomCategoryKey;
     final initialCategoryId = requestedCategoryId;
+    final initialWord = widget.initialWord;
 
     if (!mounted) return;
     setState(() {
@@ -139,9 +146,21 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
         ..clear()
         ..addAll(categories);
       _loadingCategories = false;
-      _selectedCategoryLabel = initialCategory;
-      _selectedCategoryId = initialCategoryId;
+      _selectedCategoryLabel =
+          initialWord != null && initialWord.categoryName.isNotEmpty
+          ? initialWord.categoryName
+          : initialCategory;
+      _selectedCategoryId = initialWord?.categoryId ?? initialCategoryId;
+      if (initialWord != null) {
+        _words = [initialWord];
+        _loadingWords = false;
+      }
     });
+
+    if (initialWord != null) {
+      _scheduleVisibleImagePreload();
+      return;
+    }
 
     await _loadWordsForSelection(initialCategory, showLoader: false);
   }
@@ -398,7 +417,7 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
         final Uint8List pngBytes = byteData!.buffer.asUint8List();
 
         final tempDir = await getTemporaryDirectory();
-        final file = File('${tempDir.path}/klug_card_${word.word}.png');
+        final file = File('${tempDir.path}/nroq_card_${word.word}.png');
         await file.writeAsBytes(pngBytes);
 
         await Share.shareXFiles(

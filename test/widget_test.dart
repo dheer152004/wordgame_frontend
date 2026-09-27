@@ -9,7 +9,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:word_frontend/main.dart';
+import 'package:word/main.dart';
 
 void main() {
   testWidgets('shows the auth screen when there is no saved session', (
@@ -21,7 +21,7 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    expect(find.text('KLUG'), findsWidgets);
+    expect(find.text('NROQ'), findsWidgets);
     expect(find.text('Forgot password?'), findsOneWidget);
   });
 

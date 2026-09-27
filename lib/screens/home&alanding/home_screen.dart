@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../theme/app_theme.dart';
 import '../home/widget/home_header.dart';
-import '../home/widget/daily_challenge_card.dart';
 import '../../widgets/categories_section.dart';
 import '../home/widget/home_bottom_nav.dart';
 import '../../models/profile_models.dart';
@@ -41,7 +40,6 @@ class HomeScreen extends StatelessWidget {
                     const SizedBox(height: 16),
                     HomeHeader(user: user),
                     const SizedBox(height: 24),
-                    const DailyChallengeCard(),
                     const SizedBox(height: 24),
                     const CategoriesSection(),
                     const SizedBox(height: 16),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:word_frontend/services/backend_api.dart';
+import 'package:Nroq/services/backend_api.dart';
 
 import '../models/word_Content_models.dart';
 import '../services/audio_service.dart';
@@ -297,7 +297,7 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
 
       shareText
         ..writeln()
-        ..writeln('Get more exciting words on KLUG');
+        ..writeln('Get more exciting words on NROQ');
 
       await Share.share(
         shareText.toString().trim(),

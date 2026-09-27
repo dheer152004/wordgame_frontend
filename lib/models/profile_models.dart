@@ -19,6 +19,7 @@ class UserProfile {
   final int wordsMastered;
   final DateTime? lastActive;
   final DateTime? createdAt;
+  final DateTime? dateOfBirth;
   final String lastQuizDate;
   final List<String> recentBadges;
 
@@ -43,6 +44,7 @@ class UserProfile {
     required this.wordsMastered,
     required this.lastActive,
     required this.createdAt,
+    required this.dateOfBirth,
     required this.lastQuizDate,
     required this.recentBadges,
   });
@@ -69,6 +71,7 @@ class UserProfile {
       wordsMastered: _readInt(json['wordsMastered']),
       lastActive: _readDateTime(json['lastActive']),
       createdAt: _readDateTime(json['createdAt']),
+      dateOfBirth: _readDateTime(json['dateOfBirth']),
       lastQuizDate: json['lastQuizDate']?.toString() ?? '',
       recentBadges: _readStringList(json['recentBadges']),
     );
@@ -96,6 +99,7 @@ class UserProfile {
       'wordsMastered': wordsMastered,
       'lastActive': _dateToJson(lastActive),
       'createdAt': _dateToJson(createdAt),
+      'dateOfBirth': _dateToJson(dateOfBirth),
       'lastQuizDate': lastQuizDate,
       'recentBadges': recentBadges,
     };
@@ -122,6 +126,7 @@ class UserProfile {
     int? wordsMastered,
     DateTime? lastActive,
     DateTime? createdAt,
+    DateTime? dateOfBirth,
     String? lastQuizDate,
     List<String>? recentBadges,
   }) {
@@ -147,6 +152,7 @@ class UserProfile {
       wordsMastered: wordsMastered ?? this.wordsMastered,
       lastActive: lastActive ?? this.lastActive,
       createdAt: createdAt ?? this.createdAt,
+      dateOfBirth: dateOfBirth ?? this.dateOfBirth,
       lastQuizDate: lastQuizDate ?? this.lastQuizDate,
       recentBadges: recentBadges ?? this.recentBadges,
     );

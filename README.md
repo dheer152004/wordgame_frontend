@@ -1,4 +1,4 @@
-# word_frontend
+# word
 
 A new Flutter project.
 

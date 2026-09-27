@@ -96,7 +96,10 @@ class RegisterScreen extends StatelessWidget {
             child: RichText(
               textAlign: TextAlign.center,
               text: TextSpan(
-                style: const TextStyle(color: Color.fromARGB(179, 21, 20, 20), fontSize: 12),
+                style: const TextStyle(
+                  color: Color.fromARGB(179, 21, 20, 20),
+                  fontSize: 12,
+                ),
                 children: [
                   const TextSpan(text: 'By signing in you accept our '),
                   TextSpan(
@@ -108,7 +111,7 @@ class RegisterScreen extends StatelessWidget {
                     recognizer: TapGestureRecognizer()
                       ..onTap = () async {
                         await launchUrl(
-                          Uri.parse('https://github.com'),
+                          Uri.parse('https://nroq.in/terms-of-service'),
                           mode: LaunchMode.externalApplication,
                         );
                       },
@@ -123,7 +126,7 @@ class RegisterScreen extends StatelessWidget {
                     recognizer: TapGestureRecognizer()
                       ..onTap = () async {
                         await launchUrl(
-                          Uri.parse('https://github.com'),
+                          Uri.parse('https://nroq.in/privacy-policy'),
                           mode: LaunchMode.externalApplication,
                         );
                       },

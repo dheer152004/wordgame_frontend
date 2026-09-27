@@ -28,7 +28,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:366418846443:android:467008be10e7bc514794ae",
         "android_client_info": {
-          "package_name": "com.example.word_frontend"
+          "package_name": "com.nroq.word"
         }
       },
       "oauth_client": [],

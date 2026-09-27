@@ -5,8 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/profile_models.dart';
 
 class SessionStore {
-  static const String _userKey = 'word_frontend_auth_user';
-  static const String _usernameKey = 'word_frontend_login_username';
+  static const String _userKey = 'word_auth_user';
+  static const String _usernameKey = 'word_login_username';
   static UserProfile? _currentUser;
 
   static Future<void> saveUser(UserProfile user) async {
@@ -71,7 +71,7 @@ class SessionStore {
     await preferences.remove(_usernameKey);
   }
 
-  static const String _onboardingKey = 'word_frontend_onboarding_complete';
+  static const String _onboardingKey = 'word_onboarding_complete';
 
   static Future<bool> hasSeenOnboarding() async {
     final preferences = await SharedPreferences.getInstance();
@@ -87,11 +87,11 @@ class SessionStore {
   // and no-op if not present.
   static Future<void> clearCache() async {
     final preferences = await SharedPreferences.getInstance();
-    await preferences.remove('word_frontend_app_cache');
+    await preferences.remove('word_app_cache');
   }
 
   static Future<void> clearHistory() async {
     final preferences = await SharedPreferences.getInstance();
-    await preferences.remove('word_frontend_activity_history');
+    await preferences.remove('word_activity_history');
   }
 }

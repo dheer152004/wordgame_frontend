@@ -1,6 +1,6 @@
 {
-    "name": "KLUG - Word Learning Game",
-    "short_name": "KLUG",
+    "name": "NROQ - Visual Vocabulary Library",
+    "short_name": "NROQ",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#05070D",
@@ -10,25 +10,25 @@
     "prefer_related_applications": false,
     "icons": [
         {
-            "src": "icons/Icon-192.png",
+            "src": "icons/nqlogo.svg",
             "sizes": "192x192",
-            "type": "image/png"
+            "type": "image/svg+xml"
         },
         {
-            "src": "icons/Icon-512.png",
+            "src": "icons/nqlogo.svg",
             "sizes": "512x512",
-            "type": "image/png"
+            "type": "image/svg+xml"
         },
         {
-            "src": "icons/Icon-maskable-192.png",
+            "src": "icons/nqlogo.svg",
             "sizes": "192x192",
-            "type": "image/png",
+            "type": "image/svg+xml",
             "purpose": "maskable"
         },
         {
-            "src": "icons/Icon-maskable-512.png",
+            "src": "icons/nqlogo.svg",
             "sizes": "512x512",
-            "type": "image/png",
+            "type": "image/svg+xml",
             "purpose": "maskable"
         }
     ]

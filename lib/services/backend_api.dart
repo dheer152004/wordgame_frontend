@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -60,8 +61,8 @@ class BackendApi {
 
   String get baseUrl => AppConfig.backendApiBaseUrl;
   static const Duration _cacheTtl = Duration(hours: 6);
-  static const String _categoriesCacheKey = 'word_frontend_categories_cache';
-  static const String _wordDetailCachePrefix = 'word_frontend_word_detail_v2_';
+  static const String _categoriesCacheKey = 'word_categories_cache';
+  static const String _wordDetailCachePrefix = 'word_word_detail_v2_';
   static const String _ipLocationLookupBestEffortUrl = 'https://ipinfo.io/json';
   static const String _ipLocationLookupPrimaryUrl = 'https://ipwho.is/';
   static const String _ipLocationLookupFallbackUrl = 'https://ipapi.co/json/';
@@ -203,6 +204,23 @@ class BackendApi {
     );
   }
 
+  Future<void> updateDateOfBirth(DateTime dateOfBirth) async {
+    final response = await _client.put(
+      _uri('/api/user/profile/date-of-birth'),
+      headers: await _headers(authenticated: true),
+      body: jsonEncode({'dateOfBirth': _dateToApiString(dateOfBirth)}),
+    );
+
+    _decodeResponse(response);
+  }
+
+  String _dateToApiString(DateTime value) {
+    final year = value.year.toString().padLeft(4, '0');
+    final month = value.month.toString().padLeft(2, '0');
+    final day = value.day.toString().padLeft(2, '0');
+    return '$year-$month-$day';
+  }
+
   Future<void> changePassword({
     required String currentPassword,
     required String newPassword,
@@ -234,22 +252,31 @@ class BackendApi {
   Future<void> submitReport({
     required String reason,
     required String description,
-    List<String>? screenshotUrls,
+    List<PlatformFile>? screenshotFiles,
   }) async {
-    final body = <String, dynamic>{
-      'reason': reason,
-      'description': description,
-    };
-    if (screenshotUrls != null && screenshotUrls.isNotEmpty) {
-      body['screenshotUrls'] = screenshotUrls;
+    final request = http.MultipartRequest('POST', _uri('/api/report'))
+      ..headers.addAll(await SessionStore.authorizationHeaders())
+      ..fields['reason'] = reason
+      ..fields['description'] = description;
+
+    for (final file in screenshotFiles ?? const <PlatformFile>[]) {
+      if (file.bytes != null) {
+        request.files.add(
+          http.MultipartFile.fromBytes(
+            'screenshotFiles',
+            file.bytes!,
+            filename: file.name,
+          ),
+        );
+      } else if (file.path != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath('screenshotFiles', file.path!),
+        );
+      }
     }
 
-    final response = await _client.post(
-      _uri('/api/report'),
-      headers: await _headers(authenticated: true),
-      body: jsonEncode(body),
-    );
-
+    final streamedResponse = await _client.send(request);
+    final response = await http.Response.fromStream(streamedResponse);
     _decodeResponse(response);
   }
 
@@ -762,6 +789,43 @@ class BackendApi {
     }
 
     throw const BackendException('Unexpected word response from server.');
+  }
+
+  Future<ApiWord> fetchWordOfTheDay() async {
+    final response = await _client.get(
+      _uri('/api/word-of-the-day'),
+      headers: await _headers(authenticated: true),
+    );
+
+    final payload = _decodeResponse(response);
+    if (payload is! Map || payload['wordOfTheDay'] is! Map) {
+      throw const BackendException('Unexpected word-of-the-day response.');
+    }
+
+    final wordData = Map<String, dynamic>.from(payload['wordOfTheDay'] as Map);
+    final categories = wordData['categories'];
+    final category = categories is List && categories.isNotEmpty
+        ? categories.first
+        : null;
+    final categoryData = category is Map
+        ? Map<String, dynamic>.from(category)
+        : const <String, dynamic>{};
+    final images = wordData['images'];
+    final firstImage = images is List && images.isNotEmpty
+        ? images.first
+        : null;
+    final firstImageUrl = firstImage is Map
+        ? firstImage['imageUrl']?.toString() ?? ''
+        : firstImage?.toString() ?? '';
+
+    return ApiWord.fromJson({
+      ...wordData,
+      'id': wordData['wordId'] ?? wordData['id'],
+      'categoryId': wordData['categoryId'] ?? categoryData['categoryId'],
+      'categoryName':
+          wordData['categoryName'] ?? categoryData['categoryName'] ?? '',
+      'wordImageUrl': firstImageUrl,
+    });
   }
 
   Future<String> hello() async {

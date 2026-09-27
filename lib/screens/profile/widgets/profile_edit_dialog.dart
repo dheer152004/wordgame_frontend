@@ -36,6 +36,7 @@ class _ProfileEditDialogState extends State<ProfileEditDialog> {
   late final TextEditingController _displayNameController;
   late final TextEditingController _avatarUrlController;
   late final TextEditingController _bioController;
+  DateTime? _dateOfBirth;
   late final List<({String style, String url})> _avatarOptions;
   bool _isSaving = false;
 
@@ -49,6 +50,7 @@ class _ProfileEditDialogState extends State<ProfileEditDialog> {
       text: widget.currentProfile.avatarUrl,
     );
     _bioController = TextEditingController(text: widget.currentProfile.bio);
+    _dateOfBirth = widget.currentProfile.dateOfBirth;
     _avatarOptions = widget.avatarStyles
         .map(
           (style) => (
@@ -150,6 +152,17 @@ class _ProfileEditDialogState extends State<ProfileEditDialog> {
                 decoration: const InputDecoration(labelText: 'Bio'),
               ),
               const SizedBox(height: 12),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.cake_outlined),
+                title: const Text('Date of birth'),
+                subtitle: Text(
+                  _dateOfBirth == null ? 'Not set' : _formatDate(_dateOfBirth!),
+                ),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: _isSaving ? null : _selectDateOfBirth,
+              ),
+              const SizedBox(height: 12),
               Text(
                 'Location is detected automatically from your IP address.',
                 style: TextStyle(color: AppThemeColors.textSecondary(context)),
@@ -204,6 +217,7 @@ class _ProfileEditDialogState extends State<ProfileEditDialog> {
         displayName: _displayNameController.text.trim(),
         bio: _bioController.text.trim(),
         location: location,
+        dateOfBirth: _dateOfBirth,
       );
 
       await widget.onProfileUpdated(mergedProfile);
@@ -218,5 +232,25 @@ class _ProfileEditDialogState extends State<ProfileEditDialog> {
         SnackBar(content: Text('Unable to update profile: $error')),
       );
     }
+  }
+
+  Future<void> _selectDateOfBirth() async {
+    final today = DateTime.now();
+    final selected = await showDatePicker(
+      context: context,
+      initialDate:
+          _dateOfBirth ?? DateTime(today.year - 18, today.month, today.day),
+      firstDate: DateTime(1900),
+      lastDate: today,
+    );
+    if (selected != null && mounted) {
+      setState(() => _dateOfBirth = selected);
+    }
+  }
+
+  String _formatDate(DateTime date) {
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+    return '${date.year}-$month-$day';
   }
 }

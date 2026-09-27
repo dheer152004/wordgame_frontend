@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 
 import '../../../../services/backend_api.dart';
 import '../../../../theme/app_theme.dart';
@@ -12,8 +14,7 @@ class ProfileReportDialog extends StatefulWidget {
 
 class _ProfileReportDialogState extends State<ProfileReportDialog> {
   final TextEditingController _descriptionController = TextEditingController();
-  final TextEditingController _screenshotUrlsController =
-      TextEditingController();
+  List<PlatformFile> _screenshotFiles = [];
   String _selectedReason = 'APP_IS_CRASHING';
   bool _isSubmitting = false;
   String? _errorMessage;
@@ -30,7 +31,6 @@ class _ProfileReportDialogState extends State<ProfileReportDialog> {
   @override
   void dispose() {
     _descriptionController.dispose();
-    _screenshotUrlsController.dispose();
     super.dispose();
   }
 
@@ -93,19 +93,32 @@ class _ProfileReportDialogState extends State<ProfileReportDialog> {
                 ),
               ),
               const SizedBox(height: 12),
-              TextField(
-                controller: _screenshotUrlsController,
-                enabled: !_isSubmitting,
-                minLines: 3,
-                maxLines: 5,
-                decoration: const InputDecoration(
-                  labelText: 'Screenshot URLs',
-                  hintText: 'One URL per line or comma separated',
+              Align(
+                alignment: Alignment.centerLeft,
+                child: OutlinedButton.icon(
+                  onPressed: _isSubmitting ? null : _pickScreenshots,
+                  icon: const Icon(Icons.attach_file_rounded),
+                  label: const Text('Attach screenshots'),
                 ),
               ),
-              const SizedBox(height: 12),
+              if (_screenshotFiles.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                ..._screenshotFiles.map(
+                  (file) => ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.image_outlined),
+                    title: Text(
+                      file.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 4),
               Text(
-                'Screenshots are optional. Paste direct image URLs separated by new lines or commas.',
+                'Screenshots are optional. You can attach multiple image files.',
                 style: TextStyle(
                   color: AppThemeColors.textSecondary(context),
                   fontSize: 12,
@@ -142,13 +155,10 @@ class _ProfileReportDialogState extends State<ProfileReportDialog> {
     });
 
     try {
-      final screenshotUrls = _parseScreenshotUrls(
-        _screenshotUrlsController.text,
-      );
       await BackendApi.instance.submitReport(
         reason: _selectedReason,
         description: _descriptionController.text.trim(),
-        screenshotUrls: screenshotUrls.isEmpty ? null : screenshotUrls,
+        screenshotFiles: _screenshotFiles,
       );
 
       if (!mounted) return;
@@ -165,12 +175,18 @@ class _ProfileReportDialogState extends State<ProfileReportDialog> {
     }
   }
 
-  List<String> _parseScreenshotUrls(String rawText) {
-    final separators = RegExp(r'[\n,;]+');
-    return rawText
-        .split(separators)
-        .map((value) => value.trim())
-        .where((value) => value.isNotEmpty)
-        .toList();
+  Future<void> _pickScreenshots() async {
+    final result = await FilePicker.pickFiles(
+      allowMultiple: true,
+      type: FileType.image,
+      withData: kIsWeb,
+    );
+    if (!mounted || result == null) {
+      return;
+    }
+
+    setState(() {
+      _screenshotFiles = result.files;
+    });
   }
 }

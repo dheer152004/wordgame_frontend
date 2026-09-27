@@ -8,8 +8,7 @@ import '../../services/backend_api.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/categories_section.dart';
 import '../flash_cards_screen.dart';
-import '../quiz/quiz_screen.dart';
-import 'widget/daily_challenge_card.dart';
+import 'widget/word_of_the_day_card.dart';
 import 'widget/home_bottom_nav.dart';
 import 'widget/home_header.dart';
 import 'widget/home_search_section.dart';
@@ -70,11 +69,10 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _openDailyQuiz() async {
-    await openQuizModePicker(context);
-    if (mounted) {
-      await _fetchProfile();
-    }
+  void _openWordOfTheDay(ApiWord word) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => FlashCardsScreen(initialWord: word)),
+    );
   }
 
   Future<void> _performSearch({bool loadMore = false}) async {
@@ -355,7 +353,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 18),
                     ],
-                    DailyChallengeCard(onTap: _openDailyQuiz),
+                    WordOfTheDayCard(onWordTap: _openWordOfTheDay),
                     const SizedBox(height: 24),
                     const CategoriesSection(),
                     const SizedBox(height: 16),
