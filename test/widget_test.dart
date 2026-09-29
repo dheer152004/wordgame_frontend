@@ -9,7 +9,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:Nroq/main.dart';
+import 'package:nroq/main.dart';
 
 void main() {
   testWidgets('shows the auth screen when there is no saved session', (

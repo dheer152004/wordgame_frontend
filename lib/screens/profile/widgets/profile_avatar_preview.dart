@@ -63,7 +63,7 @@ class ProfileAvatarPreview extends StatelessWidget {
                       height: size,
                       fit: BoxFit.cover,
                       webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
-                      errorBuilder: (_, __, ___) => Icon(
+                      errorBuilder: (_, _, _) => Icon(
                         Icons.person,
                         size: 40,
                         color: AppThemeColors.textOnPrimary(context),

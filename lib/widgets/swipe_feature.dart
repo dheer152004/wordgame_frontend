@@ -21,8 +21,8 @@ class SwipeCard extends StatelessWidget {
     required this.progress,
     required this.isDragging,
     required this.onShareWord,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -191,8 +191,8 @@ class StackCardBackdrop extends StatelessWidget {
     required this.scale,
     required this.rotation,
     required this.offset,
-    Key? key,
-  }) : super(key: key);
+    super.key
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -224,8 +224,8 @@ class BackdropCard extends StatelessWidget {
     required this.word,
     required this.width,
     required this.height,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

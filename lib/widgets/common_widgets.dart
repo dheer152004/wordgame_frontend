@@ -6,7 +6,7 @@ import '../theme/app_theme.dart';
 class CategoryPill extends StatelessWidget {
   final String label;
 
-  const CategoryPill({required this.label, Key? key}) : super(key: key);
+  const CategoryPill({required this.label, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -42,8 +42,8 @@ class SwipeBadge extends StatelessWidget {
     required this.backgroundColor,
     required this.foregroundColor,
     required this.opacity,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -77,8 +77,7 @@ class CardImage extends StatelessWidget {
   final String imageUrl;
   final double size;
 
-  const CardImage({required this.imageUrl, required this.size, Key? key})
-    : super(key: key);
+  const CardImage({required this.imageUrl, required this.size, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -109,7 +108,7 @@ class CardImage extends StatelessWidget {
                   fit: BoxFit.contain,
                   filterQuality: FilterQuality.medium,
                   webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
-                  errorBuilder: (_, __, ___) => const Icon(
+                  errorBuilder: (_, _, _) => const Icon(
                     Icons.image_not_supported_outlined,
                     size: 42,
                     color: AppColors.textSecondary,
@@ -129,7 +128,7 @@ class CardImage extends StatelessWidget {
 class InlineError extends StatelessWidget {
   final String message;
 
-  const InlineError({required this.message, Key? key}) : super(key: key);
+  const InlineError({required this.message, super.key}) ;
 
   @override
   Widget build(BuildContext context) {

@@ -9,12 +9,12 @@ import 'login_screen.dart';
 import 'register_screen.dart';
 import '../profile/widgets/date_of_birth_dialog.dart';
 
-enum _AuthMode { login, register }
+enum AuthMode { login, register }
 
 class AuthScreen extends StatefulWidget {
-  const AuthScreen({super.key, this.initialMode = _AuthMode.login});
+  const AuthScreen({super.key, this.initialMode = AuthMode.login});
 
-  final _AuthMode initialMode;
+  final AuthMode initialMode;
 
   @override
   State<AuthScreen> createState() => _AuthScreenState();
@@ -31,7 +31,7 @@ class _AuthScreenState extends State<AuthScreen> {
   final _registerDisplayNameController = TextEditingController();
   final _registerPasswordController = TextEditingController();
 
-  _AuthMode _mode = _AuthMode.login;
+  AuthMode _mode = AuthMode.login;
   bool _isSubmitting = false;
   String? _errorMessage;
   bool _showError = true;
@@ -65,7 +65,7 @@ class _AuthScreenState extends State<AuthScreen> {
     super.dispose();
   }
 
-  void _setMode(_AuthMode mode) {
+  void _setMode(AuthMode mode) {
     if (_mode == mode) {
       return;
     }
@@ -141,7 +141,7 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   Future<void> _submit() async {
-    final isLogin = _mode == _AuthMode.login;
+    final isLogin = _mode == AuthMode.login;
     final formState = isLogin
         ? _loginFormKey.currentState
         : _registerFormKey.currentState;
@@ -210,7 +210,7 @@ class _AuthScreenState extends State<AuthScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Account created. You can log in now.')),
       );
-      _setMode(_AuthMode.login);
+      _setMode(AuthMode.login);
     } on BackendException catch (error) {
       if (mounted) {
         // Display user-friendly error messages
@@ -290,7 +290,7 @@ class _AuthScreenState extends State<AuthScreen> {
     const borderColor = Color(0xFFE2E8F0);
     const primaryBlue = Color(0xFF2563EB);
 
-    final isLogin = _mode == _AuthMode.login;
+    final isLogin = _mode == AuthMode.login;
 
     return Scaffold(
       backgroundColor: pageBackground,
@@ -488,7 +488,7 @@ class _AuthScreenState extends State<AuthScreen> {
                             Navigator.of(context).push(
                               MaterialPageRoute(
                                 builder: (_) => const AuthScreen(
-                                  initialMode: _AuthMode.register,
+                                  initialMode: AuthMode.register,
                                 ),
                               ),
                             );
@@ -530,7 +530,7 @@ class _AuthScreenState extends State<AuthScreen> {
                             Navigator.of(context).pushReplacement(
                               MaterialPageRoute(
                                 builder: (_) => const AuthScreen(
-                                  initialMode: _AuthMode.login,
+                                  initialMode: AuthMode.login,
                                 ),
                               ),
                             );

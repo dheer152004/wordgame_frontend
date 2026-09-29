@@ -48,7 +48,7 @@ class ProfileAvatarOption extends StatelessWidget {
                   width: 42,
                   height: 42,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
+                  errorBuilder: (_, _, _) => Container(
                     width: 42,
                     height: 42,
                     color: AppThemeColors.challengeCard(context),

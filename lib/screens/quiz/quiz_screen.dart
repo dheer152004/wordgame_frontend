@@ -726,7 +726,7 @@ class _QuizCard extends StatelessWidget {
                 height: 190,
                 fit: BoxFit.cover,
                 webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
-                errorBuilder: (_, __, ___) => Container(
+                errorBuilder: (_, _, _) => Container(
                   height: 190,
                   color: AppThemeColors.surfaceAlt(context),
                   alignment: Alignment.center,

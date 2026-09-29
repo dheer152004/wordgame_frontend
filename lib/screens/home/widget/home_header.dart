@@ -79,7 +79,7 @@ class HomeHeader extends StatelessWidget {
                           height: 44,
                           fit: BoxFit.cover,
                           webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
-                          errorBuilder: (_, __, ___) => Container(
+                          errorBuilder: (_, _, _) => Container(
                             color: AppColors.challengeCard,
                             alignment: Alignment.center,
                             child: const Text(

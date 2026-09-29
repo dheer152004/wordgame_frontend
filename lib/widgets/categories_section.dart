@@ -394,7 +394,7 @@ class _CategoryCardState extends State<_CategoryCard> {
                 widget.data.imageUrl,
                 fit: BoxFit.cover,
                 webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
-                errorBuilder: (_, __, ___) => _buildImageFallback(),
+                errorBuilder: (_, _, _) => _buildImageFallback(),
               ),
               DecoratedBox(
                 decoration: BoxDecoration(
@@ -526,7 +526,7 @@ class _CategoryDetailSheet extends StatelessWidget {
                           data.imageUrl,
                           fit: BoxFit.cover,
                           webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
-                          errorBuilder: (_, __, ___) => _detailFallback(data),
+                          errorBuilder: (_, _, _) => _detailFallback(data),
                         )
                       else
                         _detailFallback(data),

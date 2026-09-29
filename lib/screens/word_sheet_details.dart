@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:Nroq/services/backend_api.dart';
+import 'package:nroq/services/backend_api.dart';
 
 import '../models/word_Content_models.dart';
 import '../services/audio_service.dart';
@@ -563,7 +563,7 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                               fit: BoxFit.cover,
                               webHtmlElementStrategy:
                                   WebHtmlElementStrategy.prefer,
-                              errorBuilder: (_, __, ___) => Container(
+                              errorBuilder: (_, _, _) => Container(
                                 width: 210,
                                 height: 210,
                                 color: softPanel,
@@ -591,7 +591,7 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                         height: double.infinity,
                         fit: BoxFit.cover,
                         webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
-                        errorBuilder: (_, __, ___) => Container(
+                        errorBuilder: (_, _, _) => Container(
                           color: softPanel,
                           alignment: Alignment.center,
                           child: Icon(

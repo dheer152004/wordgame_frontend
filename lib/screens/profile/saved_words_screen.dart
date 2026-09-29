@@ -298,7 +298,7 @@ class _SavedWordCard extends StatelessWidget {
                             ? Image.network(
                                 word.wordImageUrl,
                                 fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) =>
+                                errorBuilder: (_, _, _) =>
                                     _imageFallback(context),
                               )
                             : _imageFallback(context),
