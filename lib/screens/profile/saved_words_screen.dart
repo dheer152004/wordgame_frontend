@@ -111,11 +111,7 @@ class _SavedWordsScreenState extends State<SavedWordsScreen> {
                       sliver: SliverLayoutBuilder(
                         builder: (context, constraints) {
                           final width = constraints.crossAxisExtent;
-                          final crossAxisCount = width >= 720
-                              ? 3
-                              : width >= 520
-                              ? 2
-                              : 1;
+                          final crossAxisCount = width >= 720 ? 3 : 2;
 
                           return SliverGrid(
                             gridDelegate:
@@ -123,9 +119,9 @@ class _SavedWordsScreenState extends State<SavedWordsScreen> {
                                   crossAxisCount: crossAxisCount,
                                   mainAxisSpacing: 14,
                                   crossAxisSpacing: 14,
-                                  childAspectRatio: crossAxisCount == 1
-                                      ? 1.9
-                                      : 0.78,
+                                  childAspectRatio: crossAxisCount == 2
+                                      ? 0.55
+                                      : 0.7,
                                 ),
                             delegate: SliverChildBuilderDelegate((
                               context,
@@ -238,6 +234,7 @@ class _SavedWordCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final word = savedWord.toApiWord();
+    final previewImageUrl = savedWord.previewImageUrl.trim();
 
     return Material(
       color: Colors.transparent,
@@ -264,11 +261,13 @@ class _SavedWordCard extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _pill(
-                    context,
-                    savedWord.categoryName.isNotEmpty
-                        ? savedWord.categoryName
-                        : 'Saved',
+                  Flexible(
+                    child: _pill(
+                      context,
+                      savedWord.categoryName.isNotEmpty
+                          ? savedWord.categoryName
+                          : 'Saved',
+                    ),
                   ),
                   Container(
                     padding: const EdgeInsets.all(8),
@@ -294,9 +293,9 @@ class _SavedWordCard extends StatelessWidget {
                   child: Stack(
                     children: [
                       Positioned.fill(
-                        child: word.wordImageUrl.isNotEmpty
+                        child: previewImageUrl.isNotEmpty
                             ? Image.network(
-                                word.wordImageUrl,
+                                previewImageUrl,
                                 fit: BoxFit.cover,
                                 errorBuilder: (_, _, _) =>
                                     _imageFallback(context),
@@ -417,6 +416,8 @@ class _SavedWordCard extends StatelessWidget {
       ),
       child: Text(
         label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w700,

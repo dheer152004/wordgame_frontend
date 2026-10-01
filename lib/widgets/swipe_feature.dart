@@ -64,9 +64,7 @@ class SwipeCard extends StatelessWidget {
                       shape: BoxShape.circle,
                       color: isDark
                           ? AppThemeColors.primarySoft(context)
-                          : AppThemeColors.challengeCard(
-                              context,
-                            ).withAlpha(120),
+                          : LightColors.primaryLight.withAlpha(120),
                     ),
                   ),
                 ),
@@ -191,7 +189,7 @@ class StackCardBackdrop extends StatelessWidget {
     required this.scale,
     required this.rotation,
     required this.offset,
-    super.key
+    super.key,
   });
 
   @override

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../models/profile_models.dart';
+import '../../../models/quiz_models.dart';
 import '../../flash_cards_screen.dart';
 import '../../quiz/quiz_screen.dart';
 import '../../profile/profile_screen.dart';
@@ -7,8 +8,15 @@ import '../../../theme/app_theme.dart';
 
 class HomeBottomNav extends StatefulWidget {
   final UserProfile? user;
+  final Future<void> Function()? onProfileReturned;
+  final ValueChanged<QuizSubmissionResult>? onQuizCompleted;
 
-  const HomeBottomNav({super.key, this.user});
+  const HomeBottomNav({
+    super.key,
+    this.user,
+    this.onProfileReturned,
+    this.onQuizCompleted,
+  });
 
   @override
   State<HomeBottomNav> createState() => _HomeBottomNavState();
@@ -45,7 +53,7 @@ class _HomeBottomNavState extends State<HomeBottomNav> {
         children: List.generate(_icons.length, (index) {
           final isActive = index == _selectedIndex;
           return GestureDetector(
-            onTap: () {
+            onTap: () async {
               setState(() => _selectedIndex = index);
 
               if (index == 1) {
@@ -55,15 +63,24 @@ class _HomeBottomNavState extends State<HomeBottomNav> {
               }
 
               if (index == 2) {
-                openQuizModePicker(context);
+                final quizResult = await openQuizModePicker(context);
+                if (context.mounted) {
+                  await widget.onProfileReturned?.call();
+                  if (context.mounted && quizResult != null) {
+                    widget.onQuizCompleted?.call(quizResult);
+                  }
+                }
               }
 
               if (index == 3) {
-                Navigator.of(context).push(
+                await Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => ProfileScreen(user: widget.user),
                   ),
                 );
+                if (context.mounted) {
+                  await widget.onProfileReturned?.call();
+                }
               }
             },
             child: AnimatedContainer(

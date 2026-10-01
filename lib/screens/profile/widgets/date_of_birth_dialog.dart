@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../services/backend_api.dart';
+import '../../../../services/session_store.dart';
 import '../../../../theme/app_theme.dart';
 
 class DateOfBirthDialog extends StatefulWidget {
@@ -97,6 +98,10 @@ class _DateOfBirthDialogState extends State<DateOfBirthDialog> {
     });
     try {
       await BackendApi.instance.updateDateOfBirth(selectedDate);
+      final user = await SessionStore.restoreUser();
+      if (user != null) {
+        await SessionStore.saveUser(user.copyWith(dateOfBirth: selectedDate));
+      }
       if (mounted) Navigator.of(context).pop(selectedDate);
     } catch (error) {
       if (!mounted) return;

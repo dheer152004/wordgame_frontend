@@ -55,6 +55,10 @@ class _WordOfTheDayCardState extends State<WordOfTheDayCard> {
     return FutureBuilder<ApiWord>(
       future: _wordOfTheDay,
       builder: (context, snapshot) {
+        final compact = MediaQuery.sizeOf(context).width < 400;
+        final horizontalPadding = compact ? 16.0 : 20.0;
+        final imageSize = compact ? 120.0 : 144.0;
+        final columnGap = compact ? 10.0 : 14.0;
         final word = snapshot.data;
         final imageUrl = word != null && word.images.isNotEmpty
             ? word.images.first.imageUrl.trim()
@@ -66,11 +70,7 @@ class _WordOfTheDayCardState extends State<WordOfTheDayCard> {
             gradient: const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                Color.fromARGB(255, 22, 46, 231),
-                Color.fromARGB(255, 33, 20, 146),
-                Color.fromARGB(255, 204, 206, 230),
-              ],
+              colors: [Color(0xFF2563EB), Color(0xFF1D4ED8), Color(0xFF3B82F6)],
             ),
             borderRadius: BorderRadius.circular(AppRadius.card),
             border: Border.all(color: Colors.white.withAlpha(16)),
@@ -86,12 +86,15 @@ class _WordOfTheDayCardState extends State<WordOfTheDayCard> {
                   height: 160,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: const Color.fromARGB(255, 142, 57, 57).withAlpha(20),
+                    color: const Color(0xFFBFDBFE).withAlpha(28),
                   ),
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.all(20),
+                padding: EdgeInsets.symmetric(
+                  horizontal: horizontalPadding,
+                  vertical: 14,
+                ),
                 child: Row(
                   children: [
                     Expanded(
@@ -116,10 +119,11 @@ class _WordOfTheDayCardState extends State<WordOfTheDayCard> {
                                       (snapshot.hasError
                                           ? 'Unavailable'
                                           : 'Loading...'),
-                                  maxLines: 2,
+                                  maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: AppTextStyles.sectionTitle.copyWith(
-                                    fontSize: 28,
+                                    fontSize: compact ? 24 : 28,
+                                    color: Colors.white,
                                   ),
                                 ),
                               ),
@@ -134,7 +138,7 @@ class _WordOfTheDayCardState extends State<WordOfTheDayCard> {
                                   _isPlayingAudio
                                       ? Icons.stop_circle_outlined
                                       : Icons.volume_up_rounded,
-                                  color: const Color.fromARGB(255, 32, 13, 198),
+                                  color: Colors.white,
                                 ),
                               ),
                             ],
@@ -149,6 +153,7 @@ class _WordOfTheDayCardState extends State<WordOfTheDayCard> {
                             overflow: TextOverflow.ellipsis,
                             style: AppTextStyles.greetingDate.copyWith(
                               fontSize: 13,
+                              color: Colors.white.withAlpha(220),
                             ),
                           ),
                           const Spacer(),
@@ -156,7 +161,7 @@ class _WordOfTheDayCardState extends State<WordOfTheDayCard> {
                             width: 40,
                             height: 40,
                             child: Material(
-                              color: const Color.fromARGB(255, 0, 0, 0).withAlpha(38),
+                              color: Colors.white.withAlpha(38),
                               shape: const CircleBorder(),
                               child: IconButton(
                                 tooltip: 'Open word flashcard',
@@ -165,7 +170,7 @@ class _WordOfTheDayCardState extends State<WordOfTheDayCard> {
                                     : () => widget.onWordTap(word),
                                 icon: const Icon(
                                   Icons.arrow_forward_rounded,
-                                  color: Color.fromARGB(255, 22, 1, 1),
+                                  color: Colors.white,
                                   size: 21,
                                 ),
                                 padding: EdgeInsets.zero,
@@ -175,18 +180,18 @@ class _WordOfTheDayCardState extends State<WordOfTheDayCard> {
                         ],
                       ),
                     ),
-                    const SizedBox(width: 14),
+                    SizedBox(width: columnGap),
                     // Image rounded
                     SizedBox(
-                      width: 144,
-                      height: 144,
+                      width: imageSize,
+                      height: imageSize,
                       child: imageUrl.isNotEmpty
                           ? ClipRRect(
                               borderRadius: BorderRadius.circular(18),
                               child: Image.network(
                                 imageUrl,
-                                width: 144,
-                                height: 144,
+                                width: imageSize,
+                                height: imageSize,
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) {
                                   return Container(

@@ -293,7 +293,6 @@ class _CategoryCardState extends State<_CategoryCard> {
       onTap: _handleTap,
       child: Container(
         height: 190,
-        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
@@ -314,53 +313,95 @@ class _CategoryCardState extends State<_CategoryCard> {
             ),
           ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _IntensityTag(
-              label: widget.data.label,
-              backgroundColor: tagColors.background,
-              foregroundColor: tagColors.foreground,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              widget.data.title,
-              style: AppTextStyles.planCardTitle.copyWith(color: textColor),
-            ),
-            const SizedBox(height: 8),
-            Expanded(
-              child: Text(
-                widget.data.examples,
-                style: AppTextStyles.planCardDetail.copyWith(color: textColor),
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Align(
-              alignment: Alignment.bottomRight,
-              child: Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(
-                    textColor == Colors.white ? 24 : 38,
-                  ),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white.withAlpha(14)),
-                ),
-                child: Icon(
-                  widget.data.icon,
-                  color: textColor == Colors.white
-                      ? Colors.white
-                      : Colors.black,
-                  size: 22,
-                ),
-              ),
-            ),
-          ],
+        child: _buildCardContent(
+          titleColor: textColor,
+          descriptionColor: textColor,
+          tagBackgroundColor: tagColors.background,
+          tagForegroundColor: tagColors.foreground,
+          isImageCard: false,
         ),
       ),
+    );
+  }
+
+  Widget _buildCardContent({
+    required Color titleColor,
+    required Color descriptionColor,
+    required Color tagBackgroundColor,
+    required Color tagForegroundColor,
+    required bool isImageCard,
+  }) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 220;
+        final padding = compact ? 14.0 : 18.0;
+        final iconSize = compact ? 36.0 : 44.0;
+        final iconColor = isImageCard || titleColor == Colors.white
+            ? Colors.white
+            : Colors.black;
+
+        return Padding(
+          padding: EdgeInsets.all(padding),
+          child: Stack(
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _IntensityTag(
+                    label: widget.data.label,
+                    backgroundColor: tagBackgroundColor,
+                    foregroundColor: tagForegroundColor,
+                  ),
+                  SizedBox(height: compact ? 8 : 12),
+                  Text(
+                    widget.data.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.planCardTitle.copyWith(
+                      color: titleColor,
+                      fontSize: compact ? 20 : 24,
+                    ),
+                  ),
+                  SizedBox(height: compact ? 6 : 8),
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(right: iconSize + 8),
+                      child: Text(
+                        widget.data.examples,
+                        style: AppTextStyles.planCardDetail.copyWith(
+                          color: descriptionColor,
+                        ),
+                        maxLines: compact ? 2 : 3,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              Positioned(
+                right: 0,
+                bottom: 0,
+                child: Container(
+                  width: iconSize,
+                  height: iconSize,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withAlpha(
+                      isImageCard || titleColor == Colors.white ? 24 : 38,
+                    ),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white.withAlpha(14)),
+                  ),
+                  child: Icon(
+                    widget.data.icon,
+                    color: iconColor,
+                    size: compact ? 20 : 22,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -410,54 +451,12 @@ class _CategoryCardState extends State<_CategoryCard> {
                   ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.all(18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _IntensityTag(
-                      label: widget.data.label,
-                      backgroundColor: Colors.black.withAlpha(66),
-                      foregroundColor: Colors.white,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      widget.data.title,
-                      style: AppTextStyles.planCardTitle.copyWith(
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Expanded(
-                      child: Text(
-                        widget.data.examples,
-                        style: AppTextStyles.planCardDetail.copyWith(
-                          color: Colors.white.withAlpha(220),
-                        ),
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Align(
-                      alignment: Alignment.bottomRight,
-                      child: Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withAlpha(24),
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white.withAlpha(24)),
-                        ),
-                        child: Icon(
-                          widget.data.icon,
-                          color: Colors.white,
-                          size: 22,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+              _buildCardContent(
+                titleColor: Colors.white,
+                descriptionColor: Colors.white.withAlpha(220),
+                tagBackgroundColor: Colors.black.withAlpha(66),
+                tagForegroundColor: Colors.white,
+                isImageCard: true,
               ),
             ],
           ),

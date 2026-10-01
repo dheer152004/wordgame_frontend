@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../models/profile_models.dart';
+import '../../models/quiz_models.dart';
 import '../../models/word_Content_models.dart';
 import '../../services/backend_api.dart';
 import '../../theme/app_theme.dart';
@@ -67,6 +68,21 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (_) {
       // Keep the profile passed during login visible if the refresh fails.
     }
+  }
+
+  void _applyQuizResult(QuizSubmissionResult result) {
+    final currentProfile = _profile ?? widget.user;
+    if (currentProfile == null) {
+      return;
+    }
+
+    setState(() {
+      _profile = currentProfile.copyWith(
+        totalXp: result.newTotalXp,
+        level: result.newLevel,
+        currentStreak: result.currentStreak,
+      );
+    });
   }
 
   void _openWordOfTheDay(ApiWord word) {
@@ -305,6 +321,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     HomeHeader(
                       user: _profile ?? widget.user,
                       onSearchTap: _toggleSearchBar,
+                      onProfileReturned: _fetchProfile,
                     ),
                     if (_showSearchBar) ...[
                       const SizedBox(height: 24),
@@ -361,7 +378,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            HomeBottomNav(user: _profile ?? widget.user),
+            HomeBottomNav(
+              user: _profile ?? widget.user,
+              onProfileReturned: _fetchProfile,
+              onQuizCompleted: _applyQuizResult,
+            ),
           ],
         ),
       ),

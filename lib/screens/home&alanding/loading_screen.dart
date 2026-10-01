@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../auth/auth_screen.dart';
 import 'onboarding_screen.dart';
 import '../home/home_screen.dart';
+import '../../services/app_version_service.dart';
 import '../../services/session_store.dart';
 
 class LoadingScreen extends StatefulWidget {
@@ -42,8 +44,16 @@ class _LoadingScreenState extends State<LoadingScreen>
       await Future.delayed(const Duration(milliseconds: 1400));
       if (!mounted) return;
 
+      final updateNotice = await AppVersionService.instance.checkForUpdate();
+      if (!mounted) return;
+      if (updateNotice != null) {
+        final shouldContinue = await _showUpdateDialog(updateNotice);
+        if (!mounted || !shouldContinue) return;
+      }
+
       // Try to restore saved user session
       final savedUser = await SessionStore.restoreUser();
+      if (!mounted) return;
 
       if (savedUser != null) {
         // User has a saved session, go directly to home
@@ -65,6 +75,7 @@ class _LoadingScreenState extends State<LoadingScreen>
           if (!mounted) return;
           if (completed == true) {
             await SessionStore.markOnboardingSeen();
+            if (!mounted) return;
           }
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (_) => const AuthScreen()),
@@ -80,6 +91,49 @@ class _LoadingScreenState extends State<LoadingScreen>
         );
       }
     }
+  }
+
+  Future<bool> _showUpdateDialog(AppUpdateNotice notice) async {
+    return await showDialog<bool>(
+          context: context,
+          barrierDismissible: !notice.forceUpdate,
+          builder: (dialogContext) => PopScope(
+            canPop: !notice.forceUpdate,
+            child: AlertDialog(
+              title: Text(notice.title),
+              content: Text(notice.message),
+              actions: [
+                if (!notice.forceUpdate)
+                  TextButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(true),
+                    child: const Text('LATER'),
+                  ),
+                FilledButton(
+                  onPressed: () async {
+                    final storeUri = Uri.tryParse(notice.storeUrl);
+                    final opened =
+                        storeUri != null &&
+                        await launchUrl(
+                          storeUri,
+                          mode: LaunchMode.externalApplication,
+                        );
+                    if (!opened && mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Could not open the app store.'),
+                        ),
+                      );
+                    } else if (!notice.forceUpdate && dialogContext.mounted) {
+                      Navigator.of(dialogContext).pop(true);
+                    }
+                  },
+                  child: Text(notice.buttonText),
+                ),
+              ],
+            ),
+          ),
+        ) ??
+        !notice.forceUpdate;
   }
 
   @override

@@ -10,8 +10,36 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:nroq/main.dart';
+import 'package:nroq/models/profile_models.dart';
+import 'package:nroq/models/word_Content_models.dart';
 
 void main() {
+  test('saved word preview prefers the first available image URL', () {
+    final savedWord = SavedWord.fromJson({
+      'wordImageUrl': 'fallback.png',
+      'images': [
+        {'imageUrl': 'first.png'},
+        {'imageUrl': 'second.png'},
+      ],
+    });
+
+    expect(savedWord.previewImageUrl, 'first.png');
+  });
+
+  test('parses a profile date of birth from an ISO date string', () {
+    final profile = UserProfile.fromJson({'dateOfBirth': '2005-08-15'});
+
+    expect(profile.dateOfBirth, DateTime(2005, 8, 15));
+  });
+
+  test('parses a profile date of birth from a Java date array', () {
+    final profile = UserProfile.fromJson({
+      'dateOfBirth': [2005, 8, 15],
+    });
+
+    expect(profile.dateOfBirth, DateTime(2005, 8, 15));
+  });
+
   testWidgets('shows the auth screen when there is no saved session', (
     WidgetTester tester,
   ) async {

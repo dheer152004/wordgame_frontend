@@ -13,6 +13,7 @@ import 'widgets/profile_edit_dialog.dart';
 import 'widgets/profile_avatar_helper.dart';
 import 'widgets/profile_report_dialog.dart';
 import 'widgets/date_of_birth_dialog.dart';
+import 'widgets/profile_saved_words_section.dart';
 import 'settings_detail_page.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -55,12 +56,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     try {
       final profile = await BackendApi.instance.fetchUserProfile();
+      final savedDateOfBirth = (await SessionStore.restoreUser())?.dateOfBirth;
+      final dateOfBirth = profile.dateOfBirth ?? savedDateOfBirth;
       if (mounted) {
         setState(() {
-          _profile = _mergeAvatarPreference(profile);
+          _profile = _mergeAvatarPreference(
+            profile,
+          ).copyWith(dateOfBirth: dateOfBirth);
           _loadingProfile = false;
         });
-        if (profile.dateOfBirth == null && !_dateOfBirthPromptShown) {
+        if (dateOfBirth == null && !_dateOfBirthPromptShown) {
           _dateOfBirthPromptShown = true;
           if (!context.mounted) {
             return;
@@ -235,6 +240,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ],
               ),
+              if (isSignedIn) ...[
+                const SizedBox(height: 12),
+                const ProfileSavedWordsSection(),
+              ],
               const SizedBox(height: 18),
               _sectionLabel(context, 'ACCOUNT OPTIONS'),
               const SizedBox(height: 6),

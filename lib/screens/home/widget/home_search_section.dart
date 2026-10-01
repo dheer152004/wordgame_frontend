@@ -121,6 +121,9 @@ class HomeSearchSection extends StatelessWidget {
               ),
             ),
           ),
+
+
+          //search button
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
@@ -129,7 +132,7 @@ class HomeSearchSection extends StatelessWidget {
               icon: const Icon(Icons.search_rounded),
               label: const Text('Search'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.challengeCard,
+                backgroundColor: AppThemeColors.primary(context),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
@@ -151,7 +154,7 @@ class HomeSearchSection extends StatelessWidget {
               Switch(
                 value: showCategoryResults,
                 onChanged: onToggleCategoryResults,
-                activeColor: AppColors.challengeCard,
+                activeTrackColor: AppThemeColors.primary(context),
               ),
             ],
           ),

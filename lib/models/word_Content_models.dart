@@ -296,12 +296,26 @@ class SavedWord {
   });
 
   factory SavedWord.fromJson(Map<String, dynamic> json) {
+    final rawImages = json['images'];
+    final firstImage = rawImages is List && rawImages.isNotEmpty
+        ? rawImages.first
+        : null;
+    final firstImageUrl = firstImage is Map
+        ? firstImage['imageUrl']?.toString() ?? ''
+        : firstImage?.toString() ?? '';
+    final wordImageUrl = json['wordImageUrl']?.toString() ?? '';
+    final memeImageUrl = json['memeImageUrl']?.toString() ?? '';
+
     return SavedWord(
       savedWordId: _readInt(json['savedWordId']),
       wordId: _readInt(json['wordId']),
       word: json['word']?.toString() ?? '',
       meaning: json['meaning']?.toString() ?? '',
-      wordImageUrl: json['wordImageUrl']?.toString() ?? '',
+      wordImageUrl: firstImageUrl.trim().isNotEmpty
+          ? firstImageUrl
+          : wordImageUrl.trim().isNotEmpty
+          ? wordImageUrl
+          : memeImageUrl,
       categoryName: json['categoryName']?.toString() ?? '',
       notes: json['notes']?.toString() ?? '',
     );
@@ -322,6 +336,8 @@ class SavedWord {
       partOfSpeech: '',
     );
   }
+
+  String get previewImageUrl => wordImageUrl;
 }
 
 /// Safely converts various types to integer

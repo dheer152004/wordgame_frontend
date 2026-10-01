@@ -7,7 +7,7 @@ import '../../widgets/screen_action_buttons.dart';
 
 enum QuizMode { text, image }
 
-Future<void> openQuizModePicker(BuildContext context) async {
+Future<QuizSubmissionResult?> openQuizModePicker(BuildContext context) async {
   final mode = await showModalBottomSheet<QuizMode>(
     context: context,
     backgroundColor: AppThemeColors.surface(context),
@@ -46,11 +46,13 @@ Future<void> openQuizModePicker(BuildContext context) async {
     ),
   );
 
-  if (mode != null && context.mounted) {
-    await Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => QuizScreen(mode: mode)));
+  if (mode == null || !context.mounted) {
+    return null;
   }
+
+  return Navigator.of(context).push<QuizSubmissionResult>(
+    MaterialPageRoute(builder: (_) => QuizScreen(mode: mode)),
+  );
 }
 
 class QuizScreen extends StatefulWidget {
@@ -358,7 +360,7 @@ class _QuizScreenState extends State<QuizScreen> {
                 Row(
                   children: [
                     AppBackIconButton(
-                      onPressed: () => Navigator.of(context).pop(),
+                      onPressed: () => Navigator.of(context).pop(_result),
                     ),
                     const SizedBox(width: 6),
                     Expanded(
@@ -810,7 +812,7 @@ class _OptionRow extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: selected
                       ? Colors.black
-                      : AppThemeColors.challengeCard(context),
+                      : AppThemeColors.primary(context),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
@@ -819,7 +821,9 @@ class _OptionRow extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w800,
-                      color: selected ? Colors.white : Colors.black,
+                      color: selected
+                          ? Colors.white
+                          : AppThemeColors.textOnPrimary(context),
                     ),
                   ),
                 ),

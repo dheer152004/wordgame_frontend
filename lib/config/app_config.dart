@@ -1,10 +1,21 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AppConfig {
   // Backend API
   static String get backendApiBaseUrl {
-    return dotenv.env['BACKEND_API_BASE_URL'] ??
+    final baseUrl =
+        dotenv.env['BACKEND_API_BASE_URL'] ??
         'https://wordgame-backend-2sza.onrender.com';
+    if (kDebugMode &&
+        !kIsWeb &&
+        defaultTargetPlatform == TargetPlatform.android) {
+      final uri = Uri.tryParse(baseUrl);
+      if (uri != null && (uri.host == 'localhost' || uri.host == '127.0.0.1')) {
+        return uri.replace(host: '10.0.2.2').toString();
+      }
+    }
+    return baseUrl;
   }
 
   // AdMob App IDs

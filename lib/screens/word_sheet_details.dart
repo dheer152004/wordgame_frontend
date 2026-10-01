@@ -327,6 +327,9 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
     final relatedWords = word.relatedWords;
     final similarWords = word.alsoAppearsIn;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final categoryName = word.categoryName.trim();
+    final hasCategory =
+        categoryName.isNotEmpty && categoryName.toLowerCase() != 'general';
 
     // Use theme colors
     final sheetBackground = isDark ? DarkColors.surface : LightColors.surface;
@@ -369,29 +372,28 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? DarkColors.cardAlt
-                            : LightColors.cardAlt,
-                        borderRadius: BorderRadius.circular(999),
-                        border: Border.all(color: dividerColor),
-                      ),
-                      child: Text(
-                        word.categoryName.isNotEmpty
-                            ? word.categoryName
-                            : 'General',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: textPrimary,
+                    if (hasCategory)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? DarkColors.cardAlt
+                              : LightColors.cardAlt,
+                          borderRadius: BorderRadius.circular(999),
+                          border: Border.all(color: dividerColor),
+                        ),
+                        child: Text(
+                          categoryName,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: textPrimary,
+                          ),
                         ),
                       ),
-                    ),
                     const Spacer(),
                     TextButton.icon(
                       onPressed: () => _shareWord(context),

@@ -98,12 +98,15 @@ class _AuthScreenState extends State<AuthScreen> {
             children: [
               Icon(Icons.error_outline_rounded, color: Colors.white, size: 16),
               const SizedBox(width: 8),
-              Text(
-                _errorMessage!,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
+              Flexible(
+                child: Text(
+                  _errorMessage!,
+                  softWrap: true,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
             ],

@@ -71,7 +71,7 @@ class UserProfile {
       wordsMastered: _readInt(json['wordsMastered']),
       lastActive: _readDateTime(json['lastActive']),
       createdAt: _readDateTime(json['createdAt']),
-      dateOfBirth: _readDateTime(json['dateOfBirth']),
+      dateOfBirth: _readFlexibleDateTime(json['dateOfBirth']),
       lastQuizDate: json['lastQuizDate']?.toString() ?? '',
       recentBadges: _readStringList(json['recentBadges']),
     );
