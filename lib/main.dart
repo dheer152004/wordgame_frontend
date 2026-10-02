@@ -6,7 +6,9 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'screens/auth/auth_screen.dart';
 import 'screens/home&alanding/loading_screen.dart';
+import 'services/auth_session_manager.dart';
 import 'firebase_options.dart';
 import 'theme/app_theme.dart';
 
@@ -14,6 +16,7 @@ const String _themeModeKey = 'nroq_theme_mode';
 
 // Global theme notifier
 final themeNotifier = ValueNotifier<ThemeMode>(ThemeMode.dark);
+final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
 
 ThemeMode _themeFromStorage(String? value) {
   switch (value) {
@@ -69,13 +72,22 @@ class _WordAppState extends State<WordApp> {
   void initState() {
     super.initState();
     themeNotifier.addListener(_onThemeChanged);
+    AuthSessionManager.sessionExpired.addListener(_onSessionExpired);
     _persistTheme(themeNotifier.value);
   }
 
   @override
   void dispose() {
     themeNotifier.removeListener(_onThemeChanged);
+    AuthSessionManager.sessionExpired.removeListener(_onSessionExpired);
     super.dispose();
+  }
+
+  void _onSessionExpired() {
+    _navigatorKey.currentState?.pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const AuthScreen()),
+      (_) => false,
+    );
   }
 
   Future<void> _persistTheme(ThemeMode mode) async {
@@ -91,6 +103,7 @@ class _WordAppState extends State<WordApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: _navigatorKey,
       title: 'NROQ',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.getLightTheme(),

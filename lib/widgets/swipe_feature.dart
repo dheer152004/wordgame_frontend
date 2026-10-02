@@ -33,13 +33,58 @@ class SwipeCard extends StatelessWidget {
       builder: (context, constraints) {
         // Calculate responsive sizes based on card height
         final compactFactor = (height / 420).clamp(0.6, 1.0);
-        final imageSize = (height * 0.50).clamp(240.0, 360.0);
+        final horizontalPadding = height < 500 ? 10.0 : 12.0;
         final wordFontSize = (28 * compactFactor).clamp(16.0, 34.0);
         final meaningFontSize = (14 * compactFactor).clamp(11.0, 16.0);
-
-        // Adjust padding based on card height for better layout on various screen sizes
-        final horizontalPadding = height < 500 ? 10.0 : 12.0;
         final verticalPadding = height < 500 ? 8.0 : 10.0;
+        final imageSpacing = height < 500 ? 12.0 : 20.0;
+        final availableTextWidth = (width - horizontalPadding * 2)
+            .clamp(1.0, width)
+            .toDouble();
+        final textScaler = MediaQuery.textScalerOf(context);
+        final wordStyle = TextStyle(
+          fontWeight: FontWeight.w900,
+          letterSpacing: -1.1,
+          color: textColor,
+          fontSize: wordFontSize,
+        );
+        final meaningStyle = TextStyle(
+          fontWeight: FontWeight.w700,
+          height: 1.35,
+          color: textColor,
+          fontSize: meaningFontSize,
+        );
+        final wordPainter = TextPainter(
+          text: TextSpan(text: word.word, style: wordStyle),
+          textDirection: Directionality.of(context),
+          textScaler: textScaler,
+        )..layout(maxWidth: availableTextWidth);
+        final meaningPainter = TextPainter(
+          text: TextSpan(text: word.meaning, style: meaningStyle),
+          textDirection: Directionality.of(context),
+          textScaler: textScaler,
+        )..layout(maxWidth: availableTextWidth);
+        final availableImageHeight =
+            (height -
+                    verticalPadding -
+                    6 -
+                    32 -
+                    2 -
+                    imageSpacing -
+                    wordPainter.height -
+                    6 -
+                    meaningPainter.height)
+                .clamp(0.0, double.infinity)
+                .toDouble();
+        final availableImageWidth =
+            (constraints.maxWidth - horizontalPadding * 2)
+                .clamp(0.0, double.infinity)
+                .toDouble();
+        final imageSize = (height * 0.72)
+            .clamp(0.0, 420.0)
+            .clamp(0.0, availableImageHeight)
+            .clamp(0.0, availableImageWidth)
+            .toDouble();
 
         return Container(
           width: width,
@@ -134,30 +179,10 @@ class SwipeCard extends StatelessWidget {
                               : word.wordImageUrl,
                           size: imageSize,
                         ),
-                        SizedBox(height: height < 500 ? 12 : 20),
-                        Text(
-                          word.word,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -1.1,
-                            color: textColor,
-                            fontSize: wordFontSize,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                        SizedBox(height: imageSpacing),
+                        Text(word.word, style: wordStyle),
                         const SizedBox(height: 6),
-                        Text(
-                          word.meaning,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            height: 1.35,
-                            color: textColor,
-                            fontSize: meaningFontSize,
-                          ),
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                        Text(word.meaning, style: meaningStyle),
                       ],
                     ),
                   ),

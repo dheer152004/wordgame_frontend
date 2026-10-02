@@ -60,6 +60,11 @@ class ProfileSupportSection extends StatelessWidget {
             icon: Icons.report_problem_outlined,
             onTap: onReportProblemTap,
           ),
+          _SupportOptionTile(
+            title: 'Delete your account',
+            icon: Icons.verified_user,
+            onTap: onReportProblemTap,
+          ),
         ],
       ),
     );

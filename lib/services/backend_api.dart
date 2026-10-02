@@ -11,6 +11,7 @@ import '../models/auth_models.dart';
 import '../models/profile_models.dart';
 import '../models/word_Content_models.dart';
 import '../models/quiz_models.dart';
+import 'authenticated_http_client.dart';
 import 'session_store.dart';
 
 class BackendException implements Exception {
@@ -67,7 +68,7 @@ class BackendApi {
   static const String _ipLocationLookupPrimaryUrl = 'https://ipwho.is/';
   static const String _ipLocationLookupFallbackUrl = 'https://ipapi.co/json/';
 
-  final http.Client _client = http.Client();
+  final http.BaseClient _client = AuthenticatedHttpClient();
   List<ApiCategory>? _cachedCategories;
   final Map<int, ApiWord> _cachedWordById = {};
 
@@ -88,10 +89,13 @@ class BackendApi {
   }
 
   Future<UserProfile> login(LoginRequest request) async {
+    final requestBody = request.toJson()
+      ..['deviceId'] = await SessionStore.getOrCreateDeviceId()
+      ..['deviceName'] = _deviceName;
     final response = await _client.post(
       _uri('/api/auth/login'),
       headers: _jsonHeaders,
-      body: jsonEncode(request.toJson()),
+      body: jsonEncode(requestBody),
     );
 
     final payload = _decodeResponse(response);
@@ -100,6 +104,43 @@ class BackendApi {
     }
 
     throw const BackendException('Unexpected login response from server.');
+  }
+
+  String get _deviceName {
+    if (kIsWeb) return 'Web browser';
+    return switch (defaultTargetPlatform) {
+      TargetPlatform.android => 'Android device',
+      TargetPlatform.iOS => 'iOS device',
+      TargetPlatform.macOS => 'macOS device',
+      TargetPlatform.windows => 'Windows device',
+      TargetPlatform.linux => 'Linux device',
+      TargetPlatform.fuchsia => 'Flutter device',
+    };
+  }
+
+  Future<void> logout() async {
+    try {
+      final response = await _client.post(
+        _uri('/api/auth/logout'),
+        headers: await _headers(authenticated: true),
+      );
+      _decodeResponse(response);
+    } finally {
+      await SessionStore.clear();
+    }
+  }
+
+  Future<int> logoutAllSessions() async {
+    final response = await _client.post(
+      _uri('/api/auth/logout-all'),
+      headers: await _headers(authenticated: true),
+    );
+    final payload = _decodeResponse(response);
+    final revokedSessions = payload is Map<String, dynamic>
+        ? int.tryParse(payload['revokedSessions']?.toString() ?? '') ?? 0
+        : 0;
+    await SessionStore.clear();
+    return revokedSessions;
   }
 
   Future<UserProfile?> register(RegisterRequest request) async {

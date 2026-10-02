@@ -196,7 +196,7 @@ class ProfileDetailsSection extends StatelessWidget {
         ),
         _InfoTile(
           label: 'Total words saved',
-          value: profile.totalWordsSaved.toString(),
+          value: '${profile.totalWordsSaved} ',
         ),
         _InfoTile(
           label: 'Quizzes completed',

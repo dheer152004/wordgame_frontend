@@ -40,6 +40,14 @@ void main() {
     expect(profile.dateOfBirth, DateTime(2005, 8, 15));
   });
 
+  test('parses createdAt from the profile API date array', () {
+    final profile = UserProfile.fromJson({
+      'createdAt': [2026, 9, 17, 11, 27, 38, 54508000],
+    });
+
+    expect(profile.createdAt, DateTime(2026, 9, 17, 11, 27, 38, 54508));
+  });
+
   testWidgets('shows the auth screen when there is no saved session', (
     WidgetTester tester,
   ) async {

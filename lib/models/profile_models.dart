@@ -1,5 +1,6 @@
 class UserProfile {
   final String token;
+  final String refreshToken;
   final int id;
   final String username;
   final String email;
@@ -25,6 +26,7 @@ class UserProfile {
 
   const UserProfile({
     required this.token,
+    this.refreshToken = '',
     required this.id,
     required this.username,
     required this.email,
@@ -52,6 +54,7 @@ class UserProfile {
   factory UserProfile.fromJson(Map<String, dynamic> json) {
     return UserProfile(
       token: json['token']?.toString() ?? '',
+      refreshToken: json['refreshToken']?.toString() ?? '',
       id: _readInt(json['id']),
       username: json['username']?.toString() ?? '',
       email: json['email']?.toString() ?? '',
@@ -70,7 +73,7 @@ class UserProfile {
       averageQuizScore: _readDouble(json['averageQuizScore']),
       wordsMastered: _readInt(json['wordsMastered']),
       lastActive: _readDateTime(json['lastActive']),
-      createdAt: _readDateTime(json['createdAt']),
+      createdAt: _readFlexibleDateTime(json['createdAt']),
       dateOfBirth: _readFlexibleDateTime(json['dateOfBirth']),
       lastQuizDate: json['lastQuizDate']?.toString() ?? '',
       recentBadges: _readStringList(json['recentBadges']),
@@ -79,7 +82,6 @@ class UserProfile {
 
   Map<String, dynamic> toJson() {
     return {
-      'token': token,
       'id': id,
       'username': username,
       'email': email,
@@ -107,6 +109,7 @@ class UserProfile {
 
   UserProfile copyWith({
     String? token,
+    String? refreshToken,
     int? id,
     String? username,
     String? email,
@@ -132,6 +135,7 @@ class UserProfile {
   }) {
     return UserProfile(
       token: token ?? this.token,
+      refreshToken: refreshToken ?? this.refreshToken,
       id: id ?? this.id,
       username: username ?? this.username,
       email: email ?? this.email,

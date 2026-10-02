@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../auth/auth_screen.dart';
 import 'onboarding_screen.dart';
 import '../home/home_screen.dart';
+import '../../services/auth_session_manager.dart';
 import '../../services/app_version_service.dart';
 import '../../services/session_store.dart';
 
@@ -52,7 +53,7 @@ class _LoadingScreenState extends State<LoadingScreen>
       }
 
       // Try to restore saved user session
-      final savedUser = await SessionStore.restoreUser();
+      final savedUser = await AuthSessionManager.instance.restoreSession();
       if (!mounted) return;
 
       if (savedUser != null) {

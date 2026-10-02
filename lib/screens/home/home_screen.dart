@@ -317,14 +317,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 8),
                     HomeHeader(
                       user: _profile ?? widget.user,
                       onSearchTap: _toggleSearchBar,
                       onProfileReturned: _fetchProfile,
                     ),
                     if (_showSearchBar) ...[
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 10),
                       HomeSearchSection(
                         searchController: _searchController,
                         searchFocusNode: _searchFocusNode,
@@ -369,7 +369,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         onClose: _closeSearchBar,
                       ),
                       const SizedBox(height: 18),
-                    ],
+                    ] else
+                      const SizedBox(height: 4),
                     WordOfTheDayCard(onWordTap: _openWordOfTheDay),
                     const SizedBox(height: 24),
                     const CategoriesSection(),

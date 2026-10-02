@@ -605,7 +605,7 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
 
         return ClipRect(
           child: Stack(
-            alignment: Alignment.center,
+            alignment: const Alignment(0, -0.20),
             children: [
               Positioned(
                 left: -5000,
@@ -660,17 +660,17 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
               GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: () => _showWordDetails(currentWord),
-                onPanStart: (_) {
+                onHorizontalDragStart: (_) {
                   setState(() {
                     _isDragging = true;
                   });
                 },
-                onPanUpdate: (details) {
+                onHorizontalDragUpdate: (details) {
                   setState(() {
                     _dragOffset += details.delta;
                   });
                 },
-                onPanEnd: (details) {
+                onHorizontalDragEnd: (details) {
                   final shouldSwipe =
                       _dragOffset.dx.abs() > swipeThreshold ||
                       details.velocity.pixelsPerSecond.dx.abs() > 700;

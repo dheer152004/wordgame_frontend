@@ -14,6 +14,7 @@ import 'widgets/profile_avatar_helper.dart';
 import 'widgets/profile_report_dialog.dart';
 import 'widgets/date_of_birth_dialog.dart';
 import 'widgets/profile_saved_words_section.dart';
+import 'widgets/profile_account_section.dart';
 import 'settings_detail_page.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -92,7 +93,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _logout(BuildContext context) async {
-    await SessionStore.clear();
+    try {
+      await BackendApi.instance.logout();
+    } catch (_) {
+      await SessionStore.clear();
+    }
     if (!context.mounted) {
       return;
     }
@@ -278,23 +283,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   onTap: _chooseLanguage,
                 ),
                 _divider(context),
-                _ProfileOptionRow(
-                  icon: LucideIcons.target,
-                  iconColor: const Color(0xFFA655F5),
-                  title: 'Daily Goals & Streak',
-                  trailing: Icon(
-                    LucideIcons.chevronDown,
-                    size: 15,
-                    color: AppThemeColors.textSecondary(context),
-                  ),
-                  onTap: () => _openSettingsPage(
-                    title: 'Daily Goals & Streak',
-                    description:
-                        'Your current streak is ${profile?.currentStreak ?? 0} days. Keep learning daily to build it up.',
-                    icon: LucideIcons.target,
-                  ),
-                ),
-                _divider(context),
+
+                // _ProfileOptionRow(
+                //   icon: LucideIcons.target,
+                //   iconColor: const Color(0xFFA655F5),
+                //   title: 'Daily Goals & Streak',
+                //   trailing: Icon(
+                //     LucideIcons.chevronDown,
+                //     size: 15,
+                //     color: AppThemeColors.textSecondary(context),
+                //   ),
+                //   onTap: () => _openSettingsPage(
+                //     title: 'Daily Goals & Streak',
+                //     description:
+                //         'Your current streak is ${profile?.currentStreak ?? 0} days. Keep learning daily to build it up.',
+                //     icon: LucideIcons.target,
+                //   ),
+                // ),
+                // _divider(context),
                 _ProfileOptionRow(
                   icon: LucideIcons.award,
                   iconColor: const Color(0xFFFF8B27),
@@ -782,7 +788,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       'Nov',
       'Dec',
     ];
-    return '${months[date.month - 1]} ${date.year}';
+    final day = date.day.toString().padLeft(2, '0');
+    return '$day ${months[date.month - 1]} ${date.year}';
   }
 
   void _chooseLanguage() {
@@ -808,7 +815,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _detailAction(
             icon: LucideIcons.mail,
             label: 'Contact Us',
-            onTap: () => _openLegalLink(Uri.parse('mailto:support@nroq.in')),
+            onTap: () => _openLegalLink(Uri.parse('mailto:mail@nroq.in')),
           ),
           _detailAction(
             icon: LucideIcons.flag,
@@ -818,9 +825,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
               builder: (_) => const ProfileReportDialog(),
             ),
           ),
+          _detailAction(
+            icon: LucideIcons.trash2,
+            label: 'Delete your account',
+            color: Theme.of(context).colorScheme.error,
+            onTap: user != null ? _showDeleteAccountDialog : null,
+          ),
         ],
       ),
     );
+  }
+
+  Future<void> _showDeleteAccountDialog() async {
+    final deleted = await showDialog<bool>(
+      context: context,
+      builder: (_) => ProfileDeleteAccountDialog(
+        onDelete: (reason) async {
+          await BackendApi.instance.deleteUserAccount(reason: reason);
+          await SessionStore.clear();
+        },
+      ),
+    );
+
+    if (deleted == true && mounted) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const AuthScreen()),
+        (route) => false,
+      );
+    }
   }
 
   void _showPrivacyOptions() {
@@ -858,11 +890,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _detailAction({
     required IconData icon,
     required String label,
-    required VoidCallback onTap,
+    required VoidCallback? onTap,
+    Color? color,
   }) {
+    final actionColor = color ?? AppThemeColors.primary(context);
     return ListTile(
-      leading: Icon(icon, size: 19, color: AppThemeColors.primary(context)),
-      title: Text(label),
+      leading: Icon(icon, size: 19, color: actionColor),
+      title: Text(
+        label,
+        style: color == null ? null : TextStyle(color: actionColor),
+      ),
       trailing: const Icon(LucideIcons.chevronRight, size: 16),
       onTap: onTap,
     );
@@ -933,7 +970,8 @@ class _ProfileOptionRow extends StatelessWidget {
                 ),
                 if (value != null) ...[
                   const SizedBox(width: 6),
-                  Flexible(
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 110),
                     child: Text(
                       value!,
                       maxLines: 1,

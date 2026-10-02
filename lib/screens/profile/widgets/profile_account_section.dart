@@ -108,7 +108,7 @@ class _ProfileDeleteAccountDialogState
   ];
 
   final _otherReasonController = TextEditingController();
-  String? _selectedReason;
+  String? _selectedReason = _reasons.first;
   bool _isDeleting = false;
 
   @override
@@ -178,7 +178,7 @@ class _ProfileDeleteAccountDialogState
         FilledButton(
           onPressed: reason == null || _isDeleting ? null : _submit,
           style: FilledButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.error,
+            backgroundColor: const Color.fromARGB(255, 207, 54, 43),
           ),
           child: Text(_isDeleting ? 'Deleting...' : 'Delete account'),
         ),
@@ -189,6 +189,31 @@ class _ProfileDeleteAccountDialogState
   Future<void> _submit() async {
     final reason = _reason;
     if (reason == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (confirmationContext) => AlertDialog(
+        backgroundColor: AppThemeColors.surface(confirmationContext),
+        title: const Text('Delete your account permanently?'),
+        content: const Text(
+          'You will no longer be able to use this account. This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(confirmationContext).pop(false),
+            child: const Text('Keep account'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(confirmationContext).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color.fromARGB(255, 207, 54, 43),
+            ),
+            child: const Text('Delete permanently'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
 
     setState(() => _isDeleting = true);
     try {

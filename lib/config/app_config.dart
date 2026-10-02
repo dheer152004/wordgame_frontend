@@ -7,10 +7,14 @@ class AppConfig {
     final baseUrl =
         dotenv.env['BACKEND_API_BASE_URL'] ??
         'https://wordgame-backend-2sza.onrender.com';
+    final uri = Uri.tryParse(baseUrl);
+    if (kReleaseMode &&
+        (uri == null || !uri.hasAuthority || uri.scheme != 'https')) {
+      throw StateError('Production backend URLs must use HTTPS.');
+    }
     if (kDebugMode &&
         !kIsWeb &&
         defaultTargetPlatform == TargetPlatform.android) {
-      final uri = Uri.tryParse(baseUrl);
       if (uri != null && (uri.host == 'localhost' || uri.host == '127.0.0.1')) {
         return uri.replace(host: '10.0.2.2').toString();
       }

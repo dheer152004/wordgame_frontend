@@ -4,8 +4,27 @@ import '../saved_words_screen.dart';
 import '../../../services/backend_api.dart';
 import '../../../theme/app_theme.dart';
 
-class ProfileSavedWordsSection extends StatelessWidget {
+class ProfileSavedWordsSection extends StatefulWidget {
   const ProfileSavedWordsSection({super.key});
+
+  @override
+  State<ProfileSavedWordsSection> createState() =>
+      _ProfileSavedWordsSectionState();
+}
+
+class _ProfileSavedWordsSectionState extends State<ProfileSavedWordsSection> {
+  late Future<int> _savedWordCount;
+
+  @override
+  void initState() {
+    super.initState();
+    _savedWordCount = _loadSavedWordCount();
+  }
+
+  Future<int> _loadSavedWordCount() async {
+    final savedWords = await BackendApi.instance.fetchSavedWords();
+    return savedWords.length;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -13,10 +32,13 @@ class ProfileSavedWordsSection extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(AppRadius.card),
-        onTap: () {
-          Navigator.of(
+        onTap: () async {
+          await Navigator.of(
             context,
           ).push(MaterialPageRoute(builder: (_) => const SavedWordsScreen()));
+          if (mounted) {
+            setState(() => _savedWordCount = _loadSavedWordCount());
+          }
         },
         child: Container(
           width: double.infinity,
@@ -27,11 +49,16 @@ class ProfileSavedWordsSection extends StatelessWidget {
             border: Border.all(color: AppThemeColors.divider(context)),
           ),
           child: FutureBuilder<int>(
-            future: BackendApi.instance.fetchSavedWordsCount(),
+            future: _savedWordCount,
             builder: (context, snapshot) {
               final isLoading =
                   snapshot.connectionState == ConnectionState.waiting;
-              final count = snapshot.hasData ? snapshot.data! : 0;
+              final count = snapshot.data;
+              final countLabel = isLoading
+                  ? 'Loading...'
+                  : snapshot.hasError
+                  ? 'Unable to load saved words'
+                  : '$count saved word${count == 1 ? '' : 's'}';
 
               return Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -49,9 +76,7 @@ class ProfileSavedWordsSection extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        isLoading
-                            ? 'Loading...'
-                            : '$count saved word${count == 1 ? '' : 's'}',
+                        countLabel,
                         style: TextStyle(
                           color: AppThemeColors.textSecondary(context),
                           fontSize: 13,
