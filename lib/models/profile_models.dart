@@ -22,6 +22,8 @@ class UserProfile {
   final DateTime? createdAt;
   final DateTime? dateOfBirth;
   final String lastQuizDate;
+  final String lastActivityDate;
+  final bool streakUpdatedToday;
   final List<String> recentBadges;
 
   const UserProfile({
@@ -48,6 +50,8 @@ class UserProfile {
     required this.createdAt,
     required this.dateOfBirth,
     required this.lastQuizDate,
+    this.lastActivityDate = '',
+    this.streakUpdatedToday = false,
     required this.recentBadges,
   });
 
@@ -76,6 +80,8 @@ class UserProfile {
       createdAt: _readFlexibleDateTime(json['createdAt']),
       dateOfBirth: _readFlexibleDateTime(json['dateOfBirth']),
       lastQuizDate: json['lastQuizDate']?.toString() ?? '',
+      lastActivityDate: json['lastActivityDate']?.toString() ?? '',
+      streakUpdatedToday: json['streakUpdatedToday'] == true,
       recentBadges: _readStringList(json['recentBadges']),
     );
   }
@@ -103,6 +109,8 @@ class UserProfile {
       'createdAt': _dateToJson(createdAt),
       'dateOfBirth': _dateToJson(dateOfBirth),
       'lastQuizDate': lastQuizDate,
+      'lastActivityDate': lastActivityDate,
+      'streakUpdatedToday': streakUpdatedToday,
       'recentBadges': recentBadges,
     };
   }
@@ -131,6 +139,8 @@ class UserProfile {
     DateTime? createdAt,
     DateTime? dateOfBirth,
     String? lastQuizDate,
+    String? lastActivityDate,
+    bool? streakUpdatedToday,
     List<String>? recentBadges,
   }) {
     return UserProfile(
@@ -158,6 +168,8 @@ class UserProfile {
       createdAt: createdAt ?? this.createdAt,
       dateOfBirth: dateOfBirth ?? this.dateOfBirth,
       lastQuizDate: lastQuizDate ?? this.lastQuizDate,
+      lastActivityDate: lastActivityDate ?? this.lastActivityDate,
+      streakUpdatedToday: streakUpdatedToday ?? this.streakUpdatedToday,
       recentBadges: recentBadges ?? this.recentBadges,
     );
   }

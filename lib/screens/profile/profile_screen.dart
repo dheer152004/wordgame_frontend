@@ -16,6 +16,7 @@ import 'widgets/date_of_birth_dialog.dart';
 import 'widgets/profile_saved_words_section.dart';
 import 'widgets/profile_account_section.dart';
 import 'settings_detail_page.dart';
+import 'streak_calendar_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final UserProfile? user;
@@ -241,6 +242,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       color: const Color(0xFFFF762B),
                       value: '${profile?.currentStreak ?? 0}',
                       label: 'Day Streak',
+                      onTap: isSignedIn ? _openStreakCalendar : null,
                     ),
                   ),
                 ],
@@ -622,42 +624,56 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required Color color,
     required String value,
     required String label,
+    VoidCallback? onTap,
   }) {
-    return Container(
-      constraints: const BoxConstraints(minHeight: 72),
-      padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 6),
-      decoration: BoxDecoration(
-        color: AppThemeColors.surface(context),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(13),
-        border: Border.all(color: AppThemeColors.divider(context)),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 16, color: color),
-          const SizedBox(height: 2),
-          Text(
-            value,
-            style: TextStyle(
-              color: AppThemeColors.textPrimary(context),
-              fontSize: 16,
-              height: 1.1,
-              fontWeight: FontWeight.w700,
-            ),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 72),
+          padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 6),
+          decoration: BoxDecoration(
+            color: AppThemeColors.surface(context),
+            borderRadius: BorderRadius.circular(13),
+            border: Border.all(color: AppThemeColors.divider(context)),
           ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: AppThemeColors.textSecondary(context),
-              fontSize: 9,
-            ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 16, color: color),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: TextStyle(
+                  color: AppThemeColors.textPrimary(context),
+                  fontSize: 16,
+                  height: 1.1,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: AppThemeColors.textSecondary(context),
+                  fontSize: 9,
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
+  }
+
+  void _openStreakCalendar() {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const StreakCalendarScreen()));
   }
 
   Widget _sectionLabel(BuildContext context, String label) {

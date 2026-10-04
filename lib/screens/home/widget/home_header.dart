@@ -29,15 +29,7 @@ class HomeHeader extends StatelessWidget {
     final hasDisplayName = user != null && user!.greetingName.isNotEmpty;
     final displayName = hasDisplayName ? user!.greetingName : 'there';
     final hasAvatar = user != null && user!.avatarUrl.isNotEmpty;
-    final lastQuizDate = user == null
-        ? null
-        : DateTime.tryParse(user!.lastQuizDate)?.toLocal();
-    final today = DateTime.now();
-    final streakCompletedToday =
-        lastQuizDate != null &&
-        lastQuizDate.year == today.year &&
-        lastQuizDate.month == today.month &&
-        lastQuizDate.day == today.day;
+    final streakCompletedToday = user?.streakUpdatedToday ?? false;
 
     return Row(
       children: [
@@ -97,8 +89,7 @@ class HomeHeader extends StatelessWidget {
                               ),
                             ),
                           )
-                        :
-                         Container(
+                        : Container(
                             color: AppColors.challengeCard,
                             alignment: Alignment.center,
                             child: Text(
@@ -121,7 +112,6 @@ class HomeHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-
               if (user != null) ...[
                 Transform.translate(
                   offset: const Offset(0, -4),
@@ -137,6 +127,9 @@ class HomeHeader extends StatelessWidget {
                         iconColor: streakCompletedToday
                             ? AppColors.streak
                             : AppThemeColors.textMuted(context),
+                        iconGlowColor: streakCompletedToday
+                            ? AppColors.streak.withAlpha(150)
+                            : null,
                         label: '${user!.currentStreak}',
                       ),
                       _HomeStatPill(
@@ -191,11 +184,13 @@ class HomeHeader extends StatelessWidget {
 class _HomeStatPill extends StatelessWidget {
   final IconData icon;
   final Color iconColor;
+  final Color? iconGlowColor;
   final String label;
 
   const _HomeStatPill({
     required this.icon,
     required this.iconColor,
+    this.iconGlowColor,
     required this.label,
   });
 
@@ -212,7 +207,14 @@ class _HomeStatPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 18, color: iconColor),
+          Icon(
+            icon,
+            size: 18,
+            color: iconColor,
+            shadows: iconGlowColor == null
+                ? null
+                : [Shadow(color: iconGlowColor!, blurRadius: 10)],
+          ),
           const SizedBox(width: 7),
           Text(
             label,

@@ -81,6 +81,10 @@ class _HomeScreenState extends State<HomeScreen> {
         totalXp: result.newTotalXp,
         level: result.newLevel,
         currentStreak: result.currentStreak,
+        longestStreak: result.longestStreak,
+        lastQuizDate: result.lastActivityDate,
+        lastActivityDate: result.lastActivityDate,
+        streakUpdatedToday: result.streakUpdatedToday,
       );
     });
   }

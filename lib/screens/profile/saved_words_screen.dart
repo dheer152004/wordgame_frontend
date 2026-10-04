@@ -233,7 +233,7 @@ class _SavedWordCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final word = savedWord.toApiWord();
+    // final word = savedWord.toApiWord();
     final previewImageUrl = savedWord.previewImageUrl.trim();
 
     return Material(

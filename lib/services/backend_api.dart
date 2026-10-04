@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../config/app_config.dart';
 import '../models/auth_models.dart';
 import '../models/profile_models.dart';
+import '../models/streak_calendar_model.dart';
 import '../models/word_Content_models.dart';
 import '../models/quiz_models.dart';
 import 'authenticated_http_client.dart';
@@ -85,7 +86,12 @@ class BackendApi {
     }
 
     final authHeaders = await SessionStore.authorizationHeaders();
-    return {..._jsonHeaders, ...authHeaders};
+    return {
+      ..._jsonHeaders,
+      ...authHeaders,
+      'X-User-Timezone-Offset-Minutes': DateTime.now().timeZoneOffset.inMinutes
+          .toString(),
+    };
   }
 
   Future<UserProfile> login(LoginRequest request) async {
@@ -188,6 +194,21 @@ class BackendApi {
     }
 
     throw const BackendException('Unexpected profile response from server.');
+  }
+
+  Future<StreakCalendar> fetchStreakCalendar(DateTime month) async {
+    final monthKey = '${month.year}-${month.month.toString().padLeft(2, '0')}';
+    final response = await _client.get(
+      _uri('/api/user/profile/streak/calendar?month=$monthKey'),
+      headers: await _headers(authenticated: true),
+    );
+
+    final payload = _decodeResponse(response);
+    if (payload is Map<String, dynamic>) {
+      return StreakCalendar.fromJson(payload);
+    }
+
+    throw const BackendException('Unexpected streak calendar response.');
   }
 
   Future<List<UserConsent>> fetchUserConsents() async {

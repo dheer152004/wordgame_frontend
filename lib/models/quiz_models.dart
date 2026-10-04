@@ -98,6 +98,11 @@ class QuizSubmissionResult {
   final int newTotalXp;
   final int newLevel;
   final int currentStreak;
+  final int longestStreak;
+  final String lastActivityDate;
+  final bool streakUpdatedToday;
+  final bool milestoneReached;
+  final int? streakMilestone;
   final String message;
   final List<QuizSubmissionDetail> details;
 
@@ -109,6 +114,11 @@ class QuizSubmissionResult {
     required this.newTotalXp,
     required this.newLevel,
     required this.currentStreak,
+    required this.longestStreak,
+    required this.lastActivityDate,
+    required this.streakUpdatedToday,
+    required this.milestoneReached,
+    required this.streakMilestone,
     required this.message,
     required this.details,
   });
@@ -134,6 +144,13 @@ class QuizSubmissionResult {
       newTotalXp: _readInt(json['newTotalXp']),
       newLevel: _readInt(json['newLevel']),
       currentStreak: _readInt(json['currentStreak']),
+      longestStreak: _readInt(json['longestStreak']),
+      lastActivityDate: json['lastActivityDate']?.toString() ?? '',
+      streakUpdatedToday: json['streakUpdatedToday'] == true,
+      milestoneReached: json['milestoneReached'] == true,
+      streakMilestone: json['streakMilestone'] == null
+          ? null
+          : _readInt(json['streakMilestone']),
       message: json['message']?.toString() ?? '',
       details: details,
     );

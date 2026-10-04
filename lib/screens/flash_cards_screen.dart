@@ -496,7 +496,7 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
   }
 
   Widget _buildCategoryChips() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // final isDark = Theme.of(context).brightness == Brightness.dark;
 
     if (_loadingCategories) {
       return const SizedBox(
