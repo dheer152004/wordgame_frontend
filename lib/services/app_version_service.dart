@@ -54,11 +54,11 @@ class AppVersionService {
       final latestVersion = payload['latestVersion'] as String;
       final minimumVersion = payload['minimumVersion'] as String;
       final installedVersion = packageInfo.version;
-      if (_compareVersions(installedVersion, latestVersion) >= 0) return null;
+      if (compareVersions(installedVersion, latestVersion) >= 0) return null;
 
       final forceUpdate =
           payload['forceUpdate'] == true ||
-          _compareVersions(installedVersion, minimumVersion) < 0;
+          compareVersions(installedVersion, minimumVersion) < 0;
       return AppUpdateNotice(
         latestVersion: latestVersion,
         forceUpdate: forceUpdate,
@@ -73,7 +73,18 @@ class AppVersionService {
     }
   }
 
-  int _compareVersions(String left, String right) {
+  Future<bool> isInstalledVersionAtLeast(String requiredVersion) async {
+    if (kIsWeb ||
+        (defaultTargetPlatform != TargetPlatform.android &&
+            defaultTargetPlatform != TargetPlatform.iOS)) {
+      return false;
+    }
+
+    final packageInfo = await PackageInfo.fromPlatform();
+    return compareVersions(packageInfo.version, requiredVersion) >= 0;
+  }
+
+  static int compareVersions(String left, String right) {
     final leftParts = left.split('.').map((part) => int.tryParse(part) ?? 0);
     final rightParts = right.split('.').map((part) => int.tryParse(part) ?? 0);
     final leftVersion = leftParts.toList();

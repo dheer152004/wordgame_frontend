@@ -122,7 +122,6 @@ class HomeSearchSection extends StatelessWidget {
             ),
           ),
 
-
           //search button
           const SizedBox(height: 12),
           SizedBox(

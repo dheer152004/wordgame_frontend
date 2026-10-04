@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -17,13 +19,15 @@ class LoadingScreen extends StatefulWidget {
 }
 
 class _LoadingScreenState extends State<LoadingScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late final AnimationController _pulseController;
   late final Animation<double> _logoScale;
+  Completer<void>? _storeReturnCompleter;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1800),
@@ -36,8 +40,17 @@ class _LoadingScreenState extends State<LoadingScreen>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _pulseController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed &&
+        !(_storeReturnCompleter?.isCompleted ?? true)) {
+      _storeReturnCompleter!.complete();
+    }
   }
 
   Future<void> _bootstrap() async {
@@ -110,24 +123,7 @@ class _LoadingScreenState extends State<LoadingScreen>
                     child: const Text('LATER'),
                   ),
                 FilledButton(
-                  onPressed: () async {
-                    final storeUri = Uri.tryParse(notice.storeUrl);
-                    final opened =
-                        storeUri != null &&
-                        await launchUrl(
-                          storeUri,
-                          mode: LaunchMode.externalApplication,
-                        );
-                    if (!opened && mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Could not open the app store.'),
-                        ),
-                      );
-                    } else if (!notice.forceUpdate && dialogContext.mounted) {
-                      Navigator.of(dialogContext).pop(true);
-                    }
-                  },
+                  onPressed: () => _openUpdateStore(notice, dialogContext),
                   child: Text(notice.buttonText),
                 ),
               ],
@@ -135,6 +131,72 @@ class _LoadingScreenState extends State<LoadingScreen>
           ),
         ) ??
         !notice.forceUpdate;
+  }
+
+  Future<void> _openUpdateStore(
+    AppUpdateNotice notice,
+    BuildContext dialogContext,
+  ) async {
+    final storeUri = Uri.tryParse(notice.storeUrl);
+    if (storeUri == null) {
+      _showUpdateError('The app store link is invalid.');
+      return;
+    }
+
+    final resumeCompleter = Completer<void>();
+    if (notice.forceUpdate) {
+      _storeReturnCompleter = resumeCompleter;
+    }
+
+    final opened = await launchUrl(
+      storeUri,
+      mode: LaunchMode.externalApplication,
+    );
+    if (!opened) {
+      if (identical(_storeReturnCompleter, resumeCompleter)) {
+        _storeReturnCompleter = null;
+      }
+      _showUpdateError('Could not open the app store.');
+      return;
+    }
+
+    if (!notice.forceUpdate) {
+      if (dialogContext.mounted) {
+        Navigator.of(dialogContext).pop(true);
+      }
+      return;
+    }
+
+    await resumeCompleter.future;
+    if (identical(_storeReturnCompleter, resumeCompleter)) {
+      _storeReturnCompleter = null;
+    }
+    if (!mounted || !dialogContext.mounted) return;
+
+    try {
+      final installed = await AppVersionService.instance
+          .isInstalledVersionAtLeast(notice.latestVersion);
+      if (!mounted || !dialogContext.mounted) return;
+      if (installed) {
+        Navigator.of(dialogContext).pop(true);
+      } else {
+        _showUpdateError(
+          'Update not detected. Install it from the store to continue.',
+        );
+      }
+    } catch (error) {
+      debugPrint('Unable to verify installed app version: $error');
+      _showUpdateError(
+        'Could not verify the update. Try again after installing it.',
+      );
+    }
+  }
+
+  void _showUpdateError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
