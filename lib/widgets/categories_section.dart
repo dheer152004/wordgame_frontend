@@ -40,8 +40,13 @@ class _CategoriesSectionState extends State<CategoriesSection> {
           children: [
             Row(
               children: [
-                const Expanded(
-                  child: Text('Categories', style: AppTextStyles.sectionTitle),
+                Expanded(
+                  child: Text(
+                    'Categories',
+                    style: AppTextStyles.sectionTitle.copyWith(
+                      color: AppThemeColors.textPrimary(context),
+                    ),
+                  ),
                 ),
                 if (snapshot.connectionState == ConnectionState.done)
                   TextButton(
@@ -50,7 +55,7 @@ class _CategoriesSectionState extends State<CategoriesSection> {
                   ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             if (snapshot.connectionState != ConnectionState.done)
               const SizedBox(
                 height: 180,
@@ -304,7 +309,7 @@ class _CategoryCardState extends State<_CategoryCard> {
             ],
           ),
           borderRadius: BorderRadius.circular(AppRadius.card),
-          border: Border.all(color: Colors.white.withAlpha(18)),
+          border: Border.all(color: AppThemeColors.border(context)),
           boxShadow: [
             BoxShadow(
               color: widget.data.color.withAlpha(70),
@@ -417,7 +422,7 @@ class _CategoryCardState extends State<_CategoryCard> {
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppRadius.card),
-          border: Border.all(color: Colors.white.withAlpha(18)),
+          border: Border.all(color: AppThemeColors.border(context)),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withAlpha(60),
@@ -493,15 +498,15 @@ class _CategoryDetailSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textColor = _idealTextColor(data.color);
+    final textColor = AppThemeColors.textPrimary(context);
 
     return Material(
       color: Colors.transparent,
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: AppThemeColors.surface(context),
           borderRadius: BorderRadius.circular(34),
-          border: Border.all(color: Colors.white.withAlpha(18)),
+          border: Border.all(color: AppThemeColors.border(context)),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withAlpha(100),
@@ -620,19 +625,19 @@ class _CategoryDetailSheet extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 18),
-                    const Text(
+                    Text(
                       'Full Details',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
+                        color: AppThemeColors.textPrimary(context),
                       ),
                     ),
                     const SizedBox(height: 10),
                     Text(
                       data.examples,
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
+                      style: TextStyle(
+                        color: AppThemeColors.textSecondary(context),
                         fontSize: 14,
                         height: 1.55,
                       ),
@@ -644,6 +649,12 @@ class _CategoryDetailSheet extends StatelessWidget {
                         onPressed: onOpenCategory,
                         icon: const Icon(Icons.arrow_forward_rounded),
                         label: const Text('Open category deck'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppThemeColors.primary(context),
+                          foregroundColor: AppThemeColors.textOnPrimary(
+                            context,
+                          ),
+                        ),
                       ),
                     ),
                   ]),
@@ -677,13 +688,16 @@ class _DetailStatChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: accentColor.withAlpha(24),
+        color: Color.alphaBlend(
+          accentColor.withAlpha(20),
+          AppThemeColors.surface(context),
+        ),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: Colors.white.withAlpha(12)),
+        border: Border.all(color: AppThemeColors.border(context)),
       ),
       child: Row(
         children: [
-          Icon(icon, color: textColor, size: 20),
+          Icon(icon, color: AppThemeColors.primary(context), size: 20),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
@@ -692,8 +706,8 @@ class _DetailStatChip extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
+                  style: TextStyle(
+                    color: AppThemeColors.textSecondary(context),
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
                   ),

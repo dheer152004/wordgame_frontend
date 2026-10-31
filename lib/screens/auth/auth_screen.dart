@@ -1,5 +1,7 @@
-import 'package:flutter/material.dart';
 import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 import '../../models/auth_models.dart';
 import '../../services/backend_api.dart';
@@ -7,6 +9,7 @@ import '../../services/session_store.dart';
 import '../home/home_screen.dart';
 import 'login_screen.dart';
 import 'register_screen.dart';
+import 'email_verification_screen.dart';
 import '../profile/widgets/date_of_birth_dialog.dart';
 
 enum AuthMode { login, register }
@@ -177,12 +180,14 @@ class _AuthScreenState extends State<AuthScreen> {
         return;
       }
 
-      final user = await BackendApi.instance.register(
+      final registration = await BackendApi.instance.register(
         RegisterRequest(
           username: _registerUsernameController.text.trim(),
           email: _registerEmailController.text.trim(),
           password: _registerPasswordController.text,
+          acceptedDocuments: const [1, 2],
           displayName: _registerDisplayNameController.text.trim(),
+          platform: kIsWeb ? 'WEB' : defaultTargetPlatform.name.toUpperCase(),
         ),
       );
 
@@ -190,15 +195,32 @@ class _AuthScreenState extends State<AuthScreen> {
         return;
       }
 
+      if (registration != null && !registration.emailVerified) {
+        await Navigator.of(context).push<void>(
+          MaterialPageRoute(
+            builder: (_) => EmailVerificationScreen(
+              email: registration.email.isNotEmpty
+                  ? registration.email
+                  : _registerEmailController.text.trim(),
+            ),
+          ),
+        );
+        if (mounted) {
+          _setMode(AuthMode.login);
+        }
+        return;
+      }
+
+      final user = registration?.user;
       if (user != null) {
         await SessionStore.saveUser(user);
         if (!mounted) {
           return;
         }
-        await showDialog<void>(
-          context: context,
-          barrierDismissible: false,
-          builder: (_) => const DateOfBirthDialog(canSkip: true),
+        await Navigator.of(context).push<DateTime>(
+          MaterialPageRoute(
+            builder: (_) => const DateOfBirthDialog(canSkip: true),
+          ),
         );
         if (!mounted) {
           return;
@@ -475,8 +497,10 @@ class _AuthScreenState extends State<AuthScreen> {
                   //social icons are comment down right now
                   const SizedBox(height: 20),
                   Center(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
+                    child: Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 4,
                       children: [
                         Text(
                           'Don\'t have an account?',
@@ -516,8 +540,10 @@ class _AuthScreenState extends State<AuthScreen> {
                 ] else ...[
                   const SizedBox(height: 20),
                   Center(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
+                    child: Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 4,
                       children: [
                         Text(
                           'Already have an account?',
@@ -527,7 +553,6 @@ class _AuthScreenState extends State<AuthScreen> {
                             height: 1.5,
                           ),
                         ),
-                        const SizedBox(width: 6),
                         TextButton(
                           onPressed: () {
                             Navigator.of(context).pushReplacement(

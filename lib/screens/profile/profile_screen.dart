@@ -72,10 +72,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           if (!context.mounted) {
             return;
           }
-          final selectedDate = await showDialog<DateTime>(
-            context: context,
-            barrierDismissible: false,
-            builder: (_) => const DateOfBirthDialog(canSkip: true),
+          final selectedDate = await Navigator.of(context).push<DateTime>(
+            MaterialPageRoute(
+              builder: (_) => const DateOfBirthDialog(canSkip: true),
+            ),
           );
           if (selectedDate != null && context.mounted) {
             setState(() {
@@ -322,16 +322,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 _divider(context),
-                _ProfileOptionRow(
-                  icon: LucideIcons.bell,
-                  iconColor: const Color(0xFFFF536A),
-                  title: 'Notifications',
-                  trailing: _profileSwitch(
-                    value: _notificationsEnabled,
-                    onChanged: (value) =>
-                        setState(() => _notificationsEnabled = value),
-                  ),
-                ),
+                // _ProfileOptionRow(
+                //   icon: LucideIcons.bell,
+                //   // iconColor: const Color(0xFFFF536A),
+                //   iconColor: const Color(0xFF1D4ED8),
+                //   title: 'Notifications',
+                //   trailing: _profileSwitch(
+                //     value: _notificationsEnabled,
+                //     onChanged: (value) =>
+                //         setState(() => _notificationsEnabled = value),
+                //   ),
+                // ),
                 _divider(context),
                 _ProfileOptionRow(
                   icon: LucideIcons.moon,
@@ -718,7 +719,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       value: value,
       onChanged: onChanged,
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      activeTrackColor: const Color(0xFFF43F63),
+      activeTrackColor: AppThemeColors.primary(context),
       inactiveTrackColor: AppThemeColors.divider(context),
       inactiveThumbColor: AppThemeColors.surface(context),
       trackOutlineColor: WidgetStatePropertyAll(

@@ -14,15 +14,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   static const _pages = [
     {
       'image': 'assets/img/girl_sitting.webp',
-      'title': 'Learn Words in Real Context',
-      'description': 'Understand meanings with examples you can relate to.',
+      'title': 'Understand the world beyound your own',
+      'description': 'Discover different fields, explore unfamiliar concepts, and see the world from new perspectives.',
       'button': 'Next',
     },
     {
       'image': 'assets/img/todo.webp',
-      'title': 'Practice. Quiz. Remember.',
-      'description':
-          'Smart quizzes and spaced repetition help you remember better.',
+      'title': 'Explore. Learn. Remember.',
+      'description': 'Discover new concepts, test your knowledge, and remember what you learn.',
       'button': 'Get Started',
     },
   ];

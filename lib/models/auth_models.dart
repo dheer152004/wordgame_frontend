@@ -1,3 +1,5 @@
+import 'profile_models.dart';
+
 class LoginRequest {
   final String username;
   final String password;
@@ -14,11 +16,15 @@ class RegisterRequest {
   final String email;
   final String password;
   final String? displayName;
+  final List<int> acceptedDocuments;
+  final String platform;
 
   const RegisterRequest({
     required this.username,
     required this.email,
     required this.password,
+    required this.acceptedDocuments,
+    required this.platform,
     this.displayName,
   });
 
@@ -27,9 +33,33 @@ class RegisterRequest {
       'username': username,
       'email': email,
       'password': password,
+      'acceptedDocuments': acceptedDocuments,
+      'platform': platform,
       if (displayName != null && displayName!.trim().isNotEmpty)
         'displayName': displayName,
     };
+  }
+}
+
+class RegistrationResult {
+  final String email;
+  final bool emailVerified;
+  final UserProfile? user;
+
+  const RegistrationResult({
+    required this.email,
+    required this.emailVerified,
+    required this.user,
+  });
+
+  factory RegistrationResult.fromJson(Map<String, dynamic> json) {
+    final token = json['token']?.toString() ?? '';
+
+    return RegistrationResult(
+      email: json['email']?.toString() ?? '',
+      emailVerified: json['emailVerified'] != false,
+      user: token.isNotEmpty ? UserProfile.fromJson(json) : null,
+    );
   }
 }
 

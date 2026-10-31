@@ -149,7 +149,7 @@ class BackendApi {
     return revokedSessions;
   }
 
-  Future<UserProfile?> register(RegisterRequest request) async {
+  Future<RegistrationResult?> register(RegisterRequest request) async {
     final response = await _client.post(
       _uri('/api/auth/register'),
       headers: _jsonHeaders,
@@ -157,8 +157,8 @@ class BackendApi {
     );
 
     final payload = _decodeResponse(response);
-    if (payload is Map<String, dynamic> && payload.containsKey('token')) {
-      return UserProfile.fromJson(payload);
+    if (payload is Map<String, dynamic>) {
+      return RegistrationResult.fromJson(payload);
     }
 
     return null;

@@ -57,28 +57,29 @@ class _HomeBottomNavState extends State<HomeBottomNav> {
               setState(() => _selectedIndex = index);
 
               if (index == 1) {
-                Navigator.of(context).push(
+                await Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const FlashCardsScreen()),
                 );
-              }
-
-              if (index == 2) {
+                if (context.mounted) {
+                  setState(() => _selectedIndex = 0);
+                }
+              } else if (index == 2) {
                 final quizResult = await openQuizModePicker(context);
                 if (context.mounted) {
+                  setState(() => _selectedIndex = 0);
                   await widget.onProfileReturned?.call();
                   if (context.mounted && quizResult != null) {
                     widget.onQuizCompleted?.call(quizResult);
                   }
                 }
-              }
-
-              if (index == 3) {
+              } else if (index == 3) {
                 await Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => ProfileScreen(user: widget.user),
                   ),
                 );
                 if (context.mounted) {
+                  setState(() => _selectedIndex = 0);
                   await widget.onProfileReturned?.call();
                 }
               }

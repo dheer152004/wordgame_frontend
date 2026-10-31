@@ -6,7 +6,7 @@ class AppConfig {
   static String get backendApiBaseUrl {
     final baseUrl =
         dotenv.env['BACKEND_API_BASE_URL'] ??
-        'https://wordgame-backend-2sza.onrender.com';
+        'https://app.nroq.in';
     final uri = Uri.tryParse(baseUrl);
     if (kReleaseMode &&
         (uri == null || !uri.hasAuthority || uri.scheme != 'https')) {

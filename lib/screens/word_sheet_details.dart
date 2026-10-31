@@ -301,7 +301,7 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
 
       await Share.share(
         shareText.toString().trim(),
-        subject: '${widget.word.word} - Klug',
+        subject: '${widget.word.word} - nroq',
       );
 
       if (!context.mounted) {

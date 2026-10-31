@@ -91,54 +91,111 @@ class RegisterScreen extends StatelessWidget {
             },
           ),
           const SizedBox(height: 12),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: RichText(
-              textAlign: TextAlign.center,
-              text: TextSpan(
-                style: const TextStyle(
-                  color: Color.fromARGB(179, 21, 20, 20),
-                  fontSize: 12,
+          FormField<bool>(
+            initialValue: false,
+            validator: (accepted) {
+              if (accepted != true) {
+                return 'Please accept the Terms of Use and Privacy Policy.';
+              }
+              return null;
+            },
+            builder: (field) => Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: 48,
+                      child: Checkbox(
+                        value: field.value ?? false,
+                        onChanged: field.didChange,
+                        activeColor: AppColors.primary,
+                        side: const BorderSide(
+                          color: Color(0xFF64748B),
+                          width: 1.5,
+                        ),
+                        visualDensity: VisualDensity.compact,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ),
+                    const Expanded(child: _AgreementText()),
+                  ],
                 ),
-                children: [
-                  const TextSpan(text: 'By signing in you accept our '),
-                  TextSpan(
-                    text: 'Terms of use',
-                    style: const TextStyle(
-                      color: AppColors.challengeCard,
-                      decoration: TextDecoration.underline,
+                if (field.errorText != null)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 48, top: 4),
+                    child: Text(
+                      field.errorText!,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                        fontSize: 12,
+                      ),
                     ),
-                    recognizer: TapGestureRecognizer()
-                      ..onTap = () async {
-                        await launchUrl(
-                          Uri.parse('https://nroq.in/terms-of-service'),
-                          mode: LaunchMode.externalApplication,
-                        );
-                      },
                   ),
-                  const TextSpan(text: ' and '),
-                  TextSpan(
-                    text: 'Privacy and policy',
-                    style: const TextStyle(
-                      color: AppColors.challengeCard,
-                      decoration: TextDecoration.underline,
-                    ),
-                    recognizer: TapGestureRecognizer()
-                      ..onTap = () async {
-                        await launchUrl(
-                          Uri.parse('https://nroq.in/privacy-policy'),
-                          mode: LaunchMode.externalApplication,
-                        );
-                      },
-                  ),
-                ],
-              ),
+              ],
             ),
           ),
           if (errorMessage != null) ...[
             const SizedBox(height: 12),
             errorBanner ?? const SizedBox.shrink(),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+class _AgreementText extends StatefulWidget {
+  const _AgreementText();
+
+  @override
+  State<_AgreementText> createState() => _AgreementTextState();
+}
+
+class _AgreementTextState extends State<_AgreementText> {
+  late final TapGestureRecognizer _termsRecognizer = TapGestureRecognizer()
+    ..onTap = () => _openLink('https://nroq.in/terms-of-service');
+  late final TapGestureRecognizer _privacyRecognizer = TapGestureRecognizer()
+    ..onTap = () => _openLink('https://nroq.in/privacy-policy');
+
+  Future<void> _openLink(String url) async {
+    await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+  }
+
+  @override
+  void dispose() {
+    _termsRecognizer.dispose();
+    _privacyRecognizer.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return RichText(
+      key: const ValueKey('agreement-text'),
+      textAlign: TextAlign.left,
+      text: TextSpan(
+        style: const TextStyle(
+          color: Color.fromARGB(179, 21, 20, 20),
+          fontSize: 13,
+        ),
+        children: [
+          const TextSpan(text: 'I have read and agree to '),
+          TextSpan(
+            text: 'Terms of Use',
+            style: const TextStyle(color: AppColors.primary),
+            recognizer: _termsRecognizer,
+          ),
+          const TextSpan(text: ' and '),
+          TextSpan(
+            text: 'Privacy Policy',
+            style: const TextStyle(color: AppColors.primary),
+            recognizer: _privacyRecognizer,
+          ),
         ],
       ),
     );

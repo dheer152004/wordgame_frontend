@@ -3,6 +3,8 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../models/profile_models.dart';
 import '../../../theme/app_theme.dart';
+import '../../profile/widgets/profile_avatar_helper.dart';
+import '../../profile/widgets/profile_avatar_preview.dart';
 import '../../profile/profile_screen.dart';
 
 class HomeHeader extends StatelessWidget {
@@ -28,7 +30,8 @@ class HomeHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final hasDisplayName = user != null && user!.greetingName.isNotEmpty;
     final displayName = hasDisplayName ? user!.greetingName : 'there';
-    final hasAvatar = user != null && user!.avatarUrl.isNotEmpty;
+    final avatarUrl = ProfileAvatarHelper.resolveAvatarUrl(user, user);
+    final hasAvatar = avatarUrl.isNotEmpty;
     final streakCompletedToday = user?.streakUpdatedToday ?? false;
 
     return Row(
@@ -70,25 +73,7 @@ class HomeHeader extends StatelessWidget {
                   ),
                   child: ClipOval(
                     child: hasAvatar
-                        ? Image.network(
-                            user!.avatarUrl,
-                            width: 44,
-                            height: 44,
-                            fit: BoxFit.cover,
-                            webHtmlElementStrategy:
-                                WebHtmlElementStrategy.prefer,
-                            errorBuilder: (_, _, _) => Container(
-                              color: AppColors.challengeCard,
-                              alignment: Alignment.center,
-                              child: const Text(
-                                'Not shown',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                          )
+                        ? ProfileAvatarPreview(avatarUrl: avatarUrl, size: 44)
                         : Container(
                             color: AppColors.challengeCard,
                             alignment: Alignment.center,

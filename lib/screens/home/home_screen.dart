@@ -8,6 +8,7 @@ import '../../models/word_Content_models.dart';
 import '../../services/backend_api.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/categories_section.dart';
+import '../profile/widgets/profile_avatar_helper.dart';
 import '../flash_cards_screen.dart';
 import 'widget/word_of_the_day_card.dart';
 import 'widget/home_bottom_nav.dart';
@@ -62,8 +63,12 @@ class _HomeScreenState extends State<HomeScreen> {
         return;
       }
 
+      final currentUser = _profile ?? widget.user;
+      final avatarUrl = profile.avatarUrl.trim().isNotEmpty
+          ? ProfileAvatarHelper.resolveAvatarUrl(profile, currentUser)
+          : ProfileAvatarHelper.resolveAvatarUrl(currentUser, currentUser);
       setState(() {
-        _profile = profile;
+        _profile = profile.copyWith(avatarUrl: avatarUrl);
       });
     } catch (_) {
       // Keep the profile passed during login visible if the refresh fails.
@@ -376,7 +381,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ] else
                       const SizedBox(height: 4),
                     WordOfTheDayCard(onWordTap: _openWordOfTheDay),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 32),
                     const CategoriesSection(),
                     const SizedBox(height: 16),
                   ],

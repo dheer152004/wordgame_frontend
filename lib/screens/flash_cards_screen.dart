@@ -68,6 +68,7 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
 
   final GlobalKey _cardKey = GlobalKey();
   final GlobalKey _cleanCardKey = GlobalKey();
+  final Map<String, GlobalKey> _categoryChipKeys = {};
 
   @override
   void initState() {
@@ -156,6 +157,7 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
         _loadingWords = false;
       }
     });
+    _scheduleSelectedCategoryChipScroll();
 
     if (initialWord != null) {
       _scheduleVisibleImagePreload();
@@ -295,7 +297,29 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
       _selectedCategoryLabel = selection;
       _selectedCategoryId = selectedCategory?.id;
     });
+    _scheduleSelectedCategoryChipScroll();
     _loadWordsForSelection(selection);
+  }
+
+  GlobalKey _categoryChipKey(String category) {
+    return _categoryChipKeys.putIfAbsent(category, GlobalKey.new);
+  }
+
+  void _scheduleSelectedCategoryChipScroll() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final chipContext = _categoryChipKey(
+        _selectedCategoryLabel,
+      ).currentContext;
+      if (chipContext == null) return;
+
+      Scrollable.ensureVisible(
+        chipContext,
+        alignment: 0.5,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    });
   }
 
   void _advanceCard() {
@@ -422,21 +446,21 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
 
         await Share.shareXFiles(
           [XFile(file.path, mimeType: 'image/png')],
-          text: 'Check out this word from Klug!',
-          subject: '${word.word} - Klug',
+          text: 'Check out this word from nroq!',
+          subject: '${word.word} - nroq',
         );
       }
     } catch (e) {
       debugPrint('Error sharing card: $e');
       final shareText = StringBuffer()
-        ..writeln('Klug word card')
+        ..writeln('nroq word card')
         ..writeln(word.word)
         ..writeln(word.meaning)
         ..writeln('Category: ${word.categoryName}');
 
       await Share.share(
         shareText.toString().trim(),
-        subject: '${word.word} - Klug',
+        subject: '${word.word} - nroq',
       );
     }
   }
@@ -507,43 +531,47 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
 
     return SizedBox(
       height: 46,
-      child: ListView.separated(
+      child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
-        itemCount: _categories.length + 1,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
-        itemBuilder: (context, index) {
-          final isRandomChip = index == 0;
-          final chipValue = isRandomChip
-              ? _randomCategoryKey
-              : _categories[index - 1].name;
-          final selected = chipValue == _selectedCategoryLabel;
+        child: Row(
+          children: [
+            for (var index = 0; index < _categories.length + 1; index++) ...[
+              if (index > 0) const SizedBox(width: 10),
+              _buildCategoryChip(index),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
 
-          final chipLabel = isRandomChip
-              ? 'Random'
-              : '${_categories[index - 1].name} · ${_categories[index - 1].wordCount}';
+  Widget _buildCategoryChip(int index) {
+    final isRandomChip = index == 0;
+    final category = isRandomChip ? null : _categories[index - 1];
+    final chipValue = category?.name ?? _randomCategoryKey;
+    final selected = chipValue == _selectedCategoryLabel;
+    final chipLabel = category == null
+        ? 'Random'
+        : '${category.name} · ${category.wordCount}';
 
-          return ChoiceChip(
-            label: Text(chipLabel),
-            selected: selected,
-            onSelected: (_) => _selectCategory(chipValue),
-            labelStyle: TextStyle(
-              color: selected
-                  ? Colors.white
-                  : AppThemeColors.textPrimary(context),
-              fontWeight: FontWeight.w700,
-            ),
-            backgroundColor: AppThemeColors.surfaceAlt(context),
-            selectedColor: AppThemeColors.primary(context),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(999),
-              side: BorderSide(
-                color: selected
-                    ? AppThemeColors.primary(context)
-                    : AppThemeColors.divider(context),
-              ),
-            ),
-          );
-        },
+    return ChoiceChip(
+      key: _categoryChipKey(chipValue),
+      label: Text(chipLabel),
+      selected: selected,
+      onSelected: (_) => _selectCategory(chipValue),
+      labelStyle: TextStyle(
+        color: selected ? Colors.white : AppThemeColors.textPrimary(context),
+        fontWeight: FontWeight.w700,
+      ),
+      backgroundColor: AppThemeColors.surfaceAlt(context),
+      selectedColor: AppThemeColors.primary(context),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(999),
+        side: BorderSide(
+          color: selected
+              ? AppThemeColors.primary(context)
+              : AppThemeColors.divider(context),
+        ),
       ),
     );
   }
