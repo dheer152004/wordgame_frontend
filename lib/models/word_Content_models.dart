@@ -17,6 +17,15 @@ class ApiCategory {
     required this.wordCount,
   });
 
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'imageUrl': imageUrl,
+    'description': description,
+    'isActive': isActive,
+    'wordCount': wordCount,
+  };
+
   factory ApiCategory.fromJson(Map<String, dynamic> json) {
     return ApiCategory(
       id: _readInt(json['id']),

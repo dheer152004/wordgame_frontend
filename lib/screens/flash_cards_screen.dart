@@ -10,6 +10,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../models/word_Content_models.dart';
 import '../services/backend_api.dart';
+import '../services/recent_category_store.dart';
 import '../theme/app_theme.dart';
 import '../widgets/common_widgets.dart';
 import '../widgets/custom_native_ad.dart';
@@ -159,6 +160,18 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
     });
     _scheduleSelectedCategoryChipScroll();
 
+    final recentCategoryId = initialWord?.categoryId ?? requestedCategoryId;
+    final recentCategory = recentCategoryId != null
+        ? _findCategoryById(recentCategoryId)
+        : _findCategoryByName(
+            initialWord?.categoryName.trim().isNotEmpty == true
+                ? initialWord!.categoryName
+                : requestedCategory,
+          );
+    if (recentCategory != null) {
+      await _recordRecentCategory(recentCategory);
+    }
+
     if (initialWord != null) {
       _scheduleVisibleImagePreload();
       return;
@@ -292,6 +305,9 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
     if (_selectedCategoryLabel == selection) return;
 
     final selectedCategory = _findCategoryByName(selection);
+    if (selectedCategory != null) {
+      unawaited(_recordRecentCategory(selectedCategory));
+    }
 
     setState(() {
       _selectedCategoryLabel = selection;
@@ -299,6 +315,20 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
     });
     _scheduleSelectedCategoryChipScroll();
     _loadWordsForSelection(selection);
+  }
+
+  Future<void> _recordRecentCategory(ApiCategory category) async {
+    try {
+      await RecentCategoryStore.record(category);
+    } catch (error, stackTrace) {
+      debugPrint('Failed to save recently explored category: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not save this recent category.')),
+        );
+      }
+    }
   }
 
   GlobalKey _categoryChipKey(String category) {

@@ -7,107 +7,183 @@ import '../services/backend_api.dart';
 import '../theme/app_theme.dart';
 
 class CategoriesSection extends StatefulWidget {
-  const CategoriesSection({super.key});
+  final ValueChanged<ApiCategory>? onCategoryTap;
+
+  const CategoriesSection({super.key, this.onCategoryTap});
 
   @override
-  State<CategoriesSection> createState() => _CategoriesSectionState();
+  CategoriesSectionState createState() => CategoriesSectionState();
 }
 
-class _CategoriesSectionState extends State<CategoriesSection> {
-  late Future<List<ApiCategory>> _categoriesFuture;
+class CategoriesSectionState extends State<CategoriesSection> {
+  static const int _pageSize = 16;
+
+  final List<ApiCategory> _categories = [];
+  int _currentPage = -1;
+  bool _hasMore = true;
+  bool _isLoading = true;
+  bool _isLoadingMore = false;
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _categoriesFuture = BackendApi.instance.fetchCategories(forceRefresh: true);
+    _loadNextPage();
   }
 
   Future<void> _reloadCategories() async {
+    if (_isLoadingMore) {
+      return;
+    }
     setState(() {
-      _categoriesFuture = BackendApi.instance.fetchCategories(
-        forceRefresh: true,
-      );
+      _categories.clear();
+      _currentPage = -1;
+      _hasMore = true;
+      _errorMessage = null;
+      _isLoading = true;
     });
+    await _loadNextPage(forceRefresh: true);
+  }
+
+  Future<void> _loadNextPage({bool forceRefresh = false}) async {
+    if (_isLoadingMore || (!_hasMore && !forceRefresh)) {
+      return;
+    }
+
+    final requestedPage = forceRefresh ? 0 : _currentPage + 1;
+    setState(() {
+      _isLoadingMore = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final result = await BackendApi.instance.fetchCategoriesPage(
+        page: requestedPage,
+        size: _pageSize,
+        forceRefresh: forceRefresh,
+      );
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        if (requestedPage == 0) {
+          _categories
+            ..clear()
+            ..addAll(result.categories);
+        } else {
+          final existingIds = _categories
+              .map((category) => category.id)
+              .toSet();
+          _categories.addAll(
+            result.categories.where((category) => existingIds.add(category.id)),
+          );
+        }
+        _currentPage = result.currentPage;
+        _hasMore = result.hasMore;
+        _isLoading = false;
+        _isLoadingMore = false;
+      });
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _isLoading = false;
+        _isLoadingMore = false;
+        _errorMessage = error.toString();
+      });
+    }
+  }
+
+  Future<void> loadNextPage() => _loadNextPage();
+
+  void _openCategory(ApiCategory category) {
+    final onCategoryTap = widget.onCategoryTap;
+    if (onCategoryTap != null) {
+      onCategoryTap(category);
+      return;
+    }
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => FlashCardsScreen(
+          categoryId: category.id,
+          categoryName: category.name,
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<ApiCategory>>(
-      future: _categoriesFuture,
-      builder: (context, snapshot) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Categories',
-                    style: AppTextStyles.sectionTitle.copyWith(
-                      color: AppThemeColors.textPrimary(context),
-                    ),
-                  ),
+            Expanded(
+              child: Text(
+                'Categories',
+                style: AppTextStyles.sectionTitle.copyWith(
+                  color: AppThemeColors.textPrimary(context),
                 ),
-                if (snapshot.connectionState == ConnectionState.done)
-                  TextButton(
-                    onPressed: _reloadCategories,
-                    child: const Text('Refresh'),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            if (snapshot.connectionState != ConnectionState.done)
-              const SizedBox(
-                height: 180,
-                child: Center(child: CircularProgressIndicator()),
-              )
-            else if (snapshot.hasError)
-              _ErrorState(
-                message: snapshot.error.toString(),
-                onRetry: _reloadCategories,
-              )
-            else if ((snapshot.data ?? const []).isEmpty)
-              const _EmptyState()
-            else
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final cardWidth =
-                      (constraints.maxWidth - AppSpacing.cardGap) / 2;
-
-                  return Wrap(
-                    spacing: AppSpacing.cardGap,
-                    runSpacing: AppSpacing.cardGap,
-                    children: [
-                      for (
-                        var index = 0;
-                        index < snapshot.data!.length;
-                        index++
-                      )
-                        SizedBox(
-                          width: cardWidth,
-                          child: _CategoryCard(
-                            data: _CategoryCardData.fromCategory(
-                              snapshot.data![index],
-                              index,
-                            ),
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => FlashCardsScreen(
-                                    categoryName: snapshot.data![index].name,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                    ],
-                  );
-                },
               ),
+            ),
+            TextButton(
+              onPressed: _isLoadingMore ? null : _reloadCategories,
+              child: const Text('Refresh'),
+            ),
           ],
-        );
-      },
+        ),
+        const SizedBox(height: 20),
+        if (_isLoading && _categories.isEmpty)
+          const SizedBox(
+            height: 180,
+            child: Center(child: CircularProgressIndicator()),
+          )
+        else if (_categories.isEmpty && _errorMessage != null)
+          _ErrorState(message: _errorMessage!, onRetry: _reloadCategories)
+        else if (_categories.isEmpty)
+          const _EmptyState()
+        else
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final cardWidth = (constraints.maxWidth - AppSpacing.cardGap) / 2;
+
+              return Wrap(
+                spacing: AppSpacing.cardGap,
+                runSpacing: AppSpacing.cardGap,
+                children: [
+                  for (var index = 0; index < _categories.length; index++)
+                    SizedBox(
+                      width: cardWidth,
+                      child: _CategoryCard(
+                        data: _CategoryCardData.fromCategory(
+                          _categories[index],
+                          index,
+                        ),
+                        onTap: () => _openCategory(_categories[index]),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+        if (_categories.isNotEmpty && _isLoadingMore)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 20),
+            child: Center(child: CircularProgressIndicator()),
+          )
+        else if (_categories.isNotEmpty && _errorMessage != null)
+          Align(
+            alignment: Alignment.center,
+            child: TextButton(
+              onPressed: _loadNextPage,
+              child: const Text('Could not load more categories. Try again'),
+            ),
+          ),
+      ],
     );
   }
 }

@@ -56,6 +56,26 @@ class CategorySearchPage {
   });
 }
 
+class CategoriesPage {
+  final List<ApiCategory> categories;
+  final int currentPage;
+  final int totalPages;
+  final int pageSize;
+  final int totalCategories;
+  final bool hasMore;
+  final String? paginationToken;
+
+  const CategoriesPage({
+    required this.categories,
+    required this.currentPage,
+    required this.totalPages,
+    required this.pageSize,
+    required this.totalCategories,
+    required this.hasMore,
+    this.paginationToken,
+  });
+}
+
 class BackendApi {
   BackendApi._();
 
@@ -63,8 +83,14 @@ class BackendApi {
 
   String get baseUrl => AppConfig.backendApiBaseUrl;
   static const Duration _cacheTtl = Duration(hours: 6);
+  static const Duration _categoryPaginationTokenTtl = Duration(minutes: 30);
   static const String _categoriesCacheKey = 'word_categories_cache';
+  static const String _categoriesPageCachePrefix =
+      'word_categories_random_page_v2_';
+  static const String _categoriesPaginationTokenKey =
+      'word_categories_random_pagination_token_v1';
   static const String _wordDetailCachePrefix = 'word_word_detail_v2_';
+  static const String _categoryWordsCachePrefix = 'category_words_page_v1_';
   static const String _ipLocationLookupBestEffortUrl = 'https://ipinfo.io/json';
   static const String _ipLocationLookupPrimaryUrl = 'https://ipwho.is/';
   static const String _ipLocationLookupFallbackUrl = 'https://ipapi.co/json/';
@@ -579,17 +605,19 @@ class BackendApi {
       }
     }
 
-    final response = await _client.get(
-      _uri('/api/categories'),
-      headers: await _headers(authenticated: true),
-    );
-    final payload = _decodeResponse(response);
-    final items = _asList(payload);
-
-    final categories = items
-        .whereType<Map>()
-        .map((entry) => ApiCategory.fromJson(Map<String, dynamic>.from(entry)))
-        .toList();
+    final categories = <ApiCategory>[];
+    var pageNumber = 0;
+    var hasMore = true;
+    while (hasMore) {
+      final page = await fetchCategoriesPage(
+        page: pageNumber,
+        size: 16,
+        forceRefresh: forceRefresh,
+      );
+      categories.addAll(page.categories);
+      hasMore = page.hasMore && page.categories.isNotEmpty;
+      pageNumber = page.currentPage + 1;
+    }
 
     _cachedCategories = categories;
     await _writeCachedList(
@@ -597,6 +625,217 @@ class BackendApi {
       categories.map((item) => itemToJson(item)).toList(),
     );
     return categories;
+  }
+
+  Future<CategoriesPage> fetchCategoriesPage({
+    int page = 0,
+    int size = 16,
+    bool forceRefresh = false,
+  }) async {
+    if (page < 0 || size <= 0) {
+      throw ArgumentError(
+        'Category page must be non-negative and size positive.',
+      );
+    }
+
+    final cacheKey = '$_categoriesPageCachePrefix${page}_$size';
+    if (!forceRefresh) {
+      final cachedPage = await _readCachedCategoriesPage(
+        cacheKey,
+        requestedPage: page,
+        requestedSize: size,
+      );
+      if (cachedPage != null) {
+        return cachedPage;
+      }
+    }
+
+    String? paginationToken;
+    if (page > 0) {
+      paginationToken = await _readCategoryPaginationToken();
+      if (paginationToken == null) {
+        await fetchCategoriesPage(page: 0, size: size, forceRefresh: true);
+        paginationToken = await _readCategoryPaginationToken();
+      }
+      if (paginationToken == null) {
+        throw const BackendException(
+          'The categories response did not include a pagination token.',
+        );
+      }
+    }
+
+    final queryParameters = <String, String>{'page': '$page', 'size': '$size'};
+    if (paginationToken case final token?) {
+      queryParameters['paginationToken'] = token;
+    }
+    final response = await _client.get(
+      _uri('/api/categories/random').replace(queryParameters: queryParameters),
+      headers: await _headers(authenticated: true),
+    );
+    final payload = _decodeResponse(response);
+    final payloadMap = payload is Map<String, dynamic>
+        ? payload
+        : const <String, dynamic>{};
+    final items = _asCategoryList(payload);
+    final categories = items
+        .whereType<Map>()
+        .map((entry) => ApiCategory.fromJson(Map<String, dynamic>.from(entry)))
+        .toList();
+    final currentPage = _readIntValue(payloadMap['currentPage'], page);
+    final totalPages = _readIntValue(payloadMap['totalPages'], currentPage + 1);
+    final pageSize = _readIntValue(payloadMap['pageSize'], size);
+    final responseToken = payloadMap['paginationToken']?.toString().trim();
+    if (page == 0 &&
+        _readBoolValue(
+          payloadMap['hasMore'],
+          fallback: currentPage + 1 < totalPages,
+        ) &&
+        (responseToken == null || responseToken.isEmpty)) {
+      throw const BackendException(
+        'The categories response did not include a pagination token.',
+      );
+    }
+    if (page == 0) {
+      await _clearCachedRandomCategoryPages();
+      final token = responseToken ?? '';
+      if (token.isNotEmpty) {
+        await _saveCategoryPaginationToken(token);
+      } else {
+        final preferences = await SharedPreferences.getInstance();
+        await preferences.remove(_categoriesPaginationTokenKey);
+      }
+    }
+    final result = CategoriesPage(
+      categories: categories,
+      currentPage: currentPage,
+      totalPages: totalPages,
+      pageSize: pageSize,
+      totalCategories: _readIntValue(
+        payloadMap['totalCategories'],
+        categories.length,
+      ),
+      hasMore: _readBoolValue(
+        payloadMap['hasMore'],
+        fallback: currentPage + 1 < totalPages,
+      ),
+      paginationToken: page == 0 ? responseToken : paginationToken,
+    );
+    await _writeCachedCategoriesPage(cacheKey, result);
+    return result;
+  }
+
+  Future<String?> _readCategoryPaginationToken() async {
+    final preferences = await SharedPreferences.getInstance();
+    final raw = preferences.getString(_categoriesPaginationTokenKey);
+    if (raw == null || raw.isEmpty) {
+      return null;
+    }
+
+    final decoded = jsonDecode(raw);
+    if (decoded is! Map<String, dynamic>) {
+      return null;
+    }
+    final token = decoded['token']?.toString().trim();
+    final cachedAtValue = decoded['cachedAt'];
+    if (token == null || token.isEmpty || cachedAtValue is! String) {
+      return null;
+    }
+
+    final cachedAt = DateTime.tryParse(cachedAtValue);
+    if (cachedAt == null ||
+        DateTime.now().difference(cachedAt) > _categoryPaginationTokenTtl) {
+      await preferences.remove(_categoriesPaginationTokenKey);
+      return null;
+    }
+    return token;
+  }
+
+  Future<void> _saveCategoryPaginationToken(String token) async {
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setString(
+      _categoriesPaginationTokenKey,
+      jsonEncode({
+        'token': token,
+        'cachedAt': DateTime.now().toIso8601String(),
+      }),
+    );
+  }
+
+  Future<void> _clearCachedRandomCategoryPages() async {
+    final preferences = await SharedPreferences.getInstance();
+    final pageCacheKeys = preferences
+        .getKeys()
+        .where((key) => key.startsWith(_categoriesPageCachePrefix))
+        .toList();
+    for (final key in pageCacheKeys) {
+      await preferences.remove(key);
+    }
+  }
+
+  Future<CategoriesPage?> _readCachedCategoriesPage(
+    String key, {
+    required int requestedPage,
+    required int requestedSize,
+  }) async {
+    final preferences = await SharedPreferences.getInstance();
+    final raw = preferences.getString(key);
+    if (raw == null || raw.isEmpty) {
+      return null;
+    }
+
+    final decoded = jsonDecode(raw);
+    if (decoded is! Map<String, dynamic> ||
+        decoded['cachedAt'] is! String ||
+        decoded['categories'] is! List) {
+      return null;
+    }
+
+    final cachedAt = DateTime.tryParse(decoded['cachedAt'] as String);
+    if (cachedAt == null || DateTime.now().difference(cachedAt) > _cacheTtl) {
+      return null;
+    }
+
+    final categories = (decoded['categories'] as List)
+        .whereType<Map>()
+        .map((entry) => ApiCategory.fromJson(Map<String, dynamic>.from(entry)))
+        .toList();
+    final currentPage = _readIntValue(decoded['currentPage'], requestedPage);
+    final totalPages = _readIntValue(decoded['totalPages'], requestedPage + 1);
+    return CategoriesPage(
+      categories: categories,
+      currentPage: currentPage,
+      totalPages: totalPages,
+      pageSize: _readIntValue(decoded['pageSize'], requestedSize),
+      totalCategories: _readIntValue(
+        decoded['totalCategories'],
+        categories.length,
+      ),
+      hasMore: _readBoolValue(
+        decoded['hasMore'],
+        fallback: currentPage + 1 < totalPages,
+      ),
+      paginationToken: decoded['paginationToken']?.toString(),
+    );
+  }
+
+  Future<void> _writeCachedCategoriesPage(
+    String key,
+    CategoriesPage page,
+  ) async {
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setString(
+      key,
+      jsonEncode({
+        'cachedAt': DateTime.now().toIso8601String(),
+        'categories': page.categories.map(itemToJson).toList(),
+        'currentPage': page.currentPage,
+        'totalPages': page.totalPages,
+        'pageSize': page.pageSize,
+        'totalCategories': page.totalCategories,
+        'hasMore': page.hasMore,
+        'paginationToken': page.paginationToken,
+      }),
+    );
   }
 
   Future<RandomWordsPage> fetchWordsByCategory(
@@ -646,6 +885,18 @@ class BackendApi {
     int size = 10,
     bool forceRefresh = false,
   }) async {
+    final cacheKey = '$_categoryWordsCachePrefix${categoryId}_${page}_$size';
+    if (!forceRefresh) {
+      final cachedPage = await _readCachedCategoryWordsPage(
+        cacheKey,
+        requestedPage: page,
+        requestedSize: size,
+      );
+      if (cachedPage != null) {
+        return cachedPage;
+      }
+    }
+
     final response = await _client.get(
       _uri('/api/words/category/$categoryId?page=$page&size=$size'),
       headers: await _headers(authenticated: true),
@@ -670,12 +921,64 @@ class BackendApi {
       fallback: currentPage + 1 < totalPages,
     );
 
-    return RandomWordsPage(
+    final result = RandomWordsPage(
       words: words,
       currentPage: currentPage,
       totalPages: totalPages,
       pageSize: pageSize,
       hasMore: hasMore,
+    );
+    await _writeCachedCategoryWordsPage(cacheKey, result);
+    return result;
+  }
+
+  Future<RandomWordsPage?> _readCachedCategoryWordsPage(
+    String key, {
+    required int requestedPage,
+    required int requestedSize,
+  }) async {
+    final preferences = await SharedPreferences.getInstance();
+    final raw = preferences.getString(key);
+    if (raw == null || raw.isEmpty) {
+      return null;
+    }
+
+    final decoded = jsonDecode(raw);
+    if (decoded is! Map<String, dynamic> || decoded['words'] is! List) {
+      return null;
+    }
+
+    return RandomWordsPage(
+      words: (decoded['words'] as List)
+          .whereType<Map>()
+          .map((word) => ApiWord.fromJson(Map<String, dynamic>.from(word)))
+          .toList(),
+      currentPage: _readIntValue(decoded['currentPage'], requestedPage),
+      totalPages: _readIntValue(decoded['totalPages'], requestedPage + 1),
+      pageSize: _readIntValue(decoded['pageSize'], requestedSize),
+      hasMore: _readBoolValue(
+        decoded['hasMore'],
+        fallback:
+            requestedPage + 1 <
+            _readIntValue(decoded['totalPages'], requestedPage + 1),
+      ),
+    );
+  }
+
+  Future<void> _writeCachedCategoryWordsPage(
+    String key,
+    RandomWordsPage page,
+  ) async {
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setString(
+      key,
+      jsonEncode({
+        'words': page.words.map(itemToJson).toList(),
+        'currentPage': page.currentPage,
+        'totalPages': page.totalPages,
+        'pageSize': page.pageSize,
+        'hasMore': page.hasMore,
+      }),
     );
   }
 
