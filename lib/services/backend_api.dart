@@ -77,13 +77,25 @@ class CategoriesPage {
 }
 
 class BackendApi {
-  BackendApi._();
+  BackendApi._({
+    http.BaseClient? client,
+    Future<Map<String, String>> Function()? authorizationHeaders,
+  }) : _client = client ?? AuthenticatedHttpClient(),
+       _authorizationHeaders = authorizationHeaders;
+
+  @visibleForTesting
+  BackendApi.withClient(http.BaseClient client)
+    : this._(
+        client: client,
+        authorizationHeaders: () async => const {},
+      );
 
   static final BackendApi instance = BackendApi._();
 
   String get baseUrl => AppConfig.backendApiBaseUrl;
   static const Duration _cacheTtl = Duration(hours: 6);
   static const Duration _categoryPaginationTokenTtl = Duration(minutes: 30);
+  static const Duration _randomWordsCacheTtl = Duration(minutes: 30);
   static const String _categoriesCacheKey = 'word_categories_cache';
   static const String _categoriesPageCachePrefix =
       'word_categories_random_page_v2_';
@@ -91,11 +103,15 @@ class BackendApi {
       'word_categories_random_pagination_token_v1';
   static const String _wordDetailCachePrefix = 'word_word_detail_v2_';
   static const String _categoryWordsCachePrefix = 'category_words_page_v1_';
+  static const String _randomWordsPageCachePrefix = 'random_words_page_v1_';
+  static const String _randomWordsPaginationTokenPrefix =
+      'random_words_pagination_token_v1_';
   static const String _ipLocationLookupBestEffortUrl = 'https://ipinfo.io/json';
   static const String _ipLocationLookupPrimaryUrl = 'https://ipwho.is/';
   static const String _ipLocationLookupFallbackUrl = 'https://ipapi.co/json/';
 
-  final http.BaseClient _client = AuthenticatedHttpClient();
+  final http.BaseClient _client;
+  final Future<Map<String, String>> Function()? _authorizationHeaders;
   List<ApiCategory>? _cachedCategories;
   final Map<int, ApiWord> _cachedWordById = {};
 
@@ -111,7 +127,8 @@ class BackendApi {
       return _jsonHeaders;
     }
 
-    final authHeaders = await SessionStore.authorizationHeaders();
+    final authHeaders = await (_authorizationHeaders?.call() ??
+        SessionStore.authorizationHeaders());
     return {
       ..._jsonHeaders,
       ...authHeaders,
@@ -985,9 +1002,44 @@ class BackendApi {
   Future<RandomWordsPage> fetchRandomWords({
     int page = 0,
     int size = 10,
+    bool forceRefresh = false,
   }) async {
+    if (page < 0 || size <= 0) {
+      throw ArgumentError('Word page must be non-negative and size positive.');
+    }
+
+    final cacheKey = '$_randomWordsPageCachePrefix${size}_$page';
+    if (!forceRefresh) {
+      final cachedPage = await _readCachedRandomWordsPage(
+        cacheKey,
+        requestedPage: page,
+        requestedSize: size,
+      );
+      if (cachedPage != null) {
+        return cachedPage;
+      }
+    }
+
+    String? paginationToken;
+    if (page > 0) {
+      paginationToken = await _readRandomWordsPaginationToken(size);
+      if (paginationToken == null) {
+        await fetchRandomWords(page: 0, size: size, forceRefresh: true);
+        paginationToken = await _readRandomWordsPaginationToken(size);
+      }
+      if (paginationToken == null) {
+        throw const BackendException(
+          'The random words response did not include a pagination token.',
+        );
+      }
+    }
+
+    final queryParameters = <String, String>{'page': '$page', 'size': '$size'};
+    if (paginationToken case final token?) {
+      queryParameters['paginationToken'] = token;
+    }
     final response = await _client.get(
-      _uri('/api/words/random?page=$page&size=$size'),
+      _uri('/api/words/random').replace(queryParameters: queryParameters),
       headers: await _headers(authenticated: true),
     );
 
@@ -1009,13 +1061,144 @@ class BackendApi {
       payloadMap['hasMore'],
       fallback: currentPage + 1 < totalPages,
     );
+    final responseToken = payloadMap['paginationToken']?.toString().trim();
+    if (page == 0 &&
+        hasMore &&
+        (responseToken == null || responseToken.isEmpty)) {
+      throw const BackendException(
+        'The random words response did not include a pagination token.',
+      );
+    }
+    if (page == 0) {
+      await _clearCachedRandomWordsPages(size);
+      final token = responseToken ?? '';
+      if (token.isNotEmpty) {
+        await _saveRandomWordsPaginationToken(size, token);
+      } else {
+        final preferences = await SharedPreferences.getInstance();
+        await preferences.remove(_randomWordsPaginationTokenKey(size));
+      }
+    }
 
-    return RandomWordsPage(
+    final result = RandomWordsPage(
       words: words,
       currentPage: currentPage,
       totalPages: totalPages,
       pageSize: pageSize,
       hasMore: hasMore,
+    );
+    await _writeCachedRandomWordsPage(cacheKey, result);
+    return result;
+  }
+
+  String _randomWordsPaginationTokenKey(int size) =>
+      '$_randomWordsPaginationTokenPrefix$size';
+
+  Future<String?> _readRandomWordsPaginationToken(int size) async {
+    final preferences = await SharedPreferences.getInstance();
+    final raw = preferences.getString(_randomWordsPaginationTokenKey(size));
+    if (raw == null || raw.isEmpty) {
+      return null;
+    }
+
+    final decoded = jsonDecode(raw);
+    if (decoded is! Map<String, dynamic>) {
+      return null;
+    }
+    final token = decoded['token']?.toString().trim();
+    final cachedAtValue = decoded['cachedAt'];
+    if (token == null || token.isEmpty || cachedAtValue is! String) {
+      return null;
+    }
+
+    final cachedAt = DateTime.tryParse(cachedAtValue);
+    if (cachedAt == null ||
+        DateTime.now().difference(cachedAt) > _categoryPaginationTokenTtl) {
+      await preferences.remove(_randomWordsPaginationTokenKey(size));
+      return null;
+    }
+    return token;
+  }
+
+  Future<void> _saveRandomWordsPaginationToken(int size, String token) async {
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setString(
+      _randomWordsPaginationTokenKey(size),
+      jsonEncode({
+        'token': token,
+        'cachedAt': DateTime.now().toIso8601String(),
+      }),
+    );
+  }
+
+  Future<void> _clearCachedRandomWordsPages(int size) async {
+    final preferences = await SharedPreferences.getInstance();
+    final pageCachePrefix = '$_randomWordsPageCachePrefix${size}_';
+    final pageCacheKeys = preferences
+        .getKeys()
+        .where((key) => key.startsWith(pageCachePrefix))
+        .toList();
+    for (final key in pageCacheKeys) {
+      await preferences.remove(key);
+    }
+  }
+
+  Future<RandomWordsPage?> _readCachedRandomWordsPage(
+    String key, {
+    required int requestedPage,
+    required int requestedSize,
+  }) async {
+    final preferences = await SharedPreferences.getInstance();
+    final raw = preferences.getString(key);
+    if (raw == null || raw.isEmpty) {
+      return null;
+    }
+
+    final decoded = jsonDecode(raw);
+    if (decoded is! Map<String, dynamic> ||
+        decoded['cachedAt'] is! String ||
+        decoded['words'] is! List) {
+      return null;
+    }
+    final cachedAt = DateTime.tryParse(decoded['cachedAt'] as String);
+    if (cachedAt == null ||
+        DateTime.now().difference(cachedAt) > _randomWordsCacheTtl) {
+      await preferences.remove(key);
+      return null;
+    }
+
+    return RandomWordsPage(
+      words: (decoded['words'] as List)
+          .whereType<Map>()
+          .map((word) => ApiWord.fromJson(Map<String, dynamic>.from(word)))
+          .toList(),
+      currentPage: _readIntValue(decoded['currentPage'], requestedPage),
+      totalPages: _readIntValue(decoded['totalPages'], requestedPage + 1),
+      pageSize: _readIntValue(decoded['pageSize'], requestedSize),
+      hasMore: _readBoolValue(
+        decoded['hasMore'],
+        fallback:
+            requestedPage + 1 <
+            _readIntValue(decoded['totalPages'], requestedPage + 1),
+      ),
+    );
+  }
+
+  Future<void> _writeCachedRandomWordsPage(
+    String key,
+    RandomWordsPage page,
+  ) async {
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setString(
+      key,
+      jsonEncode({
+        'cachedAt': DateTime.now().toIso8601String(),
+        'words': page.words.map(itemToJson).toList(),
+        'currentPage': page.currentPage,
+        'totalPages': page.totalPages,
+        'pageSize': page.pageSize,
+        'hasMore': page.hasMore,
+      }),
     );
   }
 

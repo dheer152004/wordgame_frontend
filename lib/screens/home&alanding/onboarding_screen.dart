@@ -20,8 +20,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     },
     {
       'image': 'assets/img/todo.webp',
-      'title': 'Explore. Learn. Remember.',
-      'description': 'Discover new concepts, test your knowledge, and remember what you learn.',
+      'title': 'Discover. Explore. Connect.',
+      'description': 'Explore fascinating concepts, uncover new perspectives, and connect with the world around you.',
       'button': 'Get Started',
     },
   ];
