@@ -1,5 +1,6 @@
 import java.util.Properties
 import java.io.FileInputStream
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     id("com.android.application")
@@ -17,7 +18,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.nroq.word"
+    namespace = "com.nroq.app"
     compileSdk = 36
     ndkVersion = "27.0.12077973"
 
@@ -26,12 +27,8 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
-    }
-
     defaultConfig {
-        applicationId = "com.nroq.word"
+        applicationId = "com.nroq.app"
         minSdk = 24
         targetSdk = 36
         versionCode = flutter.versionCode
@@ -55,9 +52,19 @@ android {
             isShrinkResources = true
         }
     }
+}
 
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_17)
+    }
 }
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    implementation(platform("com.google.firebase:firebase-bom:35.1.0"))
+    implementation("com.google.firebase:firebase-analytics")
 }

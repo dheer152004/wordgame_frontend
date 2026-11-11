@@ -14,7 +14,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   static const _pages = [
     {
       'image': 'assets/img/girl_sitting.webp',
-      'title': 'Understand the world beyound your own',
+      'title': 'Know the world beyound your own',
       'description': 'Discover different fields, explore unfamiliar concepts, and see the world from new perspectives.',
       'button': 'Next',
     },

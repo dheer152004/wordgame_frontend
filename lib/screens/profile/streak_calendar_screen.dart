@@ -5,6 +5,8 @@ import '../../models/streak_calendar_model.dart';
 import '../../services/backend_api.dart';
 import '../../theme/app_theme.dart';
 
+enum _CalendarDayStatus { active, missed, untracked }
+
 class StreakCalendarScreen extends StatefulWidget {
   const StreakCalendarScreen({super.key});
 
@@ -105,7 +107,7 @@ class _StreakCalendarScreenState extends State<StreakCalendarScreen> {
                     child: _summaryMetric(
                       context,
                       LucideIcons.flame,
-                      const Color(0xFFFF762B),
+                      AppThemeColors.primary(context),
                       '$currentStreak',
                       'Current streak',
                     ),
@@ -129,8 +131,9 @@ class _StreakCalendarScreenState extends State<StreakCalendarScreen> {
                 spacing: 16,
                 runSpacing: 10,
                 children: [
-                  _legend(context, const Color(0xFFFF762B), 'Quiz complete'),
+                  _legend(context, AppThemeColors.primary(context), 'Activity'),
                   _legend(context, const Color(0xFFE35D65), 'Missed'),
+                  _legend(context, const Color.fromARGB(255, 67, 255, 155), 'Streak starts'),
                   _legend(
                     context,
                     AppThemeColors.divider(context),
@@ -158,7 +161,6 @@ class _StreakCalendarScreenState extends State<StreakCalendarScreen> {
     final cellCount = ((leadingDays + daysInMonth + 6) ~/ 7) * 7;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final trackedFrom = _calendar?.trackedFromDate;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 16),
@@ -250,8 +252,8 @@ class _StreakCalendarScreenState extends State<StreakCalendarScreen> {
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 7,
                 mainAxisSpacing: 5,
-                crossAxisSpacing: 3,
-                childAspectRatio: 1,
+                crossAxisSpacing: 0,
+                childAspectRatio: 1.25,
               ),
               itemBuilder: (context, index) {
                 final day = index - leadingDays + 1;
@@ -264,14 +266,31 @@ class _StreakCalendarScreenState extends State<StreakCalendarScreen> {
                   _selectedMonth.month,
                   day,
                 );
-                final isActive = _calendar!.activeDates.contains(date);
+                final status = _statusForDay(day);
+                final isActive = status == _CalendarDayStatus.active;
+                final isMissed = status == _CalendarDayStatus.missed;
                 final isToday = date == today;
-                final isMissed =
-                    !isActive &&
-                    date.isBefore(today) &&
-                    trackedFrom != null &&
-                    !date.isBefore(trackedFrom);
-                return _dayCell(context, day, isActive, isToday, isMissed);
+                final isTrackingStart = date == _calendar!.trackedFromDate;
+                final previousStatus = index % 7 == 0
+                    ? null
+                    : _statusForDay(day - 1);
+                final nextStatus = index % 7 == 6
+                    ? null
+                    : _statusForDay(day + 1);
+                return _dayCell(
+                  context,
+                  day,
+                  isActive,
+                  isToday,
+                  isMissed,
+                  isTrackingStart: isTrackingStart,
+                  connectLeft:
+                      status != _CalendarDayStatus.untracked &&
+                      status == previousStatus,
+                  connectRight:
+                      status != _CalendarDayStatus.untracked &&
+                      status == nextStatus,
+                );
               },
             ),
         ],
@@ -284,10 +303,13 @@ class _StreakCalendarScreenState extends State<StreakCalendarScreen> {
     int day,
     bool isActive,
     bool isToday,
-    bool isMissed,
-  ) {
+    bool isMissed, {
+    required bool isTrackingStart,
+    required bool connectLeft,
+    required bool connectRight,
+  }) {
     final color = isActive
-        ? const Color(0xFFFF762B)
+        ? AppThemeColors.primary(context)
         : isMissed
         ? const Color(0xFFE35D65).withAlpha(28)
         : Colors.transparent;
@@ -300,8 +322,13 @@ class _StreakCalendarScreenState extends State<StreakCalendarScreen> {
     return Container(
       decoration: BoxDecoration(
         color: color,
-        shape: BoxShape.circle,
-        border: isToday
+        borderRadius: BorderRadius.horizontal(
+          left: Radius.circular(connectLeft ? 0 : 24),
+          right: Radius.circular(connectRight ? 0 : 24),
+        ),
+        border: isTrackingStart
+            ? Border.all(color: const Color.fromARGB(255, 67, 255, 155), width: 2)
+            : isToday
             ? Border.all(color: AppThemeColors.primary(context), width: 1.5)
             : null,
       ),
@@ -329,6 +356,18 @@ class _StreakCalendarScreenState extends State<StreakCalendarScreen> {
     );
   }
 
+  _CalendarDayStatus _statusForDay(int day) {
+    if (day < 1 ||
+        day > DateTime(_selectedMonth.year, _selectedMonth.month + 1, 0).day) {
+      return _CalendarDayStatus.untracked;
+    }
+
+    final date = DateTime(_selectedMonth.year, _selectedMonth.month, day);
+    if (_calendar!.activeDates.contains(date)) return _CalendarDayStatus.active;
+    if (_calendar!.missedDates.contains(date)) return _CalendarDayStatus.missed;
+    return _CalendarDayStatus.untracked;
+  }
+
   Widget _activityStatus(BuildContext context) {
     final lastActivity = _calendar?.lastActivityDate;
     final trackedFrom = _calendar?.trackedFromDate;
@@ -337,7 +376,7 @@ class _StreakCalendarScreenState extends State<StreakCalendarScreen> {
         : 'Last quiz: ${_formatDate(lastActivity)}';
     final tracking = trackedFrom == null
         ? 'Calendar history will begin with your first completed quiz.'
-        : 'Missed days are shown from ${_formatDate(trackedFrom)} onward.';
+        : 'Streak tracking began on ${_formatDate(trackedFrom)}.';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

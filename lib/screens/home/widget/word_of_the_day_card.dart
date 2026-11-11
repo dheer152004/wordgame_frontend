@@ -10,18 +10,33 @@ class WordOfTheDayCard extends StatefulWidget {
   const WordOfTheDayCard({super.key, required this.onWordTap});
 
   @override
-  State<WordOfTheDayCard> createState() => _WordOfTheDayCardState();
+  WordOfTheDayCardState createState() => WordOfTheDayCardState();
 }
 
-class _WordOfTheDayCardState extends State<WordOfTheDayCard> {
+class WordOfTheDayCardState extends State<WordOfTheDayCard> {
   final AudioService _audioService = AudioService();
-  late final Future<ApiWord> _wordOfTheDay;
+  late Future<ApiWord> _wordOfTheDay;
+  ApiWord? _lastLoadedWord;
   bool _isPlayingAudio = false;
 
   @override
   void initState() {
     super.initState();
-    _wordOfTheDay = BackendApi.instance.fetchWordOfTheDay();
+    _wordOfTheDay = _loadWordOfTheDay();
+  }
+
+  Future<ApiWord> _loadWordOfTheDay() async {
+    final word = await BackendApi.instance.fetchWordOfTheDay();
+    _lastLoadedWord = word;
+    return word;
+  }
+
+  Future<void> refresh() async {
+    final refreshedWord = _loadWordOfTheDay();
+    setState(() {
+      _wordOfTheDay = refreshedWord;
+    });
+    await refreshedWord;
   }
 
   Future<void> _togglePronunciation(ApiWord? word) async {
@@ -59,7 +74,7 @@ class _WordOfTheDayCardState extends State<WordOfTheDayCard> {
         final horizontalPadding = compact ? 16.0 : 20.0;
         final imageSize = compact ? 120.0 : 144.0;
         final columnGap = compact ? 10.0 : 14.0;
-        final word = snapshot.data;
+        final word = snapshot.data ?? _lastLoadedWord;
         final imageUrl = word != null && word.images.isNotEmpty
             ? word.images.first.imageUrl.trim()
             : '';

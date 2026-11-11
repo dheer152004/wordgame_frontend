@@ -27,15 +27,21 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   final GlobalKey<CategoriesSectionState> _categoriesSectionKey =
       GlobalKey<CategoriesSectionState>();
+  final GlobalKey<WordOfTheDayCardState> _wordOfTheDayCardKey =
+      GlobalKey<WordOfTheDayCardState>();
   UserProfile? _profile;
   Timer? _searchDebounceTimer;
+  Timer? _wordOfTheDayRefreshTimer;
+  DateTime _lastWordOfTheDayRefreshDay = _dateOnly(DateTime.now());
+  bool _isAppActive = true;
   bool _showSearchBar = false;
   bool _isSearching = false;
+  bool _isSearchingCategories = false;
   bool _isLoadingMore = false;
   bool _hasSearched = false;
   bool _hasMore = false;
@@ -44,13 +50,16 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _searchError;
   List<ApiWord> _searchResults = [];
   List<ApiCategory> _categoryResults = [];
+  String? _categorySearchQuery;
   List<ApiCategory> _recentCategories = [];
   bool _hasMoreCategories = false;
   int _categoryCurrentPage = 0;
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _searchDebounceTimer?.cancel();
+    _wordOfTheDayRefreshTimer?.cancel();
     _searchController.dispose();
     _searchFocusNode.dispose();
     super.dispose();
@@ -59,9 +68,65 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _scheduleWordOfTheDayRefresh();
     _fetchProfile();
     _loadRecentCategories(refreshCategoryDetails: true);
   }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _isAppActive = state == AppLifecycleState.resumed;
+    if (_isAppActive) {
+      _refreshWordOfTheDayIfNeeded();
+      _scheduleWordOfTheDayRefresh();
+    } else {
+      _wordOfTheDayRefreshTimer?.cancel();
+    }
+  }
+
+  void _scheduleWordOfTheDayRefresh() {
+    _wordOfTheDayRefreshTimer?.cancel();
+    if (!_isAppActive || !mounted) {
+      return;
+    }
+
+    final now = DateTime.now();
+    final nextMidnight = DateTime(now.year, now.month, now.day + 1);
+    _wordOfTheDayRefreshTimer = Timer(nextMidnight.difference(now), () {
+      if (!_isAppActive || !mounted) {
+        return;
+      }
+
+      _refreshWordOfTheDayIfNeeded();
+      _scheduleWordOfTheDayRefresh();
+    });
+  }
+
+  void _refreshWordOfTheDayIfNeeded() {
+    final today = _dateOnly(DateTime.now());
+    if (today == _lastWordOfTheDayRefreshDay) {
+      return;
+    }
+
+    _lastWordOfTheDayRefreshDay = today;
+    final card = _wordOfTheDayCardKey.currentState;
+    if (card != null) {
+      unawaited(_refreshWordOfTheDay(card));
+    }
+  }
+
+  Future<void> _refreshWordOfTheDay(WordOfTheDayCardState card) async {
+    try {
+      await card.refresh();
+    } catch (error, stackTrace) {
+      debugPrint('Failed to refresh word of the day: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
+  }
+
+  static DateTime _dateOnly(DateTime date) =>
+      DateTime(date.year, date.month, date.day);
 
   Future<void> _loadRecentCategories({
     bool refreshCategoryDetails = false,
@@ -81,6 +146,7 @@ class _HomeScreenState extends State<HomeScreen> {
             final page = await BackendApi.instance.fetchCategoriesPage(
               page: pageNumber,
               size: 16,
+              forceRefresh: true,
             );
             for (final category in page.categories) {
               if (requestedIds.contains(category.id)) {
@@ -167,6 +233,25 @@ class _HomeScreenState extends State<HomeScreen> {
       });
     } catch (_) {
       // Keep the profile passed during login visible if the refresh fails.
+    }
+  }
+
+  Future<void> _refreshHome() async {
+    try {
+      await Future.wait<void>([
+        _fetchProfile(),
+        _loadRecentCategories(refreshCategoryDetails: true),
+        _categoriesSectionKey.currentState?.refresh() ?? Future<void>.value(),
+        _wordOfTheDayCardKey.currentState?.refresh() ?? Future<void>.value(),
+      ]);
+    } catch (error, stackTrace) {
+      debugPrint('Failed to refresh home screen: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not refresh home data: $error')),
+        );
+      }
     }
   }
 
@@ -308,6 +393,8 @@ class _HomeScreenState extends State<HomeScreen> {
         _categoryResults = [];
         _hasMoreCategories = false;
         _categoryCurrentPage = 0;
+        _categorySearchQuery = null;
+        _isSearchingCategories = false;
       });
       return;
     }
@@ -321,6 +408,9 @@ class _HomeScreenState extends State<HomeScreen> {
         _categoryResults = [];
         _categoryCurrentPage = 0;
         _hasMoreCategories = false;
+        _categorySearchQuery = null;
+        _isSearchingCategories = true;
+        _searchError = null;
       });
     } else {
       setState(() {
@@ -348,15 +438,18 @@ class _HomeScreenState extends State<HomeScreen> {
         }
         _hasMoreCategories = pageResult.hasMore;
         _categoryCurrentPage = pageResult.currentPage;
+        _categorySearchQuery = query;
       });
     } catch (error) {
       if (!mounted) return;
       setState(() {
         _searchError = error.toString();
+        _categorySearchQuery = null;
       });
     } finally {
       if (mounted) {
         setState(() {
+          _isSearchingCategories = false;
           _isLoadingMore = false;
         });
       }
@@ -375,7 +468,9 @@ class _HomeScreenState extends State<HomeScreen> {
         _hasMoreCategories = false;
         _searchError = null;
         _isSearching = false;
+        _isSearchingCategories = false;
         _isLoadingMore = false;
+        _categorySearchQuery = null;
       });
       return;
     }
@@ -390,24 +485,23 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _toggleSearchBar() {
+    final shouldOpen = !_showSearchBar;
+    if (!shouldOpen) {
+      _searchDebounceTimer?.cancel();
+      _searchFocusNode.unfocus();
+    }
+
     setState(() {
-      _showSearchBar = !_showSearchBar;
+      _showSearchBar = shouldOpen;
     });
 
-    if (_showSearchBar) {
+    if (shouldOpen) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           _searchFocusNode.requestFocus();
         }
       });
     }
-  }
-
-  void _closeSearchBar() {
-    setState(() {
-      _showSearchBar = false;
-    });
-    _searchFocusNode.unfocus();
   }
 
   @override
@@ -428,74 +522,92 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               child: NotificationListener<ScrollNotification>(
                 onNotification: _handleHomeScroll,
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.screenPadding,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 8),
-                      HomeHeader(
-                        user: _profile ?? widget.user,
-                        onSearchTap: _toggleSearchBar,
-                        onProfileReturned: _fetchProfile,
-                      ),
-                      if (_showSearchBar) ...[
-                        const SizedBox(height: 10),
-                        HomeSearchSection(
-                          searchController: _searchController,
-                          searchFocusNode: _searchFocusNode,
-                          isSearching: _isSearching,
-                          isLoadingMore: _isLoadingMore,
-                          hasSearched: _hasSearched,
-                          hasMore: _hasMore,
-                          showCategoryResults: _showCategoryResults,
-                          categoryResults: _categoryResults,
-                          hasMoreCategories: _hasMoreCategories,
-                          searchError: _searchError,
-                          searchResults: _searchResults,
-                          onSearch: _performSearch,
-                          onQueryChanged: _onQueryChanged,
-                          onLoadMore: () => _performSearch(loadMore: true),
-                          onLoadMoreCategories: () =>
-                              _performCategorySearch(loadMore: true),
-                          onCategoryTap: _openCategory,
-                          onToggleCategoryResults: (value) {
-                            setState(() {
-                              _showCategoryResults = value;
-                            });
-                            if (value) {
-                              _performCategorySearch();
-                            } else {
-                              setState(() {
-                                _categoryResults = [];
-                                _hasMoreCategories = false;
-                              });
-                            }
-                          },
-                          onClear: _clearSearch,
-                          onClose: _closeSearchBar,
+                child: RefreshIndicator(
+                  onRefresh: _refreshHome,
+                  displacement: MediaQuery.sizeOf(context).height / 3,
+                  color: AppThemeColors.primary(context),
+                  backgroundColor: AppThemeColors.surface(context),
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(
+                      parent: BouncingScrollPhysics(),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.screenPadding,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 8),
+                        HomeHeader(
+                          user: _profile ?? widget.user,
+                          onSearchTap: _toggleSearchBar,
+                          isSearchOpen: _showSearchBar,
+                          onProfileReturned: _fetchProfile,
                         ),
-                        const SizedBox(height: 18),
-                      ] else
-                        const SizedBox(height: 4),
-                      WordOfTheDayCard(onWordTap: _openWordOfTheDay),
-                      const SizedBox(height: 32),
-                      RecentCategoriesSection(
-                        categories: _recentCategories,
-                        onCategoryTap: _openCategory,
-                        onSeeAll: _showAllRecentCategories,
-                      ),
-                      if (_recentCategories.isNotEmpty)
-                        const SizedBox(height: 28),
-                      CategoriesSection(
-                        key: _categoriesSectionKey,
-                        onCategoryTap: _openCategory,
-                      ),
-                      const SizedBox(height: 16),
-                    ],
+                        if (_showSearchBar) ...[
+                          const SizedBox(height: 10),
+                          HomeSearchSection(
+                            searchController: _searchController,
+                            searchFocusNode: _searchFocusNode,
+                            isSearching: _isSearching,
+                            isSearchingCategories: _isSearchingCategories,
+                            isLoadingMore: _isLoadingMore,
+                            hasSearched: _hasSearched,
+                            hasMore: _hasMore,
+                            showCategoryResults: _showCategoryResults,
+                            categorySearchQuery: _categorySearchQuery,
+                            categoryResults: _categoryResults,
+                            hasMoreCategories: _hasMoreCategories,
+                            searchError: _searchError,
+                            searchResults: _searchResults,
+                            onSearch: _performSearch,
+                            onQueryChanged: _onQueryChanged,
+                            onLoadMore: () => _performSearch(loadMore: true),
+                            onLoadMoreCategories: () =>
+                                _performCategorySearch(loadMore: true),
+                            onCategoryTap: _openCategory,
+                            onToggleCategoryResults: (value) {
+                              setState(() {
+                                _showCategoryResults = value;
+                              });
+                              if (value) {
+                                _performCategorySearch();
+                              } else {
+                                setState(() {
+                                  _categoryResults = [];
+                                  _hasMoreCategories = false;
+                                  _isSearchingCategories = false;
+                                  _categorySearchQuery = null;
+                                });
+                              }
+                            },
+                            onClear: _clearSearch,
+                          ),
+                          const SizedBox(height: 18),
+                        ] else
+                          const SizedBox(height: 4),
+                        WordOfTheDayCard(
+                          key: _wordOfTheDayCardKey,
+                          onWordTap: _openWordOfTheDay,
+                        ),
+                        const SizedBox(height: 32),
+                        RecentCategoriesSection(
+                          categories: _recentCategories,
+                          onCategoryTap: _openCategory,
+                          onSeeAll: _showAllRecentCategories,
+                        ),
+                        if (_recentCategories.isNotEmpty)
+                          const SizedBox(height: 32),
+                        SizedBox(
+                          width: double.infinity,
+                          child: CategoriesSection(
+                            key: _categoriesSectionKey,
+                            onCategoryTap: _openCategory,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                    ),
                   ),
                 ),
               ),

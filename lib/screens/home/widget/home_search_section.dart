@@ -2,18 +2,21 @@ import 'package:flutter/material.dart';
 
 import '../../../models/word_Content_models.dart';
 import '../../../theme/app_theme.dart';
+import '../../../widgets/category_request_section.dart';
 import '../../word_sheet_details.dart';
 
 class HomeSearchSection extends StatelessWidget {
   final TextEditingController searchController;
   final FocusNode searchFocusNode;
   final bool isSearching;
+  final bool isSearchingCategories;
   final bool isLoadingMore;
   final bool hasSearched;
   final bool hasMore;
   final String? searchError;
   final List<ApiWord> searchResults;
   final bool showCategoryResults;
+  final String? categorySearchQuery;
   final List<ApiCategory> categoryResults;
   final bool hasMoreCategories;
   final VoidCallback onSearch;
@@ -23,17 +26,18 @@ class HomeSearchSection extends StatelessWidget {
   final ValueChanged<ApiCategory> onCategoryTap;
   final ValueChanged<bool> onToggleCategoryResults;
   final VoidCallback onClear;
-  final VoidCallback onClose;
 
   const HomeSearchSection({
     super.key,
     required this.searchController,
     required this.searchFocusNode,
     required this.isSearching,
+    required this.isSearchingCategories,
     required this.isLoadingMore,
     required this.hasSearched,
     required this.hasMore,
     required this.showCategoryResults,
+    required this.categorySearchQuery,
     required this.categoryResults,
     required this.hasMoreCategories,
     required this.searchError,
@@ -45,7 +49,6 @@ class HomeSearchSection extends StatelessWidget {
     required this.onCategoryTap,
     required this.onToggleCategoryResults,
     required this.onClear,
-    required this.onClose,
   });
 
   @override
@@ -71,12 +74,6 @@ class HomeSearchSection extends StatelessWidget {
                     color: AppThemeColors.textPrimary(context),
                   ),
                 ),
-              ),
-              IconButton(
-                onPressed: onClose,
-                icon: const Icon(Icons.close_rounded),
-                color: AppThemeColors.textSecondary(context),
-                tooltip: 'Close search',
               ),
             ],
           ),
@@ -122,23 +119,6 @@ class HomeSearchSection extends StatelessWidget {
             ),
           ),
 
-          //search button
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: onSearch,
-              icon: const Icon(Icons.search_rounded),
-              label: const Text('Search'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppThemeColors.primary(context),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-            ),
-          ),
           const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -158,7 +138,7 @@ class HomeSearchSection extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 18),
-          if (isSearching)
+          if (isSearching || isSearchingCategories)
             const Center(
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: 24),
@@ -303,10 +283,10 @@ class HomeSearchSection extends StatelessWidget {
                 if (searchResults.isNotEmpty) ...[
                   Text(
                     'Results for “${searchController.text.trim()}”',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
+                      color: AppThemeColors.textPrimary(context),
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -422,6 +402,17 @@ class HomeSearchSection extends StatelessWidget {
                 style: TextStyle(color: AppThemeColors.textSecondary(context)),
               ),
             ),
+          if (showCategoryResults &&
+              categorySearchQuery == searchController.text.trim() &&
+              categoryResults.isEmpty &&
+              !isSearching &&
+              !isSearchingCategories &&
+              searchError == null) ...[
+            const SizedBox(height: 18),
+            CategoryRequestSection(
+              initialCategoryName: searchController.text.trim(),
+            ),
+          ],
         ],
       ),
     );

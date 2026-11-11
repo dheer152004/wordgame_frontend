@@ -1,4 +1,4 @@
-package com.nroq.word
+package com.nroq.app
 
 import android.view.LayoutInflater
 import android.widget.Button

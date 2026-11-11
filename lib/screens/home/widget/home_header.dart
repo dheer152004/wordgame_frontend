@@ -10,12 +10,14 @@ import '../../profile/profile_screen.dart';
 class HomeHeader extends StatelessWidget {
   final UserProfile? user;
   final VoidCallback? onSearchTap;
+  final bool isSearchOpen;
   final Future<void> Function()? onProfileReturned;
 
   const HomeHeader({
     super.key,
     this.user,
     this.onSearchTap,
+    this.isSearchOpen = false,
     this.onProfileReturned,
   });
 
@@ -135,27 +137,30 @@ class HomeHeader extends StatelessWidget {
           child: Material(
             color: Colors.transparent,
             shape: const CircleBorder(),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(22),
-              onTap: onSearchTap,
-              child: Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: AppThemeColors.surface(context),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withAlpha(15),
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Icon(
-                  LucideIcons.search,
-                  color: AppThemeColors.textPrimary(context),
-                  size: 20,
+            child: Tooltip(
+              message: isSearchOpen ? 'Close search' : 'Search',
+              child: InkWell(
+                borderRadius: BorderRadius.circular(22),
+                onTap: onSearchTap,
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: AppThemeColors.surface(context),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withAlpha(15),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    isSearchOpen ? LucideIcons.x : LucideIcons.search,
+                    color: AppThemeColors.textPrimary(context),
+                    size: 20,
+                  ),
                 ),
               ),
             ),

@@ -5,8 +5,10 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/word_Content_models.dart';
 import '../services/backend_api.dart';
@@ -14,6 +16,7 @@ import '../services/recent_category_store.dart';
 import '../theme/app_theme.dart';
 import '../widgets/common_widgets.dart';
 import '../widgets/custom_native_ad.dart';
+import '../widgets/flash_card_settings.dart';
 import '../widgets/screen_action_buttons.dart';
 import '../widgets/swipe_feature.dart';
 import 'word_sheet_details.dart';
@@ -43,6 +46,9 @@ class FlashCardsScreen extends StatefulWidget {
 class _FlashCardsScreenState extends State<FlashCardsScreen> {
   static const String _randomCategoryKey = '__random__';
   static const int _randomPageSize = 10;
+  static const String _wordSizeScaleKey = 'flash_card_word_size_scale';
+  static const String _meaningSizeScaleKey = 'flash_card_meaning_size_scale';
+  static const String _imageSizeScaleKey = 'flash_card_image_size_scale';
 
   final List<ApiCategory> _categories = [];
   List<ApiWord> _words = [];
@@ -58,8 +64,15 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
   bool _hasMoreRandomWords = false;
 
   int _currentIndex = 0;
+  final List<int> _visitedCardIndices = [0];
+  int _historyPosition = 0;
+  bool _showPreviousCardButton = false;
+  double _wordSizeScale = 1;
+  double _meaningSizeScale = 1;
+  double _imageSizeScale = 1;
   Offset _dragOffset = Offset.zero;
   bool _isDragging = false;
+  final Map<int, BuildContext> _categoryChipContexts = {};
 
   late Timer _sessionTimer;
   late DateTime _sessionStartTime;
@@ -67,14 +80,13 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
   final InterstitialAdManager _adManager = InterstitialAdManager();
   final RewardedVideoAdManager _rewardedAdManager = RewardedVideoAdManager();
 
-  final GlobalKey _cardKey = GlobalKey();
   final GlobalKey _cleanCardKey = GlobalKey();
-  final Map<String, GlobalKey> _categoryChipKeys = {};
 
   @override
   void initState() {
     super.initState();
     _bootstrap();
+    _loadFlashCardSizeSettings();
     _adManager.loadInterstitialAd();
     _rewardedAdManager.loadRewardedAd();
     _startSessionTimer();
@@ -120,6 +132,10 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
       _loadingWords = true;
       _errorMessage = null;
       _currentIndex = 0;
+      _visitedCardIndices
+        ..clear()
+        ..add(0);
+      _historyPosition = 0;
       _dragOffset = Offset.zero;
       _isDragging = false;
     });
@@ -207,6 +223,10 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
         _loadingWords = true;
         _errorMessage = null;
         _currentIndex = 0;
+        _visitedCardIndices
+          ..clear()
+          ..add(0);
+        _historyPosition = 0;
         _dragOffset = Offset.zero;
         _isDragging = false;
       });
@@ -254,6 +274,11 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
         _randomPage = 0;
         _hasMoreRandomWords = false;
         _loadingMoreRandomWords = false;
+        _currentIndex = 0;
+        _visitedCardIndices
+          ..clear()
+          ..add(0);
+        _historyPosition = 0;
       });
     } else if (_loadingMoreRandomWords) {
       return;
@@ -273,6 +298,11 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
       setState(() {
         if (resetDeck) {
           _words = page.words;
+          _currentIndex = 0;
+          _visitedCardIndices
+            ..clear()
+            ..add(0);
+          _historyPosition = 0;
         } else {
           final existingIds = _words.map((word) => word.id).toSet();
           final pageWords = page.words
@@ -331,17 +361,25 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
     }
   }
 
-  GlobalKey _categoryChipKey(String category) {
-    return _categoryChipKeys.putIfAbsent(category, GlobalKey.new);
-  }
-
   void _scheduleSelectedCategoryChipScroll() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final chipContext = _categoryChipKey(
-        _selectedCategoryLabel,
-      ).currentContext;
-      if (chipContext == null) return;
+
+      final selectedIndex = _selectedCategoryLabel == _randomCategoryKey
+          ? 0
+          : _selectedCategoryId != null
+          ? _categories.indexWhere(
+                  (category) => category.id == _selectedCategoryId,
+                ) +
+                1
+          : _categories.indexWhere(
+                  (category) => category.name == _selectedCategoryLabel,
+                ) +
+                1;
+      if (selectedIndex < 0) return;
+
+      final chipContext = _categoryChipContexts[selectedIndex];
+      if (chipContext == null || !chipContext.mounted) return;
 
       Scrollable.ensureVisible(
         chipContext,
@@ -356,13 +394,130 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
     if (_words.isEmpty) return;
 
     setState(() {
-      _currentIndex = (_currentIndex + 1) % _words.length;
+      if (_historyPosition < _visitedCardIndices.length - 1) {
+        _historyPosition++;
+        _currentIndex = _visitedCardIndices[_historyPosition];
+      } else {
+        final nextIndex = (_currentIndex + 1) % _words.length;
+        if (nextIndex != _currentIndex) {
+          _visitedCardIndices.add(nextIndex);
+          _historyPosition = _visitedCardIndices.length - 1;
+        }
+        _currentIndex = nextIndex;
+      }
       _dragOffset = Offset.zero;
       _isDragging = false;
     });
 
     _scheduleVisibleImagePreload();
     unawaited(_loadMoreWordsIfNeeded());
+  }
+
+  void _showPreviousCard() {
+    if (_historyPosition == 0) return;
+
+    setState(() {
+      _historyPosition--;
+      _currentIndex = _visitedCardIndices[_historyPosition];
+      _dragOffset = Offset.zero;
+      _isDragging = false;
+    });
+
+    _scheduleVisibleImagePreload();
+  }
+
+  Future<void> _openFlashCardSettings() async {
+    var showPreviousCardButton = _showPreviousCardButton;
+    var wordSizeScale = _wordSizeScale;
+    var meaningSizeScale = _meaningSizeScale;
+    var imageSizeScale = _imageSizeScale;
+    await showModalBottomSheet<void>(
+      context: context,
+      useSafeArea: true,
+      backgroundColor: AppThemeColors.surface(context),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => FlashCardSettings(
+          showPreviousCardButton: showPreviousCardButton,
+          wordSizeScale: wordSizeScale,
+          meaningSizeScale: meaningSizeScale,
+          imageSizeScale: imageSizeScale,
+          onWordSizeScaleChanged: (value) {
+            setModalState(() => wordSizeScale = value);
+            setState(() => _wordSizeScale = value);
+          },
+          onWordSizeScaleChangeEnd: (value) =>
+              _saveFlashCardSizeSetting(_wordSizeScaleKey, value),
+          onMeaningSizeScaleChanged: (value) {
+            setModalState(() => meaningSizeScale = value);
+            setState(() => _meaningSizeScale = value);
+          },
+          onMeaningSizeScaleChangeEnd: (value) =>
+              _saveFlashCardSizeSetting(_meaningSizeScaleKey, value),
+          onImageSizeScaleChanged: (value) {
+            setModalState(() => imageSizeScale = value);
+            setState(() => _imageSizeScale = value);
+          },
+          onImageSizeScaleChangeEnd: (value) =>
+              _saveFlashCardSizeSetting(_imageSizeScaleKey, value),
+          onShowPreviousCardButtonChanged: (enabled) {
+            setModalState(() {
+              showPreviousCardButton = enabled;
+            });
+            setState(() {
+              _showPreviousCardButton = enabled;
+            });
+          },
+        ),
+      ),
+    );
+  }
+
+  Future<void> _loadFlashCardSizeSettings() async {
+    try {
+      final preferences = await SharedPreferences.getInstance();
+      if (!mounted) return;
+
+      setState(() {
+        _wordSizeScale = (preferences.getDouble(_wordSizeScaleKey) ?? 1)
+            .clamp(0.6, 1.6)
+            .toDouble();
+        _meaningSizeScale = (preferences.getDouble(_meaningSizeScaleKey) ?? 1)
+            .clamp(0.6, 1.6)
+            .toDouble();
+        _imageSizeScale = (preferences.getDouble(_imageSizeScaleKey) ?? 1)
+            .clamp(0.6, 1.6)
+            .toDouble();
+      });
+    } catch (error, stackTrace) {
+      debugPrint('Failed to load flash card size settings: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not load flash card settings.')),
+        );
+      }
+    }
+  }
+
+  Future<void> _saveFlashCardSizeSetting(String key, double value) async {
+    try {
+      final preferences = await SharedPreferences.getInstance();
+      final saved = await preferences.setDouble(key, value);
+      if (!saved) {
+        throw StateError('The setting was not saved.');
+      }
+    } catch (error, stackTrace) {
+      debugPrint('Failed to save flash card size setting: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not save this card setting.')),
+        );
+      }
+    }
   }
 
   Future<void> _loadMoreWordsIfNeeded() async {
@@ -525,6 +680,16 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
                       color: isDark ? Colors.white : const Color(0xFF1A202C),
                     ),
                   ),
+                  const Spacer(),
+                  IconButton(
+                    tooltip: 'Flash card settings',
+                    onPressed: _openFlashCardSettings,
+                    style: IconButton.styleFrom(
+                      backgroundColor: AppThemeColors.surfaceAlt(context),
+                      foregroundColor: AppThemeColors.textSecondary(context),
+                    ),
+                    icon: const Icon(LucideIcons.settings, size: 20),
+                  ),
                 ],
               ),
               const SizedBox(height: 6),
@@ -540,9 +705,39 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
               ),
               const SizedBox(height: 16),
               _buildCategoryChips(),
-              const SizedBox(height: 18),
               Expanded(child: _buildDeck(swipeThreshold)),
+              if (_showPreviousCardButton) ...[
+                const SizedBox(height: 12),
+                Center(child: _buildPreviousCardButton()),
+              ],
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPreviousCardButton() {
+    final canGoBack = _historyPosition > 0;
+    const buttonColor = Color(0xFFD92243);
+
+    return Semantics(
+      button: true,
+      enabled: canGoBack,
+      label: 'Previous card',
+      child: SizedBox(
+        key: const ValueKey('previous_card_button'),
+        width: 64,
+        height: 64,
+        child: Material(
+          color: buttonColor,
+          shape: const CircleBorder(),
+          child: InkWell(
+            onTap: canGoBack ? _showPreviousCard : null,
+            customBorder: const CircleBorder(),
+            child: const Center(
+              child: Icon(Icons.reply_rounded, color: Colors.white, size: 38),
+            ),
           ),
         ),
       ),
@@ -579,30 +774,42 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
     final isRandomChip = index == 0;
     final category = isRandomChip ? null : _categories[index - 1];
     final chipValue = category?.name ?? _randomCategoryKey;
-    final selected = chipValue == _selectedCategoryLabel;
+    final selected = category == null
+        ? _selectedCategoryLabel == _randomCategoryKey
+        : category.id == _selectedCategoryId ||
+              (_selectedCategoryId == null &&
+                  category.name == _selectedCategoryLabel &&
+                  _findCategoryByName(category.name)?.id == category.id);
     final chipLabel = category == null
         ? 'Random'
         : '${category.name} · ${category.wordCount}';
 
-    return ChoiceChip(
-      key: _categoryChipKey(chipValue),
-      label: Text(chipLabel),
-      selected: selected,
-      onSelected: (_) => _selectCategory(chipValue),
-      labelStyle: TextStyle(
-        color: selected ? Colors.white : AppThemeColors.textPrimary(context),
-        fontWeight: FontWeight.w700,
-      ),
-      backgroundColor: AppThemeColors.surfaceAlt(context),
-      selectedColor: AppThemeColors.primary(context),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(999),
-        side: BorderSide(
-          color: selected
-              ? AppThemeColors.primary(context)
-              : AppThemeColors.divider(context),
-        ),
-      ),
+    return Builder(
+      builder: (chipContext) {
+        _categoryChipContexts[index] = chipContext;
+        return ChoiceChip(
+          key: ValueKey<String>('flash-category-chip-$index'),
+          label: Text(chipLabel),
+          selected: selected,
+          onSelected: (_) => _selectCategory(chipValue),
+          labelStyle: TextStyle(
+            color: selected
+                ? Colors.white
+                : AppThemeColors.textPrimary(context),
+            fontWeight: FontWeight.w700,
+          ),
+          backgroundColor: AppThemeColors.surfaceAlt(context),
+          selectedColor: AppThemeColors.primary(context),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(999),
+            side: BorderSide(
+              color: selected
+                  ? AppThemeColors.primary(context)
+                  : AppThemeColors.divider(context),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -682,6 +889,9 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
                       height: effectiveCardHeight,
                       progress: 0,
                       isDragging: false,
+                      wordSizeScale: _wordSizeScale,
+                      meaningSizeScale: _meaningSizeScale,
+                      imageSizeScale: _imageSizeScale,
                       onShareWord: _shareWord,
                     ),
                   ),
@@ -743,7 +953,6 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
                   }
                 },
                 child: RepaintBoundary(
-                  key: _cardKey,
                   child: Transform.translate(
                     offset: _dragOffset,
                     child: Transform.rotate(
@@ -759,6 +968,9 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
                           progress: (_dragOffset.dx.abs() / swipeThreshold)
                               .clamp(0.0, 1.0),
                           isDragging: _isDragging,
+                          wordSizeScale: _wordSizeScale,
+                          meaningSizeScale: _meaningSizeScale,
+                          imageSizeScale: _imageSizeScale,
                           onShareWord: _shareWord,
                         ),
                       ),

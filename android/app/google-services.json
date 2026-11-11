@@ -7,28 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:366418846443:android:c6486f61d7c6d0184794ae",
+        "mobilesdk_app_id": "1:366418846443:android:6fe7985f93a4fe884794ae",
         "android_client_info": {
-          "package_name": "com.andorid.nroq"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyBkjOVJZiBKxapWMJKgZD7MydlQGYAoqms"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:366418846443:android:467008be10e7bc514794ae",
-        "android_client_info": {
-          "package_name": "com.nroq.word"
+          "package_name": "com.nroq.app"
         }
       },
       "oauth_client": [],

@@ -84,11 +84,13 @@ class BackendApi {
        _authorizationHeaders = authorizationHeaders;
 
   @visibleForTesting
-  BackendApi.withClient(http.BaseClient client)
-    : this._(
-        client: client,
-        authorizationHeaders: () async => const {},
-      );
+  BackendApi.withClient(
+    http.BaseClient client, {
+    Future<Map<String, String>> Function()? authorizationHeaders,
+  }) : this._(
+         client: client,
+         authorizationHeaders: authorizationHeaders ?? () async => const {},
+       );
 
   static final BackendApi instance = BackendApi._();
 
@@ -127,8 +129,9 @@ class BackendApi {
       return _jsonHeaders;
     }
 
-    final authHeaders = await (_authorizationHeaders?.call() ??
-        SessionStore.authorizationHeaders());
+    final authHeaders =
+        await (_authorizationHeaders?.call() ??
+            SessionStore.authorizationHeaders());
     return {
       ..._jsonHeaders,
       ...authHeaders,
@@ -237,6 +240,22 @@ class BackendApi {
     }
 
     throw const BackendException('Unexpected profile response from server.');
+  }
+
+  Future<void> requestCategory({
+    required String categoryName,
+    required String description,
+  }) async {
+    final response = await _client.post(
+      _uri('/api/user-requests'),
+      headers: await _headers(authenticated: true),
+      body: jsonEncode({
+        'categoryName': categoryName.trim(),
+        'description': description.trim(),
+      }),
+    );
+
+    _decodeResponse(response);
   }
 
   Future<StreakCalendar> fetchStreakCalendar(DateTime month) async {

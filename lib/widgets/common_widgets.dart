@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import 'card_image_view.dart';
 
 /// Displays category name in a rounded pill-shaped container
 /// Used at the top of cards to show word category
@@ -98,22 +99,8 @@ class CardImage extends StatelessWidget {
         ),
         child: imageUrl.isNotEmpty
             ? ClipRRect(
-                key: ValueKey<String>('card-image-$imageUrl'),
                 borderRadius: BorderRadius.circular(22),
-                child: Image.network(
-                  key: ValueKey<String>('network-image-$imageUrl'),
-                  imageUrl,
-                  width: size,
-                  height: size,
-                  fit: BoxFit.contain,
-                  filterQuality: FilterQuality.medium,
-                  webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
-                  errorBuilder: (_, _, _) => const Icon(
-                    Icons.image_not_supported_outlined,
-                    size: 42,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
+                child: buildCardImageView(imageUrl, size),
               )
             : const Icon(
                 Icons.image_not_supported_outlined,
@@ -128,7 +115,7 @@ class CardImage extends StatelessWidget {
 class InlineError extends StatelessWidget {
   final String message;
 
-  const InlineError({required this.message, super.key}) ;
+  const InlineError({required this.message, super.key});
 
   @override
   Widget build(BuildContext context) {

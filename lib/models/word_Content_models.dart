@@ -126,6 +126,20 @@ class WordAudio {
   }
 }
 
+class WordGrammarValue {
+  final String category;
+  final String value;
+
+  const WordGrammarValue({required this.category, required this.value});
+
+  factory WordGrammarValue.fromJson(Map<String, dynamic> json) {
+    return WordGrammarValue(
+      category: json['grammarCategory']?.toString() ?? '',
+      value: json['grammarValue']?.toString() ?? '',
+    );
+  }
+}
+
 /// Main word model containing all word data from backend API
 /// Includes word metadata, examples, images, and relationships to other words
 /// Supports multiple word types: ACRONYM, NOUN, VERB, ADJECTIVE, etc.
@@ -137,7 +151,11 @@ class ApiWord {
   final String
   expandedForm; // Expansion for acronyms (e.g., MOU → Memorandum of Understanding)
   final String partOfSpeech; // Grammatical role: NOUN, VERB, ADJECTIVE, etc.
+  final String languageCode;
+  final List<WordGrammarValue> grammarValues;
   final String meaning; // Primary definition
+  final String usage;
+  final String etymology;
   final String wordImageUrl; // Main image URL
   final String categoryName; // Category name
   final List<String> examples; // Usage examples
@@ -164,7 +182,11 @@ class ApiWord {
     this.wordType = '',
     this.expandedForm = '',
     this.partOfSpeech = '',
+    this.languageCode = '',
+    this.grammarValues = const [],
     required this.meaning,
+    this.usage = '',
+    this.etymology = '',
     required this.wordImageUrl,
     required this.categoryName,
     required this.examples,
@@ -186,6 +208,28 @@ class ApiWord {
   /// Parses JSON response from backend API into ApiWord object
   /// Safely handles type conversions and null values with fallbacks
   factory ApiWord.fromJson(Map<String, dynamic> json) {
+    final language = json['language'];
+    final languageData = language is Map
+        ? Map<String, dynamic>.from(language)
+        : const <String, dynamic>{};
+    final rawGrammarValues = json['grammarValues'];
+    final grammarValues = rawGrammarValues is List
+        ? rawGrammarValues
+              .whereType<Map>()
+              .map(
+                (entry) =>
+                    WordGrammarValue.fromJson(Map<String, dynamic>.from(entry)),
+              )
+              .where(
+                (item) => item.category.isNotEmpty || item.value.isNotEmpty,
+              )
+              .toList()
+        : <WordGrammarValue>[];
+    final wordDetails = json['wordDetails'];
+    final detailsData = wordDetails is Map
+        ? Map<String, dynamic>.from(wordDetails)
+        : const <String, dynamic>{};
+
     // Parse examples list, ensuring all entries are strings
     final rawExamples = json['examples'];
     final examples = rawExamples is List
@@ -259,7 +303,11 @@ class ApiWord {
       wordType: json['wordType']?.toString() ?? '',
       expandedForm: json['expandedForm']?.toString() ?? '',
       partOfSpeech: json['partOfSpeech']?.toString() ?? '',
+      languageCode: languageData['code']?.toString() ?? '',
+      grammarValues: grammarValues,
       meaning: json['meaning']?.toString() ?? '',
+      usage: detailsData['usage']?.toString() ?? '',
+      etymology: detailsData['etymology']?.toString() ?? '',
       wordImageUrl: json['wordImageUrl']?.toString() ?? '',
       categoryName: json['categoryName']?.toString() ?? '',
       examples: examples,

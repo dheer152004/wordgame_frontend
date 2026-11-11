@@ -12,6 +12,9 @@ class SwipeCard extends StatelessWidget {
   final double height;
   final double progress;
   final bool isDragging;
+  final double wordSizeScale;
+  final double meaningSizeScale;
+  final double imageSizeScale;
   final Future<void> Function(ApiWord word) onShareWord;
 
   const SwipeCard({
@@ -20,6 +23,9 @@ class SwipeCard extends StatelessWidget {
     required this.height,
     required this.progress,
     required this.isDragging,
+    this.wordSizeScale = 1,
+    this.meaningSizeScale = 1,
+    this.imageSizeScale = 1,
     required this.onShareWord,
     super.key,
   });
@@ -34,8 +40,14 @@ class SwipeCard extends StatelessWidget {
         // Calculate responsive sizes based on card height
         final compactFactor = (height / 420).clamp(0.6, 1.0);
         final horizontalPadding = height < 500 ? 10.0 : 12.0;
-        final wordFontSize = (28 * compactFactor).clamp(16.0, 34.0);
-        final meaningFontSize = (14 * compactFactor).clamp(11.0, 16.0);
+        final minimumWordFontSize = wordSizeScale < 1 ? 12.0 : 16.0;
+        final minimumMeaningFontSize = meaningSizeScale < 1 ? 9.0 : 11.0;
+        final wordFontSize = (28 * compactFactor * wordSizeScale)
+            .clamp(minimumWordFontSize, 54.0)
+            .toDouble();
+        final meaningFontSize = (14 * compactFactor * meaningSizeScale)
+            .clamp(minimumMeaningFontSize, 30.0)
+            .toDouble();
         final verticalPadding = height < 500 ? 8.0 : 10.0;
         final imageSpacing = height < 500 ? 12.0 : 20.0;
         final availableTextWidth = (width - horizontalPadding * 2)
@@ -80,10 +92,10 @@ class SwipeCard extends StatelessWidget {
             (constraints.maxWidth - horizontalPadding * 2)
                 .clamp(0.0, double.infinity)
                 .toDouble();
-        final imageSize = (height * 0.72)
-            .clamp(0.0, 420.0)
-            .clamp(0.0, availableImageHeight)
+        final imageSize = (height * 0.72 * imageSizeScale)
+            .clamp(80.0, 420.0)
             .clamp(0.0, availableImageWidth)
+            .clamp(0.0, availableImageHeight < 80 ? 80.0 : availableImageHeight)
             .toDouble();
 
         return Container(

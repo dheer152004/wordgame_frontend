@@ -6,6 +6,7 @@ class StreakCalendar {
   final DateTime? trackedFromDate;
   final bool streakUpdatedToday;
   final Set<DateTime> activeDates;
+  final Set<DateTime> missedDates;
 
   const StreakCalendar({
     required this.month,
@@ -15,18 +16,10 @@ class StreakCalendar {
     required this.trackedFromDate,
     required this.streakUpdatedToday,
     required this.activeDates,
+    required this.missedDates,
   });
 
   factory StreakCalendar.fromJson(Map<String, dynamic> json) {
-    final rawDates = json['activeDates'];
-    final activeDates = rawDates is List
-        ? rawDates
-              .map((value) => DateTime.tryParse(value.toString()))
-              .whereType<DateTime>()
-              .map((date) => DateTime(date.year, date.month, date.day))
-              .toSet()
-        : <DateTime>{};
-
     return StreakCalendar(
       month: json['month']?.toString() ?? '',
       currentStreak: _readInt(json['currentStreak']),
@@ -34,8 +27,19 @@ class StreakCalendar {
       lastActivityDate: _readDate(json['lastActivityDate']),
       trackedFromDate: _readDate(json['trackedFromDate']),
       streakUpdatedToday: json['streakUpdatedToday'] == true,
-      activeDates: activeDates,
+      activeDates: _readDates(json['activeDates']),
+      missedDates: _readDates(json['missedDates']),
     );
+  }
+
+  static Set<DateTime> _readDates(Object? value) {
+    if (value is! List) return <DateTime>{};
+
+    return value
+        .map((date) => DateTime.tryParse(date.toString()))
+        .whereType<DateTime>()
+        .map((date) => DateTime(date.year, date.month, date.day))
+        .toSet();
   }
 
   static DateTime? _readDate(Object? value) {

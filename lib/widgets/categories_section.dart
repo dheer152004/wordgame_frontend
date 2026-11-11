@@ -36,14 +36,13 @@ class CategoriesSectionState extends State<CategoriesSection> {
       return;
     }
     setState(() {
-      _categories.clear();
-      _currentPage = -1;
-      _hasMore = true;
       _errorMessage = null;
       _isLoading = true;
     });
     await _loadNextPage(forceRefresh: true);
   }
+
+  Future<void> refresh() => _reloadCategories();
 
   Future<void> _loadNextPage({bool forceRefresh = false}) async {
     if (_isLoadingMore || (!_hasMore && !forceRefresh)) {
@@ -149,6 +148,11 @@ class CategoriesSectionState extends State<CategoriesSection> {
         else
           LayoutBuilder(
             builder: (context, constraints) {
+              if (!constraints.hasBoundedWidth ||
+                  constraints.maxWidth <= AppSpacing.cardGap) {
+                return const SizedBox.shrink();
+              }
+
               final cardWidth = (constraints.maxWidth - AppSpacing.cardGap) / 2;
 
               return Wrap(
@@ -179,8 +183,8 @@ class CategoriesSectionState extends State<CategoriesSection> {
           Align(
             alignment: Alignment.center,
             child: TextButton(
-              onPressed: _loadNextPage,
-              child: const Text('Could not load more categories. Try again'),
+              onPressed: _reloadCategories,
+              child: const Text('Could not load categories. Try again'),
             ),
           ),
       ],
@@ -194,7 +198,6 @@ class _CategoryCardData {
   final String examples;
   final String imageUrl;
   final Color color;
-  final IconData icon;
 
   const _CategoryCardData({
     required this.title,
@@ -202,7 +205,6 @@ class _CategoryCardData {
     required this.examples,
     required this.imageUrl,
     required this.color,
-    required this.icon,
   });
 
   factory _CategoryCardData.fromCategory(ApiCategory category, int index) {
@@ -217,17 +219,6 @@ class _CategoryCardData {
       const Color(0xFFE8D7FF),
     ];
 
-    final icons = [
-      Icons.bolt_rounded,
-      Icons.brush_rounded,
-      Icons.auto_awesome_rounded,
-      Icons.place_rounded,
-      Icons.public_rounded,
-      Icons.sports_esports_rounded,
-      Icons.work_rounded,
-      Icons.favorite_rounded,
-    ];
-
     return _CategoryCardData(
       title: category.name,
       label: '${category.wordCount} words',
@@ -236,7 +227,6 @@ class _CategoryCardData {
           : 'Tap to open the live deck\nSynced from the backend',
       imageUrl: _resolveCategoryImageUrl(category.imageUrl),
       color: palettes[index % palettes.length],
-      icon: icons[index % icons.length],
     );
   }
 
@@ -399,7 +389,6 @@ class _CategoryCardState extends State<_CategoryCard> {
           descriptionColor: textColor,
           tagBackgroundColor: tagColors.background,
           tagForegroundColor: tagColors.foreground,
-          isImageCard: false,
         ),
       ),
     );
@@ -410,73 +399,41 @@ class _CategoryCardState extends State<_CategoryCard> {
     required Color descriptionColor,
     required Color tagBackgroundColor,
     required Color tagForegroundColor,
-    required bool isImageCard,
   }) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 220;
         final padding = compact ? 14.0 : 18.0;
-        final iconSize = compact ? 36.0 : 44.0;
-        final iconColor = isImageCard || titleColor == Colors.white
-            ? Colors.white
-            : Colors.black;
 
         return Padding(
           padding: EdgeInsets.all(padding),
-          child: Stack(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _IntensityTag(
-                    label: widget.data.label,
-                    backgroundColor: tagBackgroundColor,
-                    foregroundColor: tagForegroundColor,
-                  ),
-                  SizedBox(height: compact ? 8 : 12),
-                  Text(
-                    widget.data.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTextStyles.planCardTitle.copyWith(
-                      color: titleColor,
-                      fontSize: compact ? 20 : 24,
-                    ),
-                  ),
-                  SizedBox(height: compact ? 6 : 8),
-                  Expanded(
-                    child: Padding(
-                      padding: EdgeInsets.only(right: iconSize + 8),
-                      child: Text(
-                        widget.data.examples,
-                        style: AppTextStyles.planCardDetail.copyWith(
-                          color: descriptionColor,
-                        ),
-                        maxLines: compact ? 2 : 3,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ),
-                ],
+              _IntensityTag(
+                label: widget.data.label,
+                backgroundColor: tagBackgroundColor,
+                foregroundColor: tagForegroundColor,
               ),
-              Positioned(
-                right: 0,
-                bottom: 0,
-                child: Container(
-                  width: iconSize,
-                  height: iconSize,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withAlpha(
-                      isImageCard || titleColor == Colors.white ? 24 : 38,
-                    ),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white.withAlpha(14)),
+              SizedBox(height: compact ? 8 : 12),
+              Text(
+                widget.data.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyles.planCardTitle.copyWith(
+                  color: titleColor,
+                  fontSize: compact ? 20 : 24,
+                ),
+              ),
+              SizedBox(height: compact ? 6 : 8),
+              Expanded(
+                child: Text(
+                  widget.data.examples,
+                  style: AppTextStyles.planCardDetail.copyWith(
+                    color: descriptionColor,
                   ),
-                  child: Icon(
-                    widget.data.icon,
-                    color: iconColor,
-                    size: compact ? 20 : 22,
-                  ),
+                  maxLines: compact ? 2 : 3,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
@@ -537,7 +494,6 @@ class _CategoryCardState extends State<_CategoryCard> {
                 descriptionColor: Colors.white.withAlpha(220),
                 tagBackgroundColor: Colors.black.withAlpha(66),
                 tagForegroundColor: Colors.white,
-                isImageCard: true,
               ),
             ],
           ),
@@ -809,11 +765,7 @@ class _DetailStatChip extends StatelessWidget {
 }
 
 Widget _detailFallback(_CategoryCardData data) {
-  return Container(
-    color: data.color,
-    alignment: Alignment.center,
-    child: Icon(data.icon, size: 72, color: _idealTextColor(data.color)),
-  );
+  return ColoredBox(color: data.color);
 }
 
 class _ErrorState extends StatelessWidget {

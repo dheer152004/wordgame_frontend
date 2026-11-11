@@ -321,6 +321,64 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
     }
   }
 
+  Widget _metadataChip(
+    String label,
+    Color textColor,
+    Color backgroundColor,
+    Color borderColor,
+  ) {
+    return Chip(
+      label: Text(
+        label,
+        style: TextStyle(
+          color: textColor,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      backgroundColor: backgroundColor,
+      side: BorderSide(color: borderColor),
+      visualDensity: VisualDensity.compact,
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    );
+  }
+
+  Widget _buildDetailSection({
+    required String title,
+    required String content,
+    required Color textPrimary,
+    required Color softPanel,
+    required Color dividerColor,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+            color: textPrimary,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: softPanel,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: dividerColor),
+          ),
+          child: Text(
+            content,
+            style: TextStyle(fontSize: 15, height: 1.45, color: textPrimary),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final word = _detailWord ?? widget.word;
@@ -370,31 +428,39 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                 ),
                 const SizedBox(height: 18),
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    if (hasCategory)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? DarkColors.cardAlt
-                              : LightColors.cardAlt,
-                          borderRadius: BorderRadius.circular(999),
-                          border: Border.all(color: dividerColor),
-                        ),
-                        child: Text(
-                          categoryName,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: textPrimary,
-                          ),
-                        ),
+                    Expanded(
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        children: [
+                          if (hasCategory)
+                            _metadataChip(
+                              categoryName,
+                              textPrimary,
+                              softPanel,
+                              dividerColor,
+                            ),
+                          if (word.languageCode.trim().isNotEmpty)
+                            _metadataChip(
+                              word.languageCode.toUpperCase(),
+                              textPrimary,
+                              softPanel,
+                              dividerColor,
+                            ),
+                          for (final grammar in word.grammarValues)
+                            _metadataChip(
+                              grammar.category.isEmpty
+                                  ? grammar.value
+                                  : '${grammar.category}: ${grammar.value}',
+                              textPrimary,
+                              softPanel,
+                              dividerColor,
+                            ),
+                        ],
                       ),
-                    const Spacer(),
+                    ),
                     TextButton.icon(
                       onPressed: () => _shareWord(context),
                       icon: Icon(Icons.share_outlined, color: textPrimary),
@@ -533,6 +599,26 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                       height: 1.5,
                       color: textSecondary,
                     ),
+                  ),
+                ],
+                if (word.usage.trim().isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  _buildDetailSection(
+                    title: 'Usage',
+                    content: word.usage,
+                    textPrimary: textPrimary,
+                    softPanel: softPanel,
+                    dividerColor: dividerColor,
+                  ),
+                ],
+                if (word.etymology.trim().isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  _buildDetailSection(
+                    title: 'Etymology',
+                    content: word.etymology,
+                    textPrimary: textPrimary,
+                    softPanel: softPanel,
+                    dividerColor: dividerColor,
                   ),
                 ],
                 const SizedBox(height: 18),
