@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nroq/models/word_Content_models.dart';
+import 'package:nroq/widgets/common_widgets.dart';
 import 'package:nroq/widgets/flash_card_settings.dart';
 import 'package:nroq/widgets/swipe_feature.dart';
 
@@ -105,6 +106,45 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.text(word.meaning), findsNothing);
+  });
+
+  testWidgets('background flash card uses the active size settings', (
+    tester,
+  ) async {
+    final word = ApiWord(
+      id: 4,
+      word: 'Word',
+      meaning: 'A short meaning.',
+      wordImageUrl: '',
+      categoryName: 'Words',
+      examples: const [],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: BackdropCard(
+              word: word,
+              width: 300,
+              height: 360,
+              wordSizeScale: 1.5,
+              meaningSizeScale: 1.5,
+              imageSizeScale: 1.5,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final wordText = tester.widget<Text>(find.text(word.word));
+    final meaningText = tester.widget<Text>(find.text(word.meaning));
+    final cardImage = tester.widget<CardImage>(find.byType(CardImage));
+
+    expect(wordText.style!.fontSize, 36);
+    expect(meaningText.style!.fontSize, 19.5);
+    expect(cardImage.size, greaterThan(144));
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('flash card category does not overflow a narrow card', (

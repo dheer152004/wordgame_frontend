@@ -228,6 +228,9 @@ class StackCardBackdrop extends StatelessWidget {
   final double scale; // Scaling factor for layer effect
   final double rotation; // Rotation angle for staggered appearance
   final Offset offset; // Translation offset for positioning
+  final double wordSizeScale;
+  final double meaningSizeScale;
+  final double imageSizeScale;
   final bool hideMeaning;
 
   const StackCardBackdrop({
@@ -237,6 +240,9 @@ class StackCardBackdrop extends StatelessWidget {
     required this.scale,
     required this.rotation,
     required this.offset,
+    this.wordSizeScale = 1,
+    this.meaningSizeScale = 1,
+    this.imageSizeScale = 1,
     this.hideMeaning = false,
     super.key,
   });
@@ -255,6 +261,9 @@ class StackCardBackdrop extends StatelessWidget {
               word: word,
               width: width,
               height: height,
+              wordSizeScale: wordSizeScale,
+              meaningSizeScale: meaningSizeScale,
+              imageSizeScale: imageSizeScale,
               hideMeaning: hideMeaning,
             ),
           ),
@@ -271,12 +280,18 @@ class BackdropCard extends StatelessWidget {
   final ApiWord word;
   final double width;
   final double height;
+  final double wordSizeScale;
+  final double meaningSizeScale;
+  final double imageSizeScale;
   final bool hideMeaning;
 
   const BackdropCard({
     required this.word,
     required this.width,
     required this.height,
+    this.wordSizeScale = 1,
+    this.meaningSizeScale = 1,
+    this.imageSizeScale = 1,
     this.hideMeaning = false,
     super.key,
   });
@@ -326,11 +341,17 @@ class BackdropCard extends StatelessWidget {
                     Expanded(
                       child: LayoutBuilder(
                         builder: (context, imageConstraints) {
-                          final imageSize =
+                          final maxImageSize =
                               imageConstraints.maxWidth <
                                   imageConstraints.maxHeight
                               ? imageConstraints.maxWidth
                               : imageConstraints.maxHeight;
+                          final scaledImageSize = (height * 0.4)
+                              .clamp(0.0, double.infinity)
+                              .toDouble();
+                          final imageSize = (scaledImageSize * imageSizeScale)
+                              .clamp(0.0, maxImageSize)
+                              .toDouble();
                           return Center(
                             child: CardImage(
                               imageUrl: word.images.isNotEmpty
@@ -348,7 +369,7 @@ class BackdropCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 24,
+                        fontSize: 24 * wordSizeScale,
                         fontWeight: FontWeight.w900,
                         color: textColor,
                       ),
@@ -361,7 +382,7 @@ class BackdropCard extends StatelessWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 13,
+                          fontSize: 13 * meaningSizeScale,
                           fontWeight: FontWeight.w700,
                           color: textColor,
                         ),
