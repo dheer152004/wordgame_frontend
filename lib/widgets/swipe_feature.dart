@@ -15,6 +15,7 @@ class SwipeCard extends StatelessWidget {
   final double wordSizeScale;
   final double meaningSizeScale;
   final double imageSizeScale;
+  final bool hideMeaning;
   final Future<void> Function(ApiWord word) onShareWord;
 
   const SwipeCard({
@@ -26,6 +27,7 @@ class SwipeCard extends StatelessWidget {
     this.wordSizeScale = 1,
     this.meaningSizeScale = 1,
     this.imageSizeScale = 1,
+    this.hideMeaning = false,
     required this.onShareWord,
     super.key,
   });
@@ -71,11 +73,13 @@ class SwipeCard extends StatelessWidget {
           textDirection: Directionality.of(context),
           textScaler: textScaler,
         )..layout(maxWidth: availableTextWidth);
-        final meaningPainter = TextPainter(
-          text: TextSpan(text: word.meaning, style: meaningStyle),
-          textDirection: Directionality.of(context),
-          textScaler: textScaler,
-        )..layout(maxWidth: availableTextWidth);
+        final meaningHeight = hideMeaning
+            ? 0.0
+            : (TextPainter(
+                text: TextSpan(text: word.meaning, style: meaningStyle),
+                textDirection: Directionality.of(context),
+                textScaler: textScaler,
+              )..layout(maxWidth: availableTextWidth)).height;
         final availableImageHeight =
             (height -
                     verticalPadding -
@@ -85,7 +89,7 @@ class SwipeCard extends StatelessWidget {
                     imageSpacing -
                     wordPainter.height -
                     6 -
-                    meaningPainter.height)
+                    meaningHeight)
                 .clamp(0.0, double.infinity)
                 .toDouble();
         final availableImageWidth =
@@ -154,7 +158,12 @@ class SwipeCard extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            CategoryPill(label: word.categoryName),
+                            Flexible(
+                              child: CategoryPill(
+                                label: word.categoryName,
+                                maxLines: 1,
+                              ),
+                            ),
                             Row(
                               children: [
                                 SizedBox(
@@ -194,7 +203,8 @@ class SwipeCard extends StatelessWidget {
                         SizedBox(height: imageSpacing),
                         Text(word.word, style: wordStyle),
                         const SizedBox(height: 6),
-                        Text(word.meaning, style: meaningStyle),
+                        if (!hideMeaning)
+                          Text(word.meaning, style: meaningStyle),
                       ],
                     ),
                   ),
@@ -218,6 +228,7 @@ class StackCardBackdrop extends StatelessWidget {
   final double scale; // Scaling factor for layer effect
   final double rotation; // Rotation angle for staggered appearance
   final Offset offset; // Translation offset for positioning
+  final bool hideMeaning;
 
   const StackCardBackdrop({
     required this.word,
@@ -226,6 +237,7 @@ class StackCardBackdrop extends StatelessWidget {
     required this.scale,
     required this.rotation,
     required this.offset,
+    this.hideMeaning = false,
     super.key,
   });
 
@@ -239,7 +251,12 @@ class StackCardBackdrop extends StatelessWidget {
           scale: scale,
           child: Opacity(
             opacity: 0.55,
-            child: BackdropCard(word: word, width: width, height: height),
+            child: BackdropCard(
+              word: word,
+              width: width,
+              height: height,
+              hideMeaning: hideMeaning,
+            ),
           ),
         ),
       ),
@@ -254,11 +271,13 @@ class BackdropCard extends StatelessWidget {
   final ApiWord word;
   final double width;
   final double height;
+  final bool hideMeaning;
 
   const BackdropCard({
     required this.word,
     required this.width,
     required this.height,
+    this.hideMeaning = false,
     super.key,
   });
 
@@ -266,72 +285,93 @@ class BackdropCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final textColor = AppThemeColors.textPrimary(context);
 
-    return Container(
+    return SizedBox(
       width: width,
       height: height,
-      decoration: BoxDecoration(
-        color: AppThemeColors.card(context),
-        borderRadius: BorderRadius.circular(34),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(20),
-            blurRadius: 18,
-            offset: const Offset(0, 12),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(34),
-        child: Stack(
-          children: [
-            Positioned(
-              left: -45,
-              top: -45,
-              child: Container(
-                width: 150,
-                height: 150,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppThemeColors.challengeCard(context).withAlpha(100),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  CategoryPill(label: word.categoryName),
-                  const SizedBox(height: 12),
-                  CardImage(
-                    // Display first image from images array for consistency with front card
-                    imageUrl: word.images.isNotEmpty
-                        ? word.images.first.imageUrl
-                        : word.wordImageUrl,
-                    size: (height * 0.40).clamp(100.0, 200.0),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    word.word,
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w900,
-                      color: textColor,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    word.meaning,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: textColor,
-                    ),
-                  ),
-                ],
-              ),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: AppThemeColors.card(context),
+          borderRadius: BorderRadius.circular(34),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(20),
+              blurRadius: 18,
+              offset: const Offset(0, 12),
             ),
           ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(34),
+          child: Stack(
+            children: [
+              Positioned(
+                left: -45,
+                top: -45,
+                child: Container(
+                  width: 150,
+                  height: 150,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppThemeColors.challengeCard(context).withAlpha(100),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CategoryPill(label: word.categoryName, maxLines: 1),
+                    const SizedBox(height: 6),
+                    Expanded(
+                      child: LayoutBuilder(
+                        builder: (context, imageConstraints) {
+                          final imageSize =
+                              imageConstraints.maxWidth <
+                                  imageConstraints.maxHeight
+                              ? imageConstraints.maxWidth
+                              : imageConstraints.maxHeight;
+                          return Center(
+                            child: CardImage(
+                              imageUrl: word.images.isNotEmpty
+                                  ? word.images.first.imageUrl
+                                  : word.wordImageUrl,
+                              size: imageSize,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      word.word,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w900,
+                        color: textColor,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    if (!hideMeaning) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        word.meaning,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: textColor,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

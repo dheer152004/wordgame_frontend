@@ -49,6 +49,9 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
   static const String _wordSizeScaleKey = 'flash_card_word_size_scale';
   static const String _meaningSizeScaleKey = 'flash_card_meaning_size_scale';
   static const String _imageSizeScaleKey = 'flash_card_image_size_scale';
+  static const String _showPreviousCardButtonKey =
+      'flash_card_show_previous_card_button';
+  static const String _hideMeaningKey = 'flash_card_hide_meaning';
 
   final List<ApiCategory> _categories = [];
   List<ApiWord> _words = [];
@@ -67,6 +70,7 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
   final List<int> _visitedCardIndices = [0];
   int _historyPosition = 0;
   bool _showPreviousCardButton = false;
+  bool _hideMeaning = false;
   double _wordSizeScale = 1;
   double _meaningSizeScale = 1;
   double _imageSizeScale = 1;
@@ -428,6 +432,7 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
 
   Future<void> _openFlashCardSettings() async {
     var showPreviousCardButton = _showPreviousCardButton;
+    var hideMeaning = _hideMeaning;
     var wordSizeScale = _wordSizeScale;
     var meaningSizeScale = _meaningSizeScale;
     var imageSizeScale = _imageSizeScale;
@@ -441,6 +446,7 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) => FlashCardSettings(
           showPreviousCardButton: showPreviousCardButton,
+          hideMeaning: hideMeaning,
           wordSizeScale: wordSizeScale,
           meaningSizeScale: meaningSizeScale,
           imageSizeScale: imageSizeScale,
@@ -469,6 +475,16 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
             setState(() {
               _showPreviousCardButton = enabled;
             });
+            _saveFlashCardBoolSetting(_showPreviousCardButtonKey, enabled);
+          },
+          onHideMeaningChanged: (enabled) {
+            setModalState(() {
+              hideMeaning = enabled;
+            });
+            setState(() {
+              _hideMeaning = enabled;
+            });
+            _saveFlashCardBoolSetting(_hideMeaningKey, enabled);
           },
         ),
       ),
@@ -490,6 +506,9 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
         _imageSizeScale = (preferences.getDouble(_imageSizeScaleKey) ?? 1)
             .clamp(0.6, 1.6)
             .toDouble();
+        _showPreviousCardButton =
+            preferences.getBool(_showPreviousCardButtonKey) ?? false;
+        _hideMeaning = preferences.getBool(_hideMeaningKey) ?? false;
       });
     } catch (error, stackTrace) {
       debugPrint('Failed to load flash card size settings: $error');
@@ -511,6 +530,24 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
       }
     } catch (error, stackTrace) {
       debugPrint('Failed to save flash card size setting: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not save this card setting.')),
+        );
+      }
+    }
+  }
+
+  Future<void> _saveFlashCardBoolSetting(String key, bool value) async {
+    try {
+      final preferences = await SharedPreferences.getInstance();
+      final saved = await preferences.setBool(key, value);
+      if (!saved) {
+        throw StateError('The setting was not saved.');
+      }
+    } catch (error, stackTrace) {
+      debugPrint('Failed to save flash card boolean setting: $error');
       debugPrintStack(stackTrace: stackTrace);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -719,7 +756,7 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
 
   Widget _buildPreviousCardButton() {
     final canGoBack = _historyPosition > 0;
-    const buttonColor = Color(0xFFD92243);
+    const buttonColor = ui.Color.fromARGB(255, 34, 129, 217);
 
     return Semantics(
       button: true,
@@ -892,6 +929,7 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
                       wordSizeScale: _wordSizeScale,
                       meaningSizeScale: _meaningSizeScale,
                       imageSizeScale: _imageSizeScale,
+                      hideMeaning: _hideMeaning,
                       onShareWord: _shareWord,
                     ),
                   ),
@@ -906,6 +944,7 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
                     word: thirdWord,
                     width: cardWidth * 0.88,
                     height: effectiveCardHeight * 0.82,
+                    hideMeaning: _hideMeaning,
                     scale: 0.90,
                     rotation: -0.08,
                     offset: const Offset(0, 18),
@@ -920,6 +959,7 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
                     word: nextWord,
                     width: cardWidth * 0.94,
                     height: effectiveCardHeight * 0.88,
+                    hideMeaning: _hideMeaning,
                     scale: 0.96,
                     rotation: -0.03,
                     offset: const Offset(0, 8),
@@ -971,6 +1011,7 @@ class _FlashCardsScreenState extends State<FlashCardsScreen> {
                           wordSizeScale: _wordSizeScale,
                           meaningSizeScale: _meaningSizeScale,
                           imageSizeScale: _imageSizeScale,
+                          hideMeaning: _hideMeaning,
                           onShareWord: _shareWord,
                         ),
                       ),

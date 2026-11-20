@@ -5,6 +5,8 @@ import '../theme/app_theme.dart';
 class FlashCardSettings extends StatelessWidget {
   final bool showPreviousCardButton;
   final ValueChanged<bool> onShowPreviousCardButtonChanged;
+  final bool hideMeaning;
+  final ValueChanged<bool> onHideMeaningChanged;
   final double wordSizeScale;
   final ValueChanged<double> onWordSizeScaleChanged;
   final ValueChanged<double> onWordSizeScaleChangeEnd;
@@ -19,6 +21,8 @@ class FlashCardSettings extends StatelessWidget {
     super.key,
     required this.showPreviousCardButton,
     required this.onShowPreviousCardButtonChanged,
+    this.hideMeaning = false,
+    this.onHideMeaningChanged = _onDefaultHideMeaningChanged,
     required this.wordSizeScale,
     required this.onWordSizeScaleChanged,
     required this.onWordSizeScaleChangeEnd,
@@ -29,6 +33,8 @@ class FlashCardSettings extends StatelessWidget {
     required this.onImageSizeScaleChanged,
     required this.onImageSizeScaleChangeEnd,
   });
+
+  static void _onDefaultHideMeaningChanged(bool value) {}
 
   @override
   Widget build(BuildContext context) {
@@ -78,6 +84,23 @@ class FlashCardSettings extends StatelessWidget {
               onChangeEnd: onImageSizeScaleChangeEnd,
             ),
             const SizedBox(height: 8),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(
+                'Hide meaning',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: AppThemeColors.textPrimary(context),
+                ),
+              ),
+              subtitle: Text(
+                'Do not show the meaning on flash cards.',
+                style: TextStyle(color: AppThemeColors.textSecondary(context)),
+              ),
+              value: hideMeaning,
+              onChanged: onHideMeaningChanged,
+              activeTrackColor: AppThemeColors.primary(context),
+            ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               title: Text(

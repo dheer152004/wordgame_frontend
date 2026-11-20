@@ -18,6 +18,8 @@ void main() {
           body: FlashCardSettings(
             showPreviousCardButton: false,
             onShowPreviousCardButtonChanged: (_) {},
+            hideMeaning: false,
+            onHideMeaningChanged: (_) {},
             wordSizeScale: wordSize,
             onWordSizeScaleChanged: (value) => wordSize = value,
             onWordSizeScaleChangeEnd: (_) {},
@@ -36,9 +38,103 @@ void main() {
     expect(find.text('Word size'), findsOneWidget);
     expect(find.text('Meaning size'), findsOneWidget);
     expect(find.text('Image size'), findsOneWidget);
+    expect(find.text('Hide meaning'), findsOneWidget);
 
     await tester.drag(find.byType(Slider).first, const Offset(80, 0));
     expect(wordSize, greaterThan(1));
+  });
+
+  testWidgets('flash card can hide its meaning', (tester) async {
+    final word = ApiWord(
+      id: 1,
+      word: 'Slay',
+      meaning: 'To do something exceptionally well.',
+      wordImageUrl: '',
+      categoryName: 'Words',
+      examples: const [],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SwipeCard(
+            word: word,
+            width: 340,
+            height: 300,
+            progress: 0,
+            isDragging: false,
+            hideMeaning: true,
+            onShareWord: (_) async {},
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Slay'), findsOneWidget);
+    expect(find.text(word.meaning), findsNothing);
+  });
+
+  testWidgets('background flash card content fits a narrow card', (
+    tester,
+  ) async {
+    final word = ApiWord(
+      id: 2,
+      word: 'An exceptionally long word title',
+      meaning:
+          'A long description that must be clipped to the available background '
+          'card space without causing any flex overflow.',
+      wordImageUrl: '',
+      categoryName: 'An exceptionally long category name',
+      examples: const [],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: BackdropCard(
+              word: word,
+              width: 230,
+              height: 190,
+              hideMeaning: true,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(tester.takeException(), isNull);
+    expect(find.text(word.meaning), findsNothing);
+  });
+
+  testWidgets('flash card category does not overflow a narrow card', (
+    tester,
+  ) async {
+    final word = ApiWord(
+      id: 3,
+      word: 'Word',
+      meaning: 'A short meaning.',
+      wordImageUrl: '',
+      categoryName: 'An exceptionally long category name',
+      examples: const [],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SwipeCard(
+            word: word,
+            width: 230,
+            height: 190,
+            progress: 0,
+            isDragging: false,
+            onShareWord: (_) async {},
+          ),
+        ),
+      ),
+    );
+
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('flash card remains scrollable with enlarged system text', (

@@ -6,8 +6,9 @@ import 'card_image_view.dart';
 /// Used at the top of cards to show word category
 class CategoryPill extends StatelessWidget {
   final String label;
+  final int? maxLines;
 
-  const CategoryPill({required this.label, super.key});
+  const CategoryPill({required this.label, this.maxLines, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -20,6 +21,8 @@ class CategoryPill extends StatelessWidget {
       ),
       child: Text(
         label,
+        maxLines: maxLines,
+        overflow: maxLines == null ? null : TextOverflow.ellipsis,
         style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w800,

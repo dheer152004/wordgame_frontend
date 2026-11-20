@@ -5,6 +5,7 @@ import 'package:nroq/services/backend_api.dart';
 import '../models/word_Content_models.dart';
 import '../services/audio_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/card_image_view.dart';
 import 'flash_cards_screen.dart';
 
 /// Modal bottom sheet displaying comprehensive word details
@@ -644,25 +645,7 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                           borderRadius: BorderRadius.circular(22),
                           child: AspectRatio(
                             aspectRatio: 1,
-                            child: Image.network(
-                              imageUrl,
-                              width: 210,
-                              height: 210,
-                              fit: BoxFit.cover,
-                              webHtmlElementStrategy:
-                                  WebHtmlElementStrategy.prefer,
-                              errorBuilder: (_, _, _) => Container(
-                                width: 210,
-                                height: 210,
-                                color: softPanel,
-                                alignment: Alignment.center,
-                                child: Icon(
-                                  Icons.image_not_supported_outlined,
-                                  color: textSecondary,
-                                  size: 40,
-                                ),
-                              ),
-                            ),
+                            child: buildCardImageView(imageUrl, 210),
                           ),
                         );
                       },

@@ -12,14 +12,17 @@ Widget buildCardImageView(String imageUrl, double size) {
       int viewId, {
       Object? params,
     }) {
+      final imageParams = params! as Map<Object?, Object?>;
       final image = web.HTMLImageElement()
-        ..src = params! as String
+        ..src = imageParams['url']! as String
         ..alt = ''
         ..draggable = false;
+      final imageSize = '${imageParams['size']}px';
       image.style
-        ..width = '100%'
-        ..height = '100%'
-        ..objectFit = 'contain';
+        ..width = imageSize
+        ..height = imageSize
+        ..objectFit = 'contain'
+        ..display = 'block';
       return image;
     });
     _viewFactoryRegistered = true;
@@ -28,6 +31,9 @@ Widget buildCardImageView(String imageUrl, double size) {
   return SizedBox(
     width: size,
     height: size,
-    child: HtmlElementView(viewType: _viewType, creationParams: imageUrl),
+    child: HtmlElementView(
+      viewType: _viewType,
+      creationParams: {'url': imageUrl, 'size': size},
+    ),
   );
 }
