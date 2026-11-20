@@ -7,6 +7,7 @@ class SettingsDetailPage extends StatelessWidget {
   final String title;
   final String description;
   final IconData icon;
+  final Color? iconColor;
   final Widget? content;
 
   const SettingsDetailPage({
@@ -14,16 +15,19 @@ class SettingsDetailPage extends StatelessWidget {
     required this.title,
     required this.description,
     required this.icon,
+    this.iconColor,
     this.content,
   });
 
   @override
   Widget build(BuildContext context) {
+    final accentColor = iconColor ?? AppThemeColors.primary(context);
+
     return Scaffold(
       backgroundColor: AppThemeColors.background(context),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -40,6 +44,7 @@ class SettingsDetailPage extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: AppTextStyles.sectionTitle.copyWith(
                         color: AppThemeColors.textPrimary(context),
+                        fontSize: 17,
                       ),
                     ),
                   ),
@@ -48,7 +53,7 @@ class SettingsDetailPage extends StatelessWidget {
               const SizedBox(height: 18),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
                   color: AppThemeColors.surface(context),
                   borderRadius: BorderRadius.circular(AppRadius.card),
@@ -57,28 +62,28 @@ class SettingsDetailPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    CircleAvatar(
-                      radius: 24,
-                      backgroundColor: AppThemeColors.primary(
-                        context,
-                      ).withAlpha(28),
-                      child: Icon(
-                        icon,
-                        color: AppThemeColors.primary(context),
-                        size: 26,
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    Text(
-                      description,
-                      style: TextStyle(
-                        color: AppThemeColors.textSecondary(context),
-                        fontSize: 14,
-                        height: 1.5,
-                      ),
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 21,
+                          backgroundColor: accentColor.withAlpha(24),
+                          child: Icon(icon, color: accentColor, size: 21),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            description,
+                            style: TextStyle(
+                              color: AppThemeColors.textSecondary(context),
+                              fontSize: 13,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     if (content != null) ...[
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 14),
                       content!,
                     ],
                   ],

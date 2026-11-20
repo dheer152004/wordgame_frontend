@@ -316,6 +316,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     title: 'Achievements & Badges',
                     description: 'Badges you have earned so far.',
                     icon: LucideIcons.award,
+                    iconColor: const Color(0xFFFF8B27),
                     content: _profile == null
                         ? null
                         : ProfileBadgesSection(profile: _profile!),
@@ -465,6 +466,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required String title,
     required String description,
     required IconData icon,
+    Color? iconColor,
     Widget? content,
   }) {
     Navigator.of(context).push(
@@ -473,6 +475,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           title: title,
           description: description,
           icon: icon,
+          iconColor: iconColor,
           content: content,
         ),
       ),
@@ -822,21 +825,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
       title: 'Help & Support',
       description: 'Find help or contact the NROQ team.',
       icon: LucideIcons.helpCircle,
+      iconColor: const Color(0xFFFFA400),
       content: Column(
         children: [
           _detailAction(
             icon: LucideIcons.helpCircle,
             label: 'Frequently Asked Questions',
+            color: const Color(0xFFFFA400),
             onTap: () => _openLegalLink(Uri.parse('https://www.nroq.in/faq')),
           ),
           _detailAction(
             icon: LucideIcons.mail,
             label: 'Contact Us',
+            color: const Color(0xFF3B82F6),
             onTap: () => _openLegalLink(Uri.parse('mailto:mail@nroq.in')),
           ),
           _detailAction(
             icon: LucideIcons.flag,
             label: 'Report a Problem',
+            color: const Color(0xFF8B5CF6),
             onTap: () => showDialog<void>(
               context: context,
               builder: (_) => const ProfileReportDialog(),
@@ -877,17 +884,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
       title: 'Data & Privacy',
       description: 'Review how your account data is handled.',
       icon: LucideIcons.shieldCheck,
+      iconColor: const Color(0xFF12CDB4),
       content: Column(
         children: [
           _detailAction(
             icon: LucideIcons.shieldCheck,
             label: 'Privacy Policy',
+            color: const Color(0xFF12CDB4),
             onTap: () =>
                 _openLegalLink(Uri.parse('https://www.nroq.in/privacy-policy')),
           ),
           _detailAction(
             icon: LucideIcons.fileText,
             label: 'Terms of Use',
+            color: const Color(0xFF3B82F6),
             onTap: () => _openLegalLink(
               Uri.parse('https://www.nroq.in/terms-of-service'),
             ),
@@ -895,6 +905,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _detailAction(
             icon: LucideIcons.checkCircle,
             label: 'Consent Management',
+            color: const Color(0xFF19C66A),
             onTap: () => _openLegalLink(
               Uri.parse('https://www.nroq.in/privacy-consent'),
             ),
@@ -910,15 +921,55 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required VoidCallback? onTap,
     Color? color,
   }) {
-    final actionColor = color ?? AppThemeColors.primary(context);
-    return ListTile(
-      leading: Icon(icon, size: 19, color: actionColor),
-      title: Text(
-        label,
-        style: color == null ? null : TextStyle(color: actionColor),
+    final iconColor = color ?? AppThemeColors.primary(context);
+    final titleColor = color == Theme.of(context).colorScheme.error
+        ? iconColor
+        : AppThemeColors.textPrimary(context);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
+          child: SizedBox(
+            height: 40,
+            child: Row(
+              children: [
+                Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: iconColor.withAlpha(24),
+                  ),
+                  child: Icon(icon, size: 13, color: iconColor),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: titleColor,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Icon(
+                  LucideIcons.chevronRight,
+                  size: 15,
+                  color: AppThemeColors.textSecondary(context),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
-      trailing: const Icon(LucideIcons.chevronRight, size: 16),
-      onTap: onTap,
     );
   }
 
